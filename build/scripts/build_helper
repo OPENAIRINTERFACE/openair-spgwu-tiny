@@ -44,9 +44,13 @@ if [ $IS_CONTAINER -eq 0 ]
 then
   SUDO='sudo -S -E'
 else
-  SUDO=''
+  if [ -v FORCE_SUDO ]
+  then
+    SUDO='sudo'
+  else
+    SUDO=''
+  fi
 fi
-
 ###############################
 ## echo and  family
 ###############################
