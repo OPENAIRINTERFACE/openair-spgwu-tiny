@@ -148,10 +148,10 @@ function main()
 
   if [ $var_check_install_min_deps -gt 0 ];then
     disable_ipv6
-    check_install_spgwu_min_deps  $force $debug
-    if [[ $? -ne 0 ]]; then
+    ret=$(check_install_spgwu_min_deps  $force $debug)
+    if [[ $ret -ne 0 ]]; then
         echo_error "Error: SPGW-U minimal deps installation failed"
-        return 1
+        return $ret
     else
         echo_success "SPGW-U minimal deps installation successful"
         echo_warning "SPGW-U not compiled, to compile it, re-run build_spgwu without -i option"
@@ -160,10 +160,10 @@ function main()
   fi
   if [ $var_check_install_deps -gt 0 ];then
     disable_ipv6
-    check_install_spgwu_deps  $force $debug
-    if [[ $? -ne 0 ]]; then
+    ret=$(check_install_spgwu_deps  $force $debug)
+    if [[ $ret -ne 0 ]]; then
         echo_error "Error: SPGW-U deps installation failed"
-        return 1
+        return $ret
     else
         echo_success "SPGW-U deps installation successful"
         echo_warning "SPGW-U not compiled, to compile it, re-run build_spgwu without -I option"
