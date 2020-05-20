@@ -550,7 +550,7 @@ def myShCmd(cmd, flag, user, host) {
 
 def myShRetCmd(cmd, flag, user, host) {
   if (flag) {
-    ret = sh returnStdout: true, script: "ssh -t -t ${user}@${host} 'cd /tmp/CI-CN-CUPS && ${cmd}'"
+    ret = sh returnStdout: true, script: "ssh -t -t ${user}@${host} 'cd /tmp/CI-CN-SPGWU && ${cmd}'"
   } else {
     ret = sh returnStdout: true, script: "${cmd}"
   }
