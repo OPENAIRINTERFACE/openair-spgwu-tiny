@@ -27,11 +27,15 @@
 
 #include <boost/asio.hpp>
 #include <iostream>
+#include <algorithm>
 #include <thread>
 #include <signal.h>
 #include <stdint.h>
 #include <unistd.h> // get_pid(), pause()
 #include <vector>
+
+#include <boost/algorithm/string.hpp>
+#include <boost/algorithm/string/split.hpp>
 
 using namespace spgwu;
 using namespace util;
@@ -61,8 +65,44 @@ void my_app_signal_handler(int s){
   exit(0);
 }
 //------------------------------------------------------------------------------
+// We are doing a check to see if an existing process already runs this program.
+// We have seen that running at least twice this program in a container may lead
+// to the container host to crash.
+int my_check_redundant_process(char* exec_name){
+  FILE *fp;
+  char *cmd= new char[200];
+  std::vector<std::string> words;
+  int result = 0;
+  size_t retSize = 0;
+
+  // Retrieving only the executable name
+  boost::split(words, exec_name, boost::is_any_of("/"));
+  memset(cmd,1,200);
+  sprintf(cmd,"ps aux | grep -v grep | grep -v nohup | grep -c %s", words[words.size() - 1].c_str());
+  fp=popen(cmd,"r");
+
+  // clearing the buffer
+  memset(cmd,1,200);
+  retSize = fread(cmd,1,200,fp);
+  fclose(fp);
+
+  // if something wrong, then we don't know
+  if (retSize == 0)
+    return 10;
+
+  result = atoi(cmd);
+  free(cmd);
+  return result;
+}
+//------------------------------------------------------------------------------
 int main(int argc, char **argv)
 {
+  // Checking if another instance of SPGW-U is running
+  int nb_processes = my_check_redundant_process(argv[0]);
+  if (nb_processes > 1) {
+     std::cout << "An instance of " << argv[0] << "is maybe already called!" << std::endl;
+     return -1;
+  }
 
   // Command line options
   if ( !Options::parse( argc, argv ) )
