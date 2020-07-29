@@ -120,6 +120,11 @@ void spgwu_s1u::handle_receive(char* recv_buffer, const std::size_t bytes_transf
         gtp_payload_offset += 4;
         gtp_payload_length -= 4;
       }
+      if (gtp_flags & 0x04) {
+        gtp_payload_offset += 4;
+        gtp_payload_length -= 4;
+      }
+
       uint32_t tunnel_id = be32toh(gtpuh->teid);
 
       struct iphdr* iph = (struct iphdr*)&recv_buffer[gtp_payload_offset];
