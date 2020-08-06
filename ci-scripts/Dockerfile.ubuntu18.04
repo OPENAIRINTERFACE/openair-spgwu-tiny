@@ -31,37 +31,31 @@
 FROM ubuntu:bionic as oai-spgwu-tiny-builder
 
 ARG EURECOM_PROXY
-ARG BUILD_FOR_CI
-ARG CI_SRC_BRANCH
-ARG CI_SRC_COMMIT
-ARG CI_DEST_BRANCH
 
 ENV DEBIAN_FRONTEND=noninteractive
 ENV TZ=Europe
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get upgrade --yes && DEBIAN_FRONTEND=noninteractive apt-get install --yes \
     psmisc \
-    git \
-  && rm -rf /var/lib/apt/lists/*
+    git
 
 # Some GIT configuration command quite useful
 RUN /bin/bash -c "if [[ -v EURECOM_PROXY ]]; then git config --global http.proxy $EURECOM_PROXY; fi"
 RUN git config --global https.postBuffer 123289600
 RUN git config --global http.sslverify false
-# In normal case, we build out of the develop branch
-RUN /bin/bash -c "if [[ -v CI_SRC_BRANCH ]]; then git clone https://github.com/OPENAIRINTERFACE/openair-spgwu-tiny.git -b $CI_SRC_BRANCH /openair-spgwu-tiny; else git clone https://github.com/OPENAIRINTERFACE/openair-spgwu-tiny.git -b develop /openair-spgwu-tiny; fi"
-# For CI, especially for Pull/Merge Requests, we build out of temp merge
+
+# Copy the workspace as is
 WORKDIR /openair-spgwu-tiny
-RUN /bin/bash -c "if [[ -v BUILD_FOR_CI ]]; then git config --global user.name \"OAI CI\"; fi"
-RUN /bin/bash -c "if [[ -v BUILD_FOR_CI ]]; then git config --global user.email ci@openairinterface.org; fi"
-RUN /bin/bash -c "if [[ -v BUILD_FOR_CI ]]; then git checkout -f $CI_SRC_COMMIT; fi"
-RUN /bin/bash -c "if [[ -v BUILD_FOR_CI ]]; then git merge --ff origin/$CI_DEST_BRANCH -m \"Temporary merge for CI\"; fi"
+COPY . /openair-spgwu-tiny
 
 # Installing and Building SPGW-U-TINY
 WORKDIR /openair-spgwu-tiny/build/scripts
 RUN ./build_spgwu --install-deps --force
-RUN ./build_spgwu --clean --build-type Release --jobs
-RUN cat /openair-spgwu-tiny/build/log/spgwu.txt
+RUN ./build_spgwu --clean --build-type Release --jobs --Verbose
+
+# Getting SHA-ONE for support
+WORKDIR /openair-spgwu-tiny
+RUN git log -n1 > version.txt
 
 #---------------------------------------------------------------------
 # TARGET IMAGE
@@ -86,6 +80,7 @@ RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get upgrade --yes && DE
 # Copying executable and generated libraries
 WORKDIR /openair-spgwu-tiny/bin
 COPY --from=oai-spgwu-tiny-builder /openair-spgwu-tiny/build/spgw_u/build/spgwu oai_spgwu
+COPY --from=oai-spgwu-tiny-builder /openair-spgwu-tiny/scripts/entrypoint.sh .
 
 # Copying template configuration files
 # The configuration folder will be flat
@@ -93,3 +88,10 @@ WORKDIR /openair-spgwu-tiny/etc
 COPY --from=oai-spgwu-tiny-builder /openair-spgwu-tiny/etc/spgw_u.conf .
 
 WORKDIR /openair-spgwu-tiny
+COPY --from=oai-spgwu-tiny-builder /openair-spgwu-tiny/version.txt .
+
+# expose ports
+EXPOSE 2152/udp 8805/udp
+
+CMD ["/openair-spgwu-tiny/bin/oai_spgwu", "-c", "/openair-spgwu-tiny/etc/spgw_u.conf", "-o"]
+ENTRYPOINT ["/openair-spgwu-tiny/bin/entrypoint.sh"]
