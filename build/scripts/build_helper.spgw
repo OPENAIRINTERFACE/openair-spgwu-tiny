@@ -384,6 +384,7 @@ check_install_spgwu_deps() {
       bison \
       $CMAKE \
       cppcheck \
+      procps-ng \
       flex \
       gdb \
       git"
@@ -422,12 +423,20 @@ check_install_spgwu_deps() {
       python \
       pkg-config"
   elif [[ "$OS_BASEDISTRO" == "fedora" ]]; then
+    case "$(get_distribution_release)" in
+      "centos8")
+         specific_packages="libidn2-devel"
+         ;;
+      "rhel8.2")
+         specific_packages=""
+         ;;
+    esac
     PACKAGE_LIST="\
+      $specific_packages \
       guile-devel \
       libconfig-devel \
       libgcrypt-devel \
       gmp-devel \
-      libidn2-devel \
       libidn-devel \
       lksctp-tools \
       lksctp-tools-devel \
