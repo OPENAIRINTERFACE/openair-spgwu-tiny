@@ -62,9 +62,6 @@ WORKDIR /openair-spgwu-tiny/build/scripts
 RUN ./build_spgwu --install-deps --force
 RUN ./build_spgwu --clean --build-type Release --jobs --Verbose
 
-#debug
-RUN ldd /openair-spgwu-tiny/build/spgw_u/build/spgwu
-
 #---------------------------------------------------------------------
 # TARGET IMAGE
 #---------------------------------------------------------------------
@@ -72,11 +69,11 @@ FROM registry.access.redhat.com/ubi8/ubi:latest as oai-spgwu-tiny
 # We install some debug tools for the moment in addition of mandatory libraries
 RUN yum update -y && \
     yum -y install --enablerepo="ubi-8-codeready-builder" \
-    psmisc \
-    net-tools \
-    libevent \
-  && yum clean all -y \
-  && rm -rf /var/cache/yum
+      psmisc \
+      net-tools \
+      libevent && \
+    yum clean all -y && \
+    rm -rf /var/cache/yum
 
 # Copying executable and generated libraries
 WORKDIR /openair-spgwu-tiny/bin
@@ -90,8 +87,6 @@ COPY --from=oai-spgwu-tiny-builder /lib64/libdouble-conversion.so.1 /lib64/
 COPY --from=oai-spgwu-tiny-builder /lib64/libconfig++.so.9 /lib64/
 COPY --from=oai-spgwu-tiny-builder /lib64/libboost_system.so.1.66.0 /lib64/
 RUN ldconfig
-#debug
-RUN ldd /openair-spgwu-tiny/bin/oai_spgwu
 
 # Copying template configuration files
 # The configuration folder will be flat
