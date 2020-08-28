@@ -61,7 +61,7 @@ class spgwuConfigGen():
 		spgwuFile.write('SPGWU_CONF[@SGW_INTERFACE_NAME_FOR_S1U_S12_S4_UP@]=\'' + self.s1u_name + '\'\n')
 		spgwuFile.write('SPGWU_CONF[@SGW_INTERFACE_NAME_FOR_SX@]=\'' + self.sxu_name + '\'\n')
 		# SGI is fixed on SGI
-		spgwuFile.write('SPGWU_CONF[@SGW_INTERFACE_NAME_FOR_SGI@]=\'eth0\'\n')
+		spgwuFile.write('SPGWU_CONF[@PGW_INTERFACE_NAME_FOR_SGI@]=\'eth0\'\n')
 		spgwuFile.write('SPGWU_CONF[@SPGWC0_IP_ADDRESS@]=\'' + self.spgwc0_ip_addr + '\'\n')
 		spgwuFile.write('\n')
 		spgwuFile.write('for K in "${!SPGWU_CONF[@]}"; do \n')
@@ -78,7 +78,7 @@ class spgwuConfigGen():
 		spgwuFile.write('PID_DIRECTORY=/var/run\n')
 		spgwuFile.write('SGW_INTERFACE_NAME_FOR_S1U_S12_S4_UP=' + self.s1u_name + '\n')
 		spgwuFile.write('SGW_INTERFACE_NAME_FOR_SX=' + self.sxu_name + '\n')
-		spgwuFile.write('SGW_INTERFACE_NAME_FOR_SGI=eth0\n')
+		spgwuFile.write('PGW_INTERFACE_NAME_FOR_SGI=eth0\n')
 		spgwuFile.write('SPGWC0_IP_ADDRESS=' + self.spgwc0_ip_addr + '\n')
 		spgwuFile.close()
 
