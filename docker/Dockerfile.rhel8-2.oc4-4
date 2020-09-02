@@ -71,6 +71,7 @@ RUN yum update -y && \
     yum -y install --enablerepo="ubi-8-codeready-builder" \
       psmisc \
       net-tools \
+      iproute \
       libevent && \
     yum clean all -y && \
     rm -rf /var/cache/yum
