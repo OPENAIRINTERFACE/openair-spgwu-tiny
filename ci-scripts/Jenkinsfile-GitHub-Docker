@@ -315,7 +315,7 @@ pipeline {
           // Killing all containers
           myShCmd('python3 ./ci-scripts/sanityCheckDeploy.py --action=RemoveAllContainers', new_host_flag, new_host_user, new_host)
           // Removing all intermediate networks
-          myShCmd('python3 ./ci-scripts/sanityCheckDeploy.py --action=--action=RemoveNetworks', new_host_flag, new_host_user, new_host)
+          myShCmd('python3 ./ci-scripts/sanityCheckDeploy.py --action=RemoveNetworks', new_host_flag, new_host_user, new_host)
         }
       }
     }
@@ -334,6 +334,16 @@ pipeline {
           } else {
             echo "Federation Test Job is KO"
             sh "ci-scripts/fail.sh"
+          }
+        }
+      }
+      post {
+        always {
+          script {
+            copyArtifacts(projectName: 'CI-OpenAir-EPC-FED',
+                          filter: 'test_results_oai_epc.html',
+                          selector: lastCompleted())
+            archiveArtifacts artifacts: 'test_results_oai_epc.html'
           }
         }
       }
@@ -377,7 +387,7 @@ pipeline {
         // Killing all containers
         myShCmd('python3 ./ci-scripts/sanityCheckDeploy.py --action=RemoveAllContainers', new_host_flag, new_host_user, new_host)
         // Removing the networks
-        myShCmd('python3 ./ci-scripts/sanityCheckDeploy.py --action=--action=RemoveNetworks', new_host_flag, new_host_user, new_host)
+        myShCmd('python3 ./ci-scripts/sanityCheckDeploy.py --action=RemoveNetworks', new_host_flag, new_host_user, new_host)
         // In case of build failure, we might have temporary containers still running. TBD!
 
         // Removing temporary / intermediate images
