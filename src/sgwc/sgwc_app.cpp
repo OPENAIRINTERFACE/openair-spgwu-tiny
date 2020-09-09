@@ -184,20 +184,20 @@ void sgwc_app_task (void *args_p)
     auto *msg = shared_msg.get();
     switch (msg->msg_type) {
 
-    case S11_CREATE_SESSION_REQUEST:
-        /*
-         * We received a create session request from MME (with GTP abstraction here)
-         * procedures might be:
-         * E-UTRAN Initial Attach
-         * UE requests PDN connectivity
-         */
-      if (itti_s11_create_session_request* m = dynamic_cast<itti_s11_create_session_request*>(msg)) {
+    case S5S8_CREATE_SESSION_RESPONSE:
+      if (itti_s5s8_create_session_response* m = dynamic_cast<itti_s5s8_create_session_response*>(msg)) {
         sgwc_app_inst->handle_itti_msg(ref(*m));
       }
       break;
 
-    case S5S8_CREATE_SESSION_RESPONSE:
-      if (itti_s5s8_create_session_response* m = dynamic_cast<itti_s5s8_create_session_response*>(msg)) {
+     case S5S8_DELETE_SESSION_RESPONSE:
+      if (itti_s5s8_delete_session_response* m = dynamic_cast<itti_s5s8_delete_session_response*>(msg)) {
+        sgwc_app_inst->handle_itti_msg(ref(*m));
+      }
+      break;
+
+    case S5S8_DOWNLINK_DATA_NOTIFICATION:
+      if (itti_s5s8_downlink_data_notification* m = dynamic_cast<itti_s5s8_downlink_data_notification*>(msg)) {
         sgwc_app_inst->handle_itti_msg(ref(*m));
       }
       break;
@@ -214,20 +214,32 @@ void sgwc_app_task (void *args_p)
       }
       break;
 
-    case S5S8_DOWNLINK_DATA_NOTIFICATION:
-      if (itti_s5s8_downlink_data_notification* m = dynamic_cast<itti_s5s8_downlink_data_notification*>(msg)) {
+    case S5S8_REMOTE_PEER_NOT_RESPONDING:
+      if (itti_s5s8_remote_peer_not_responding* m = dynamic_cast<itti_s5s8_remote_peer_not_responding*>(msg)) {
         sgwc_app_inst->handle_itti_msg(ref(*m));
       }
       break;
 
-    case S11_DELETE_SESSION_REQUEST:
+    case S11_CREATE_SESSION_REQUEST:
+        /*
+         * We received a create session request from MME (with GTP abstraction here)
+         * procedures might be:
+         * E-UTRAN Initial Attach
+         * UE requests PDN connectivity
+         */
+      if (itti_s11_create_session_request* m = dynamic_cast<itti_s11_create_session_request*>(msg)) {
+        sgwc_app_inst->handle_itti_msg(ref(*m));
+      }
+      break;
+
+   case S11_DELETE_SESSION_REQUEST:
       if (itti_s11_delete_session_request* m = dynamic_cast<itti_s11_delete_session_request*>(msg)) {
         sgwc_app_inst->handle_itti_msg(ref(*m));
       }
       break;
 
-    case S5S8_DELETE_SESSION_RESPONSE:
-      if (itti_s5s8_delete_session_response* m = dynamic_cast<itti_s5s8_delete_session_response*>(msg)) {
+    case S11_DOWNLINK_DATA_NOTIFICATION_ACKNOWLEDGE:
+      if (itti_s11_downlink_data_notification_acknowledge* m = dynamic_cast<itti_s11_downlink_data_notification_acknowledge*>(msg)) {
         sgwc_app_inst->handle_itti_msg(ref(*m));
       }
       break;
@@ -244,8 +256,8 @@ void sgwc_app_task (void *args_p)
       }
       break;
 
-    case S11_DOWNLINK_DATA_NOTIFICATION_ACKNOWLEDGE:
-      if (itti_s11_downlink_data_notification_acknowledge* m = dynamic_cast<itti_s11_downlink_data_notification_acknowledge*>(msg)) {
+    case S11_REMOTE_PEER_NOT_RESPONDING:
+      if (itti_s11_remote_peer_not_responding* m = dynamic_cast<itti_s11_remote_peer_not_responding*>(msg)) {
         sgwc_app_inst->handle_itti_msg(ref(*m));
       }
       break;
@@ -349,6 +361,8 @@ void sgwc_app::handle_itti_msg (itti_s11_create_session_request& csreq)
 
   if ((csreq.teid) && (not sgwc_app_inst->is_s11c_teid_exist(csreq.teid))) {
     Logger::sgwc_app().warn("Received S11 CSReq with dest teid " TEID_FMT " unknown, ignore CSreq", csreq.teid);
+    cause_t  cause = {.cause_value = CONTEXT_NOT_FOUND, .pce = 0, .bce = 0, .cs = 0};
+    send_create_session_response_cause (csreq.gtpc_tx_id, csreq.teid, csreq.r_endpoint, cause);
     return;
   }
 
@@ -397,7 +411,7 @@ void sgwc_app::handle_itti_msg (itti_s11_delete_session_request& m)
       ebc->handle_itti_msg(m);
       Logger::sgwc_app().debug("sgw_eps_bearer_context: %s!", ebc->toString().c_str());
     } else {
-      Logger::sgwc_app().debug("Discarding S11 CREATE_SESSION_REQUEST sender teid " TEID_FMT "  gtpc_tx_id " PROC_ID_FMT ", invalid teid", m.teid, m.gtpc_tx_id);
+      Logger::sgwc_app().debug("Discarding S11 DELETE_SESSION_REQUEST sender teid " TEID_FMT "  gtpc_tx_id " PROC_ID_FMT ", invalid teid", m.teid, m.gtpc_tx_id);
       return;
     }
   } else {
@@ -445,6 +459,11 @@ void sgwc_app::handle_itti_msg (itti_s11_release_access_bearers_request& m)
   }
 }
 //------------------------------------------------------------------------------
+void sgwc_app::handle_itti_msg (itti_s11_remote_peer_not_responding& m)
+{
+  Logger::sgwc_app().debug("Received S11 REMOTE_PEER_NOT_RESPONDING event, gtpc_tx_id " PROC_ID_FMT ", todo when necessary.", m.gtpc_tx_id);
+}
+//------------------------------------------------------------------------------
 void sgwc_app::handle_itti_msg (itti_s11_downlink_data_notification_acknowledge& m)
 {
   Logger::sgwc_app().debug("Received S11 DOWNLINK_DATA_NOTIFICATION_ACKNOWLEDGE sender teid " TEID_FMT "  gtpc_tx_id " PROC_ID_FMT " ", m.teid, m.gtpc_tx_id);
@@ -465,20 +484,27 @@ void sgwc_app::handle_itti_msg (itti_s11_downlink_data_notification_acknowledge&
 void sgwc_app::handle_itti_msg (itti_s5s8_create_session_response& m)
 {
   Logger::sgwc_app().debug("Received S5S8 CREATE_SESSION_RESPONSE sender teid " TEID_FMT "  gtpc_tx_id " PROC_ID_FMT " ", m.teid, m.gtpc_tx_id);
-  if (m.gtp_ies.s5_s8_pgw_fteid.second.interface_type != S5_S8_PGW_GTP_C) {
-    Logger::sgwc_app().warn("Received S5S8 CREATE_SESSION_RESPONSE with s5_s8_pgw_fteid.interface_type != S5_S8_PGW_GTP_C %d, ignore CSResp", m.gtp_ies.sender_fteid_for_cp.second.interface_type);
-    return;
-  }
-  if (m.gtp_ies.s5_s8_pgw_fteid.second.teid_gre_key == 0) {
-    // MME sent request with teid = 0. This is not valid...
-    Logger::sgwc_app().warn("Received S5S8 CREATE_SESSION_RESPONSE with s5_s8_pgw_fteid.teid = 0, ignore CSResp");
-    return;
+  if (m.gtp_ies.cause.second.cause_value < CONTEXT_NOT_FOUND) {
+    if (m.gtp_ies.s5_s8_pgw_fteid.second.interface_type != S5_S8_PGW_GTP_C) {
+      Logger::sgwc_app().warn("Received S5S8 CREATE_SESSION_RESPONSE with s5_s8_pgw_fteid.interface_type != S5_S8_PGW_GTP_C %d, ignore CSResp", m.gtp_ies.sender_fteid_for_cp.second.interface_type);
+      return;
+    }
+    if (m.gtp_ies.s5_s8_pgw_fteid.second.teid_gre_key == 0) {
+      // MME sent request with teid = 0. This is not valid...
+      Logger::sgwc_app().warn("Received S5S8 CREATE_SESSION_RESPONSE with s5_s8_pgw_fteid.teid = 0, ignore CSResp");
+      return;
+    }
   }
   if (is_s5s8sgw_teid_2_sgw_contexts(m.teid)) {
     std::pair<std::shared_ptr<sgw_eps_bearer_context>, std::shared_ptr<sgw_pdn_connection>> p = s5s8sgw_teid_2_sgw_contexts(m.teid);
     if ((p.first.get()) && (p.second.get())) {
       p.first->handle_itti_msg(m, p.second);
-      Logger::sgwc_app().debug("sgw_eps_bearer_context: %s!", p.first->toString().c_str());
+      // cleanup
+      if (0 == p.first->get_num_pdn_connections()) {
+        delete_sgw_eps_bearer_context(p.first);
+      } else {
+        Logger::sgwc_app().debug("sgw_eps_bearer_context: %s!", p.first->toString().c_str());
+      }
     } else {
       Logger::sgwc_app().debug("Received S5S8 CREATE_SESSION_RESPONSE with dest teid " TEID_FMT ", SGW contexts not found, ignore CSResp", m.teid);
     }
@@ -541,6 +567,33 @@ void sgwc_app::handle_itti_msg (itti_s5s8_release_access_bearers_response& m)
 }
 
 //------------------------------------------------------------------------------
+void sgwc_app::handle_itti_msg (itti_s5s8_remote_peer_not_responding& m)
+{
+  if (!m.l_teid) {
+    // Node not responding to path management messages: ECHO
+    // TODO
+    Logger::sgwc_app().debug("Received S5S8 REMOTE_PEER_NOT_RESPONDING event gtpc_tx_id " PROC_ID_FMT " local teid 0", m.gtpc_tx_id);
+  } else if (is_s5s8sgw_teid_2_sgw_contexts(m.l_teid)) {
+    Logger::sgwc_app().debug("Received S5S8 REMOTE_PEER_NOT_RESPONDING event gtpc_tx_id " PROC_ID_FMT " local teid " TEID_FMT ".", m.gtpc_tx_id, m.l_teid);
+
+    std::pair<std::shared_ptr<sgw_eps_bearer_context>, std::shared_ptr<sgw_pdn_connection>> p = s5s8sgw_teid_2_sgw_contexts(m.l_teid);
+    if ((p.first.get()) && (p.second.get())) {
+      p.first->handle_itti_msg(m, p.second);
+      // cleanup
+      if (0 == p.first->get_num_pdn_connections()) {
+        delete_sgw_eps_bearer_context(p.first);
+      } else {
+        Logger::sgwc_app().debug("sgw_eps_bearer_context: %s!", p.first->toString().c_str());
+      }
+    } else {
+      Logger::sgwc_app().debug("Received S5S8 REMOTE_PEER_NOT_RESPONDING with local teid " TEID_FMT ", SGW contexts not found, ignore!", m.l_teid);
+    }
+  } else {
+    Logger::sgwc_app().debug("Received S5S8 REMOTE_PEER_NOT_RESPONDING with local teid " TEID_FMT ", SGW EPS bearer context not found, ignore!", m.l_teid);
+  }
+}
+
+//------------------------------------------------------------------------------
 void sgwc_app::handle_itti_msg (itti_s5s8_downlink_data_notification& m)
 {
   Logger::sgwc_app().debug("Received S5S8 DOWNLINK_DATA_NOTIFICATION sender teid " TEID_FMT "  gtpc_tx_id " PROC_ID_FMT " ", m.teid, m.gtpc_tx_id);
@@ -557,4 +610,21 @@ void sgwc_app::handle_itti_msg (itti_s5s8_downlink_data_notification& m)
   }
 }
 
+//------------------------------------------------------------------------------
+void sgwc_app::send_create_session_response_cause (const uint64_t gtpc_tx_id, const teid_t teid, const endpoint& r_endpoint, const cause_t &cause) const
+{
+  itti_s11_create_session_response *s11 = new itti_s11_create_session_response(TASK_SGWC_APP, TASK_SGWC_S11);
+  //------
+  // GTPV2C-Stack
+  //------
+  s11->gtpc_tx_id = gtpc_tx_id;
+  s11->teid = teid;
+  s11->r_endpoint = r_endpoint;
+  s11->gtp_ies.set(cause);
+  std::shared_ptr<itti_s11_create_session_response> msg = std::shared_ptr<itti_s11_create_session_response>(s11);
+  int ret = itti_inst->send_msg(msg);
+  if (RETURNok != ret) {
+    Logger::sgwc_app().error( "Could not send ITTI message %s to task TASK_SGWC_S11", s11->get_msg_name());
+  }
+}
 

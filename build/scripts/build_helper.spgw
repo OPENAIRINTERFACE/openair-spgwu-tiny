@@ -97,6 +97,8 @@ install_spdlog_from_git() {
     git clone $GIT_URL
     cd spdlog && git checkout master
     ret=$?;[[ $ret -ne 0 ]] && popd && return $ret
+    # enable syslog, Useless (defined in SPGW code)
+    sed -i '/#define SPDLOG_ENABLE_SYSLOG/s/^\/\///g' include/spdlog/tweakme.h
     popd
   fi
   return 0
@@ -157,7 +159,6 @@ check_install_spgwc_deps() {
       automake \
       bison \
       $CMAKE \
-      doxygen \
       flex \
       gdb \
       git"
@@ -211,7 +212,7 @@ check_install_spgwc_deps() {
       libxml2-devel \
       openssl \
       check \
-      python \
+      python2 \
       pkgconfig"
   else
     echo_fatal "$OS_DISTRO is not a supported distribution."
@@ -434,7 +435,7 @@ check_install_spgwu_deps() {
       libxml2-devel \
       openssl \
       check \
-      python \
+      python2 \
       pkgconfig"
   else
     echo_fatal "$OS_DISTRO is not a supported distribution."
