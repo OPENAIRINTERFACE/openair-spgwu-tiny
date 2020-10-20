@@ -32,6 +32,7 @@ class spgwuConfigGen():
 		self.spgwc0_ip_addr = ''
 		self.fromDockerFile = False
 		self.envForEntrypoint = False
+		self.network_ue_ip = '12.1.1.0/24'
 
 	def GenerateSpgwuConfigurer(self):
 		spgwuFile = open('./spgwu-cfg.sh', 'w')
@@ -80,6 +81,7 @@ class spgwuConfigGen():
 		spgwuFile.write('SGW_INTERFACE_NAME_FOR_SX=' + self.sxu_name + '\n')
 		spgwuFile.write('PGW_INTERFACE_NAME_FOR_SGI=eth0\n')
 		spgwuFile.write('SPGWC0_IP_ADDRESS=' + self.spgwc0_ip_addr + '\n')
+		spgwuFile.write('NETWORK_UE_IP=' + self.network_ue_ip + '\n')
 		spgwuFile.close()
 
 #-----------------------------------------------------------
