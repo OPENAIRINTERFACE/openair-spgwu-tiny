@@ -72,6 +72,7 @@ RUN yum update -y && \
       psmisc \
       net-tools \
       iproute \
+      iptables \
       initscripts \
       libevent && \
     yum clean all -y && \

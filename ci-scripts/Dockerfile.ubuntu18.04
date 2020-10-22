@@ -69,6 +69,7 @@ RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get upgrade --yes && DE
     psmisc \
     net-tools \
     iproute2 \
+    iptables \
     tshark \
     libgoogle-glog0v5 \
     libdouble-conversion1 \
