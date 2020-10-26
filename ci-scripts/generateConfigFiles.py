@@ -7,7 +7,7 @@
 # * except in compliance with the License.
 # * You may obtain a copy of the License at
 # *
-# *      http://www.openairinterface.org/?page_id=698
+# *	  http://www.openairinterface.org/?page_id=698
 # *
 # * Unless required by applicable law or agreed to in writing, software
 # * distributed under the License is distributed on an "AS IS" BASIS,
@@ -16,7 +16,7 @@
 # * limitations under the License.
 # *-------------------------------------------------------------------------------
 # * For more information about the OpenAirInterface (OAI) Software Alliance:
-# *      contact@openairinterface.org
+# *	  contact@openairinterface.org
 # */
 #---------------------------------------------------------------------
 
@@ -31,6 +31,8 @@ class spgwuConfigGen():
 		self.sxu_name = ''
 		self.spgwc0_ip_addr = ''
 		self.fromDockerFile = False
+		self.envForEntrypoint = False
+		self.network_ue_ip = '12.1.1.0/24'
 
 	def GenerateSpgwuConfigurer(self):
 		spgwuFile = open('./spgwu-cfg.sh', 'w')
@@ -60,7 +62,7 @@ class spgwuConfigGen():
 		spgwuFile.write('SPGWU_CONF[@SGW_INTERFACE_NAME_FOR_S1U_S12_S4_UP@]=\'' + self.s1u_name + '\'\n')
 		spgwuFile.write('SPGWU_CONF[@SGW_INTERFACE_NAME_FOR_SX@]=\'' + self.sxu_name + '\'\n')
 		# SGI is fixed on SGI
-		spgwuFile.write('SPGWU_CONF[@SGW_INTERFACE_NAME_FOR_SGI@]=\'eth0\'\n')
+		spgwuFile.write('SPGWU_CONF[@PGW_INTERFACE_NAME_FOR_SGI@]=\'eth0\'\n')
 		spgwuFile.write('SPGWU_CONF[@SPGWC0_IP_ADDRESS@]=\'' + self.spgwc0_ip_addr + '\'\n')
 		spgwuFile.write('\n')
 		spgwuFile.write('for K in "${!SPGWU_CONF[@]}"; do \n')
@@ -68,6 +70,18 @@ class spgwuConfigGen():
 		spgwuFile.write('done\n')
 		spgwuFile.write('\n')
 		spgwuFile.write('exit 0\n')
+		spgwuFile.close()
+
+	def GenerateSpgwuEnvList(self):
+		spgwuFile = open('./spgwu-env.list', 'w')
+		spgwuFile.write('# Environment Variables used by the OAI-SPGW-U-TINY Entrypoint Script\n')
+		spgwuFile.write('INSTANCE=1\n')
+		spgwuFile.write('PID_DIRECTORY=/var/run\n')
+		spgwuFile.write('SGW_INTERFACE_NAME_FOR_S1U_S12_S4_UP=' + self.s1u_name + '\n')
+		spgwuFile.write('SGW_INTERFACE_NAME_FOR_SX=' + self.sxu_name + '\n')
+		spgwuFile.write('PGW_INTERFACE_NAME_FOR_SGI=eth0\n')
+		spgwuFile.write('SPGWC0_IP_ADDRESS=' + self.spgwc0_ip_addr + '\n')
+		spgwuFile.write('NETWORK_UE_IP=' + self.network_ue_ip + '\n')
 		spgwuFile.close()
 
 #-----------------------------------------------------------
@@ -87,6 +101,8 @@ def Usage():
 	print('  --sxu=[SPGW-U SX Interface Name]')
 	print('  --s1u=[SPGW-U S1-U Interface Name]')
 	print('  --from_docker_file')
+	print('------------------------------------------------------------------------------------------- SPGW-U Not Mandatory -----')
+	print('  --envForEntrypoint	[generates a spgwc-env.list interpreted by the entrypoint]')
 
 argvs = sys.argv
 argc = len(argvs)
@@ -113,6 +129,8 @@ while len(argvs) > 1:
 		mySpgwuCfg.s1u_name = matchReg.group(1)
 	elif re.match('^\-\-from_docker_file', myArgv, re.IGNORECASE):
 		mySpgwuCfg.fromDockerFile = True
+	elif re.match('^\-\-env_for_entrypoint', myArgv, re.IGNORECASE):
+		mySpgwuCfg.envForEntrypoint = True
 	else:
 		Usage()
 		sys.exit('Invalid Parameter: ' + myArgv)
@@ -132,7 +150,10 @@ if mySpgwuCfg.kind == 'SPGW-U':
 		Usage()
 		sys.exit('missing SPGW-C #0 IP address on SX interface')
 	else:
-		mySpgwuCfg.GenerateSpgwuConfigurer()
+		if mySpgwuCfg.envForEntrypoint:
+			mySpgwuCfg.GenerateSpgwuEnvList()
+		else:
+			mySpgwuCfg.GenerateSpgwuConfigurer()
 		sys.exit(0)
 else:
 	Usage()

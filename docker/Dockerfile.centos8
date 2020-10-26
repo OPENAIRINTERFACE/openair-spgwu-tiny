@@ -77,6 +77,8 @@ RUN yum update -y  \
     psmisc \
     net-tools \
     tcpdump \
+    iptables \
+    ethtool \
     glog \
     double-conversion \
     libconfig \
