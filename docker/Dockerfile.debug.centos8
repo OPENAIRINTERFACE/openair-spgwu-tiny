@@ -51,7 +51,7 @@ RUN /bin/bash -c "if [[ -v EURECOM_PROXY ]]; then git config --global http.proxy
 RUN git config --global https.postBuffer 123289600
 RUN git config --global http.sslverify false
 # In normal case, we build out of the develop branch
-RUN /bin/bash -c "if [[ -v CI_SRC_BRANCH ]]; then git clone https://github.com/OPENAIRINTERFACE/openair-spgwu-tiny.git -b $CI_SRC_BRANCH /openair-spgwu-tiny; else git clone https://github.com/OPENAIRINTERFACE/openair-spgwu-tiny.git -b develop /openair-spgwu-tiny; fi"
+RUN /bin/bash -c "if [[ -v CI_SRC_BRANCH ]]; then git clone https://github.com/OPENAIRINTERFACE/openair-spgwu-tiny.git -b $CI_SRC_BRANCH /openair-spgwu-tiny; else git clone https://github.com/OPENAIRINTERFACE/openair-spgwu-tiny.git -b helm3.1-onap-sync-with-cn-split-repos /openair-spgwu-tiny; fi"
 # For CI, especially for Pull/Merge Requests, we build out of temp merge
 WORKDIR /openair-spgwu-tiny
 RUN /bin/bash -c "if [[ -v BUILD_FOR_CI ]]; then git config --global user.name \"OAI CI\"; fi"
@@ -62,7 +62,7 @@ RUN /bin/bash -c "if [[ -v BUILD_FOR_CI ]]; then git merge --ff origin/$CI_DEST_
 # Installing and Building SPGW-C
 WORKDIR /openair-spgwu-tiny/build/scripts
 RUN ./build_spgwu --install-deps --force
-RUN ./build_spgwu --clean --build-type Release --jobs --Verbose
+RUN ./build_spgwu --clean --build-type Debug --jobs --Verbose
 
 #---------------------------------------------------------------------
 # TARGET IMAGE
@@ -77,11 +77,14 @@ RUN yum update -y  \
     psmisc \
     net-tools \
     tcpdump \
+    iptables \
     glog \
     double-conversion \
     libconfig \
     libevent \
     boost-system \
+    gdb \
+    valgrind \
   && yum clean all -y \
   && rm -rf /var/cache/yum
 
