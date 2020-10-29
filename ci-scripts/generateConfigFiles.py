@@ -64,6 +64,7 @@ class spgwuConfigGen():
 		# SGI is fixed on SGI
 		spgwuFile.write('SPGWU_CONF[@PGW_INTERFACE_NAME_FOR_SGI@]=\'eth0\'\n')
 		spgwuFile.write('SPGWU_CONF[@SPGWC0_IP_ADDRESS@]=\'' + self.spgwc0_ip_addr + '\'\n')
+		spgwuFile.write('SPGWU_CONF[@NETWORK_UE_IP@]=\'' + self.network_ue_ip + '\'\n')
 		spgwuFile.write('\n')
 		spgwuFile.write('for K in "${!SPGWU_CONF[@]}"; do \n')
 		spgwuFile.write('  egrep -lRZ "$K" $PREFIX | xargs -0 -l sed -i -e "s|$K|${SPGWU_CONF[$K]}|g"\n')
