@@ -80,6 +80,7 @@ RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get upgrade --yes && DE
     libdouble-conversion1 \
     libconfig++9v5 \
     libboost-system1.65.1 \
+    iptables \
   && rm -rf /var/lib/apt/lists/*
 
 
