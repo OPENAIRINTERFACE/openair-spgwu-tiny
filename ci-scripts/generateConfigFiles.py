@@ -23,16 +23,18 @@
 import os
 import re
 import sys
+import ipaddress
 
 class spgwuConfigGen():
 	def __init__(self):
 		self.kind = ''
 		self.s1u_name = ''
 		self.sxu_name = ''
-		self.spgwc0_ip_addr = ''
+		self.spgwc0_ip_addr = ipaddress.ip_address('0.0.0.0')
 		self.fromDockerFile = False
 		self.envForEntrypoint = False
-		self.network_ue_ip = '12.1.1.0/24'
+		self.networkUeIp = ipaddress.ip_network('12.1.1.0/24')
+		self.networkUeNatOption = 'no'
 
 	def GenerateSpgwuConfigurer(self):
 		spgwuFile = open('./spgwu-cfg.sh', 'w')
@@ -63,8 +65,9 @@ class spgwuConfigGen():
 		spgwuFile.write('SPGWU_CONF[@SGW_INTERFACE_NAME_FOR_SX@]=\'' + self.sxu_name + '\'\n')
 		# SGI is fixed on SGI
 		spgwuFile.write('SPGWU_CONF[@PGW_INTERFACE_NAME_FOR_SGI@]=\'eth0\'\n')
-		spgwuFile.write('SPGWU_CONF[@SPGWC0_IP_ADDRESS@]=\'' + self.spgwc0_ip_addr + '\'\n')
-		spgwuFile.write('SPGWU_CONF[@NETWORK_UE_IP@]=\'' + self.network_ue_ip + '\'\n')
+		spgwuFile.write('SPGWU_CONF[@SPGWC0_IP_ADDRESS@]=\'' + str(self.spgwc0_ip_addr) + '\'\n')
+		spgwuFile.write('SPGWU_CONF[@NETWORK_UE_IP@]=\'' + str(self.networkUeIp) + '\'\n')
+		spgwuFile.write('SPGWU_CONF[@NETWORK_UE_NAT_OPTION@]=\'' + self.networkUeNatOption + '\'\n')
 		spgwuFile.write('\n')
 		spgwuFile.write('for K in "${!SPGWU_CONF[@]}"; do \n')
 		spgwuFile.write('  egrep -lRZ "$K" $PREFIX | xargs -0 -l sed -i -e "s|$K|${SPGWU_CONF[$K]}|g"\n')
@@ -81,8 +84,9 @@ class spgwuConfigGen():
 		spgwuFile.write('SGW_INTERFACE_NAME_FOR_S1U_S12_S4_UP=' + self.s1u_name + '\n')
 		spgwuFile.write('SGW_INTERFACE_NAME_FOR_SX=' + self.sxu_name + '\n')
 		spgwuFile.write('PGW_INTERFACE_NAME_FOR_SGI=eth0\n')
-		spgwuFile.write('SPGWC0_IP_ADDRESS=' + self.spgwc0_ip_addr + '\n')
-		spgwuFile.write('NETWORK_UE_IP=' + self.network_ue_ip + '\n')
+		spgwuFile.write('SPGWC0_IP_ADDRESS=' + str(self.spgwc0_ip_addr) + '\n')
+		spgwuFile.write('NETWORK_UE_IP=' + str(self.networkUeIp) + '\n')
+		spgwuFile.write('NETWORK_UE_NAT_OPTION=' + self.networkUeNatOption + '\n')
 		spgwuFile.close()
 
 #-----------------------------------------------------------
@@ -103,7 +107,9 @@ def Usage():
 	print('  --s1u=[SPGW-U S1-U Interface Name]')
 	print('  --from_docker_file')
 	print('------------------------------------------------------------------------------------------- SPGW-U Not Mandatory -----')
-	print('  --envForEntrypoint	[generates a spgwc-env.list interpreted by the entrypoint]')
+	print('  --network_ue_ip=[UE IP pool range in CICDR format, for example 12.1.1.0/24. The attached UE will be allocated an IP address in that range.]')
+	print('  --network_ue_nat_option=[yes or no, no is default]')
+	print('  --env_for_entrypoint	[generates a spgwc-env.list interpreted by the entrypoint]')
 
 argvs = sys.argv
 argc = len(argvs)
@@ -124,7 +130,7 @@ while len(argvs) > 1:
 		mySpgwuCfg.sxu_name = matchReg.group(1)
 	elif re.match('^\-\-sxc_ip_addr=(.+)$', myArgv, re.IGNORECASE):
 		matchReg = re.match('^\-\-sxc_ip_addr=(.+)$', myArgv, re.IGNORECASE)
-		mySpgwuCfg.spgwc0_ip_addr = matchReg.group(1)
+		mySpgwuCfg.spgwc0_ip_addr = ipaddress.ip_address(matchReg.group(1))
 	elif re.match('^\-\-s1u=(.+)$', myArgv, re.IGNORECASE):
 		matchReg = re.match('^\-\-s1u=(.+)$', myArgv, re.IGNORECASE)
 		mySpgwuCfg.s1u_name = matchReg.group(1)
@@ -132,6 +138,14 @@ while len(argvs) > 1:
 		mySpgwuCfg.fromDockerFile = True
 	elif re.match('^\-\-env_for_entrypoint', myArgv, re.IGNORECASE):
 		mySpgwuCfg.envForEntrypoint = True
+	elif re.match('^\-\-network_ue_ip', myArgv, re.IGNORECASE):
+		matchReg = re.match('^\-\-network_ue_ip=(.+)$', myArgv, re.IGNORECASE)
+		mySpgwuCfg.networkUeIp = ipaddress.ip_network(matchReg.group(1))
+	elif re.match('^\-\-network_ue_nat_option', myArgv, re.IGNORECASE):
+		matchReg = re.match('^\-\-network_ue_nat_option=(.+)$', myArgv, re.IGNORECASE)
+		natOption = matchReg.group(1)
+		if natOption == 'yes' or natOption == 'Yes' or natOption == 'YES':
+			mySpgwuCfg.networkUeNatOption = 'yes'
 	else:
 		Usage()
 		sys.exit('Invalid Parameter: ' + myArgv)
@@ -147,7 +161,7 @@ if mySpgwuCfg.kind == 'SPGW-U':
 	elif mySpgwuCfg.s1u_name == '':
 		Usage()
 		sys.exit('missing S1-U Interface Name on SPGW-U container')
-	elif mySpgwuCfg.spgwc0_ip_addr == '':
+	elif str(mySpgwuCfg.spgwc0_ip_addr) == '0.0.0.0':
 		Usage()
 		sys.exit('missing SPGW-C #0 IP address on SX interface')
 	else:

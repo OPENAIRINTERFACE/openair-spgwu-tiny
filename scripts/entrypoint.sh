@@ -3,6 +3,7 @@
 set -euo pipefail
 
 CONFIG_DIR="/openair-spgwu-tiny/etc"
+NETWORK_UE_NAT_OPTION=${NETWORK_UE_NAT_OPTION:-no}
 
 for c in ${CONFIG_DIR}/*.conf; do
     # grep variable names (format: ${VAR}) from template to be rendered
