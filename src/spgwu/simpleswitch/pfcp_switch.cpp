@@ -256,7 +256,7 @@ int pfcp_switch::create_pdn_socket (const char * const ifname)
 //------------------------------------------------------------------------------
 void pfcp_switch::setup_pdn_interfaces()
 {
-  std::string cmd = fmt::format("ip link set dev {0} down > /dev/null 2>&1; ip link del {0} > /dev/null 2>&1; sync; sleep 1; ip link add {0} type dummy; ip link set dev {0} up", PDN_INTERFACE_NAME);
+  std::string cmd = fmt::format("ip link set dev {0} down > /dev/null 2>&1; ip link del {0} > /dev/null 2>&1; sync; sleep 1; ip link add {0} type dummy; ethtool -K {0} tx-checksum-ip-generic off; ip link set dev {0} up", PDN_INTERFACE_NAME);
   int rc = system ((const char*)cmd.c_str());
 
   for (auto it : spgwu_cfg.pdns) {

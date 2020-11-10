@@ -71,6 +71,7 @@ RUN yum update -y && \
     yum -y install --enablerepo="ubi-8-codeready-builder" \
       psmisc \
       net-tools \
+      ethtool \
       iproute \
       iptables \
       initscripts \

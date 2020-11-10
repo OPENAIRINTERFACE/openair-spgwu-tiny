@@ -65,6 +65,7 @@ RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get upgrade --yes && DE
     psmisc \
     net-tools \
     iproute2 \
+    ethtool \
     iptables \
     tshark \
     libgoogle-glog0v5 \
