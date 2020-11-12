@@ -514,7 +514,7 @@ class gtpv2c_imsi_ie : public gtpv2c_ie {
     } digits; /*!< \brief  IMSI shall consist of decimal digits (0 through 9)
                  only.*/
     //#define IMSI_BCD8_SIZE                    8                /*!< \brief The
-    //number of digits in IMSI shall not exceed 15.       */
+    // number of digits in IMSI shall not exceed 15.       */
     uint8_t b[IMSI_BCD8_SIZE];
   } u1;
   uint num_digits;

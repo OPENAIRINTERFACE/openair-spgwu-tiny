@@ -91,10 +91,13 @@ int my_check_redundant_process(char* exec_name) {
   fclose(fp);
 
   // if something wrong, then we don't know
-  if (retSize == 0) return 10;
+  if (retSize == 0) {
+    delete[] cmd;
+    return 10;
+  }
 
   result = atoi(cmd);
-  free(cmd);
+  delete[] cmd;
   return result;
 }
 //------------------------------------------------------------------------------
