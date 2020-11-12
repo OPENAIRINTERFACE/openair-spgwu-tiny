@@ -78,6 +78,7 @@ RUN yum update -y  \
     net-tools \
     tcpdump \
     iptables \
+    ethtool \
     glog \
     double-conversion \
     libconfig \

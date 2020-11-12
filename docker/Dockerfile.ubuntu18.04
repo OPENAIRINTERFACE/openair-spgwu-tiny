@@ -53,10 +53,6 @@ WORKDIR /openair-spgwu-tiny/build/scripts
 RUN ./build_spgwu --install-deps --force
 RUN ./build_spgwu --clean --build-type Release --jobs --Verbose
 
-# Getting SHA-ONE for support
-WORKDIR /openair-spgwu-tiny
-RUN git log -n1 > version.txt
-
 #---------------------------------------------------------------------
 # TARGET IMAGE
 #---------------------------------------------------------------------
@@ -69,6 +65,7 @@ RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get upgrade --yes && DE
     psmisc \
     net-tools \
     iproute2 \
+    ethtool \
     iptables \
     tshark \
     libgoogle-glog0v5 \
@@ -89,7 +86,6 @@ WORKDIR /openair-spgwu-tiny/etc
 COPY --from=oai-spgwu-tiny-builder /openair-spgwu-tiny/etc/spgw_u.conf .
 
 WORKDIR /openair-spgwu-tiny
-COPY --from=oai-spgwu-tiny-builder /openair-spgwu-tiny/version.txt .
 
 # expose ports
 EXPOSE 2152/udp 8805/udp
