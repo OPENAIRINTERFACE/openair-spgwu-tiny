@@ -33,6 +33,7 @@
 #include "itti.hpp"
 #include "thread_sched.hpp"
 
+#include <folly/MPMCQueue.h>
 #include <arpa/inet.h>
 #include <inttypes.h>
 #include <sys/socket.h>
@@ -56,11 +57,23 @@ class udp_application {
       udp_application* gtp_stack,
       const util::thread_sched_params& sched_params);
 };
+class udp_server;
+
+typedef struct udp_packet_q_item_s {
+  char* buffer;
+  endpoint r_endpoint;
+  size_t size;
+} udp_packet_q_item_t;
 
 class udp_server {
+#define UDP_RECV_BUFFER_SIZE 8192
  public:
   udp_server(const struct in_addr& address, const uint16_t port_num)
-      : app_(nullptr), port_(port_num) {
+      : app_(nullptr),
+        port_(port_num),
+        num_threads_(1),
+        free_pool_(nullptr),
+        work_pool_(nullptr) {
     socket_ = create_socket(address, port_);
     if (socket_ > 0) {
       Logger::udp().debug(
@@ -78,7 +91,10 @@ class udp_server {
   }
 
   udp_server(const struct in6_addr& address, const uint16_t port_num)
-      : app_(nullptr), port_(port_num) {
+      : app_(nullptr),
+        port_(port_num),
+        free_pool_(nullptr),
+        work_pool_(nullptr) {
     socket_ = create_socket(address, port_);
     if (socket_ > 0) {
       Logger::udp().debug(
@@ -96,7 +112,10 @@ class udp_server {
   }
 
   udp_server(const char* address, const uint16_t port_num)
-      : app_(nullptr), port_(port_num) {
+      : app_(nullptr),
+        port_(port_num),
+        free_pool_(nullptr),
+        work_pool_(nullptr) {
     socket_ = create_socket(address, port_);
     if (socket_ > 0) {
       Logger::udp().debug("udp_server::udp_server(%s:%d)", address, port_);
@@ -108,9 +127,18 @@ class udp_server {
     }
   }
 
-  ~udp_server() { close(socket_); }
+  ~udp_server() {
+    close(socket_);
+    // TODO delete/release elements in  the pool
+    delete free_pool_;
+    delete work_pool_;
+    free(recv_buffer_alloc_);
+    // free(udp_packet_q_item_alloc_);
+  }
 
   void udp_read_loop(const util::thread_sched_params& thread_sched_params);
+  void udp_worker_loop(
+      const int id, const util::thread_sched_params& sched_params);
 
   void async_send_to(
       const char* send_buffer, const ssize_t num_bytes,
@@ -149,6 +177,7 @@ class udp_server {
   void start_receive(
       udp_application* gtp_stack,
       const util::thread_sched_params& sched_params);
+  void stop(void);
 
  protected:
   int create_socket(const struct in_addr& address, const uint16_t port);
@@ -161,13 +190,17 @@ class udp_server {
       const char*, /*buffer*/
       const int& /*error*/, std::size_t /*bytes_transferred*/) {}
 
+  // Should be in non swapable memory
+  folly::MPMCQueue<udp_packet_q_item_t*>* free_pool_;
+  folly::MPMCQueue<udp_packet_q_item_t*>* work_pool_;
+  uint32_t num_threads_;
+  char* recv_buffer_alloc_;
+  // udp_packet_q_item_t *udp_packet_q_item_alloc_;
   udp_application* app_;
-  std::thread thread_;
+  std::vector<std::thread> threads_;
   int socket_;
   uint16_t port_;
   sa_family_t sa_family;
-#define UDP_RECV_BUFFER_SIZE 8192
-  char recv_buffer_[UDP_RECV_BUFFER_SIZE];
 };
 
 #endif /* FILE_UDP_HPP_SEEN */

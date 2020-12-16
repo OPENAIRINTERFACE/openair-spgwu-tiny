@@ -83,6 +83,7 @@ void spgwu_s1u_task(void* args_p) {
         if (itti_msg_terminate* terminate =
                 dynamic_cast<itti_msg_terminate*>(msg)) {
           Logger::spgwu_s1u().info("Received terminate message");
+          spgwu_s1u_inst->stop();
           return;
         }
         break;
@@ -114,6 +115,7 @@ void spgwu_s1u::handle_receive(
     char* recv_buffer, const std::size_t bytes_transferred,
     const endpoint& r_endpoint) {
 #define GTPU_MESSAGE_FLAGS_POS_IN_UDP_PAYLOAD 0
+  // auto start = std::chrono::high_resolution_clock::now();
   struct gtpuhdr* gtpuh = (struct gtpuhdr*) &recv_buffer[0];
 
   if (gtpuh->version == 1) {
@@ -164,6 +166,9 @@ void spgwu_s1u::handle_receive(
       Logger::spgwu_s1u().trace("Unknown IPX packet");
     }
   }
+  // auto stop = std::chrono::high_resolution_clock::now();
+  // auto duration = std::chrono::duration_cast<std::chrono::microseconds>(stop
+  // - start); cout << "UL took "  << duration.count() << std::endl;
 }
 //------------------------------------------------------------------------------
 void spgwu_s1u::handle_receive_gtpv1u_msg(

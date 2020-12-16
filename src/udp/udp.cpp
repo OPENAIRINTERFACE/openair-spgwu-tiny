@@ -58,22 +58,64 @@ static std::string string_to_hex(const std::string& input) {
   return output;
 }
 //------------------------------------------------------------------------------
+void udp_server::udp_worker_loop(
+    const int id, const util::thread_sched_params& sched_params) {
+  uint64_t count              = 0;
+  udp_packet_q_item_t* worker = nullptr;
+
+  sched_params.apply(TASK_NONE, Logger::udp());
+  while (1) {
+    work_pool_->blockingRead(worker);
+    ++count;
+    // std::cout << "w" << id << " " << count << std::endl;
+    // exit thread
+    if (worker->buffer) {
+      app_->handle_receive(worker->buffer, worker->size, worker->r_endpoint);
+      free_pool_->write(worker);
+    } else {
+      free(worker);
+      // std::cout << "exit w" << id << " " << count << std::endl;
+      while (work_pool_->readIfNotEmpty(worker)) {
+        free(worker);
+        std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+      }
+      return;
+    }
+    worker = nullptr;
+  }
+}
+
+//------------------------------------------------------------------------------
 void udp_server::udp_read_loop(const util::thread_sched_params& sched_params) {
-  endpoint r_endpoint   = {};
-  size_t bytes_received = 0;
+  uint64_t count              = 0;
+  udp_packet_q_item_t* worker = nullptr;
 
   sched_params.apply(TASK_NONE, Logger::udp());
 
   while (1) {
-    r_endpoint.addr_storage_len = sizeof(struct sockaddr_storage);
-    if ((bytes_received = recvfrom(
-             socket_, recv_buffer_, UDP_RECV_BUFFER_SIZE, 0,
-             (struct sockaddr*) &r_endpoint.addr_storage,
-             &r_endpoint.addr_storage_len)) > 0) {
-      app_->handle_receive(recv_buffer_, bytes_received, r_endpoint);
+    free_pool_->blockingRead(worker);
+    ++count;
+    // std::cout << "d" << count << std::endl;
+    // exit thread
+    if (worker->buffer == nullptr) {
+      free(worker);
+      while (work_pool_->readIfNotEmpty(worker)) {
+        free(worker);
+      }
+      // std::cout << "exit d" << count << std::endl;
+      return;
+    }
+    worker->r_endpoint.addr_storage_len = sizeof(struct sockaddr_storage);
+    if ((worker->size = recvfrom(
+             socket_, worker->buffer, UDP_RECV_BUFFER_SIZE, 0,
+             (struct sockaddr*) &worker->r_endpoint.addr_storage,
+             &worker->r_endpoint.addr_storage_len)) > 0) {
+      work_pool_->write(worker);
     } else {
       Logger::udp().error("Recvfrom failed %s\n", strerror(errno));
+      free_pool_->write(worker);
     }
+    worker = nullptr;
   }
 }
 //------------------------------------------------------------------------------
@@ -175,8 +217,38 @@ int udp_server::create_socket(const char* address, const uint16_t port_num) {
 //------------------------------------------------------------------------------
 void udp_server::start_receive(
     udp_application* app, const util::thread_sched_params& sched_params) {
-  app_ = app;
+  num_threads_   = sched_params.thread_pool_size;
+  int num_blocks = num_threads_ * 16;
+  app_           = app;
   Logger::udp().trace("udp_server::start_receive");
-  thread_ = std::thread(&udp_server::udp_read_loop, this, sched_params);
-  thread_.detach();
+  free_pool_         = new folly::MPMCQueue<udp_packet_q_item_t*>(num_blocks);
+  work_pool_         = new folly::MPMCQueue<udp_packet_q_item_t*>(num_blocks);
+  recv_buffer_alloc_ = (char*) calloc(num_blocks, UDP_RECV_BUFFER_SIZE);
+  // udp_packet_q_item_alloc_ = (udp_packet_q_item_t*)calloc(1,
+  // sizeof(udp_packet_q_item_t)*num_blocks);
+  for (int i = 0; i < num_blocks; i++) {
+    udp_packet_q_item_t* p =
+        (udp_packet_q_item_t*) calloc(1, sizeof(udp_packet_q_item_t));
+    p->buffer = &recv_buffer_alloc_[i * UDP_RECV_BUFFER_SIZE];
+    free_pool_->blockingWrite(p);
+  }
+  for (int i = 0; i < num_threads_; i++) {
+    std::thread t =
+        std::thread(&udp_server::udp_worker_loop, this, i, sched_params);
+    threads_.push_back(std::move(t));
+  }
+  std::thread t = std::thread(&udp_server::udp_read_loop, this, sched_params);
+  t.detach();
+  threads_.push_back(std::move(t));
+}
+//------------------------------------------------------------------------------
+void udp_server::stop(void) {
+  for (int i = 0; i < num_threads_; i++) {
+    udp_packet_q_item_t* p =
+        (udp_packet_q_item_t*) calloc(1, sizeof(udp_packet_q_item_t));
+    work_pool_->blockingWrite(p);
+  }
+  udp_packet_q_item_t* p =
+      (udp_packet_q_item_t*) calloc(1, sizeof(udp_packet_q_item_t));
+  free_pool_->blockingWrite(p);
 }

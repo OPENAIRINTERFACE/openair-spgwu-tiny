@@ -37,6 +37,7 @@
 #include "thread_sched.hpp"
 
 #include <folly/AtomicHashMap.h>
+#include <folly/MPMCQueue.h>
 #include <linux/ip.h>
 #include <linux/ipv6.h>
 #include <unordered_map>
@@ -48,46 +49,27 @@
 namespace spgwu {
 
 // Have to be tuned for sdt situations
-#define PFCP_SWITCH_MAX_SESSIONS 512
-#define PFCP_SWITCH_MAX_PDRS 512
-#define PDN_INTERFACE_NAME "pdn"
-// class switching_records{
-// public:
-//  switching_records() {
-//    cp_fseid2pfcp_sessions = {};
-//    up_seid2pfcp_sessions = {};
-//    ul_s1u_teid2pfcp_pdr = {};
-//    ue_ipv4_hbo2pfcp_pdr = {};
-//  }
-//  std::unordered_map<pfcp::fseid_t, std::shared_ptr<pfcp::pfcp_session>>
-//  cp_fseid2pfcp_sessions; std::unordered_map<uint64_t,
-//  std::shared_ptr<pfcp::pfcp_session>> up_seid2pfcp_sessions;
-//};
-//
-// class switching_data_per_cpu_socket {
-// public:
-//  switching_data_per_cpu_socket() {
-//    msg_iov_= {};
-//    switching_up_traffic_index = 0;
-//    switching_control_index = 1;
-//    switching_records[0] = {};
-//    switching_records[1] = {};
-//  }
-//  switching_records                         switching_records[2];
-//  struct iovec                              msg_iov_;        /* scatter/gather
-//  array */ uint8_t switching_up_traffic_index; uint8_t
-//  switching_control_index;
-//};
+#define PFCP_SWITCH_MAX_SESSIONS 128
+#define PFCP_SWITCH_MAX_PDRS 128
+
+typedef struct iovec_q_item_s {
+  struct iovec msg_iov;
+  struct msghdr msg;
+} iovec_q_item_t;
 
 class pfcp_switch {
  private:
   // Very unoptimized
 #define PFCP_SWITCH_RECV_BUFFER_SIZE 2048
 #define ROOM_FOR_GTPV1U_G_PDU 64
+  folly::MPMCQueue<iovec_q_item_t*>* free_pool_;
+  folly::MPMCQueue<iovec_q_item_t*>* work_pool_;
+  uint32_t num_threads_;
+  char* recv_buffer_alloc_;
   char recv_buffer_[PFCP_SWITCH_RECV_BUFFER_SIZE];
-  int sock_r;
+  std::vector<std::thread> threads_;
+  std::vector<int> socks_r;
   int sock_w;
-  std::thread thread_sock_;
   // std::string                               gw_mac_address;
   int pdn_if_index;
 
@@ -101,7 +83,6 @@ class pfcp_switch {
 #define PFCP_SWITCH_MIN_COMMIT_INTERVAL_MILLISECONDS 50
 
   // switching_data_per_cpu_socket             switching_data[];
-  struct iovec msg_iov_; /* scatter/gather array */
   std::unordered_map<pfcp::fseid_t, std::shared_ptr<pfcp::pfcp_session>>
       cp_fseid2pfcp_sessions;
   folly::AtomicHashMap<uint64_t, std::shared_ptr<pfcp::pfcp_session>>
@@ -115,10 +96,12 @@ class pfcp_switch {
 
   // moodycamel::ConcurrentQueue<pfcp::pfcp_session*> create_session_q;
 
-  void pdn_read_loop(const util::thread_sched_params& sched_params);
+  void pdn_worker(const int id, const util::thread_sched_params& sched_params);
+  void pdn_read_loop(int sock_r, const util::thread_sched_params& sched_params);
   int create_pdn_socket(
       const char* const ifname, const bool promisc, int& if_index);
   int create_pdn_socket(const char* const ifname);
+  int tun_open(char* devname, int flags);
   void setup_pdn_interfaces();
 
   timer_id_t timer_max_commit_interval_id;
@@ -186,6 +169,7 @@ class pfcp_switch {
   void pfcp_session_look_up_pack_in_core(
       const char* buffer, const std::size_t num_bytes);
 
+  bool no_internal_loop(struct iphdr* const iph, const std::size_t num_bytes);
   void send_to_core(char* const ip_packet, const ssize_t len);
 
   void handle_pfcp_session_establishment_request(

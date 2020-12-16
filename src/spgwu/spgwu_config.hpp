@@ -53,6 +53,7 @@ namespace spgwu {
 #define SPGWU_CONFIG_STRING_THREAD_RD_CPU_ID "CPU_ID"
 #define SPGWU_CONFIG_STRING_THREAD_RD_SCHED_POLICY "SCHED_POLICY"
 #define SPGWU_CONFIG_STRING_THREAD_RD_SCHED_PRIORITY "SCHED_PRIORITY"
+#define SPGWU_CONFIG_STRING_THREAD_POOL_SIZE "THREAD_POOL_SIZE"
 #define SPGWU_CONFIG_STRING_INTERFACE_SGI "SGI"
 #define SPGWU_CONFIG_STRING_INTERFACE_SX "SX"
 #define SPGWU_CONFIG_STRING_INTERFACE_S1U_S12_S4_UP "S1U_S12_S4_UP"
@@ -69,6 +70,8 @@ namespace spgwu {
 #define SPGWU_CONFIG_STRING_SX_SCHED_PARAMS "SX_SCHED_PARAMS"
 #define SPGWU_CONFIG_STRING_SPGWU_APP_SCHED_PARAMS "SPGWU_APP_SCHED_PARAMS"
 #define SPGWU_CONFIG_STRING_ASYNC_CMD_SCHED_PARAMS "ASYNC_CMD_SCHED_PARAMS"
+#define SPGWU_CONFIG_STRING_NON_STANDART_FEATURES "NON_STANDART_FEATURES"
+#define SPGWU_CONFIG_STRING_BYPASS_UL_PFCP_RULES "BYPASS_UL_PFCP_RULES"
 
 #define SPGW_ABORT_ON_ERROR true
 #define SPGW_WARN_ON_ERROR false
@@ -85,10 +88,12 @@ typedef struct interface_cfg_s {
 
 typedef struct pdn_cfg_s {
   struct in_addr network_ipv4;
+  uint32_t network_ipv4_be;
+  uint32_t network_mask_ipv4;
+  uint32_t network_mask_ipv4_be;
   int prefix_ipv4;
   struct in6_addr network_ipv6;
   int prefix_ipv6;
-  bool snat;
 } pdn_cfg_t;
 
 typedef struct itti_cfg_s {
@@ -99,6 +104,10 @@ typedef struct itti_cfg_s {
   util::thread_sched_params async_cmd_sched_params;
 } itti_cfg_t;
 
+// Non standart features
+typedef struct nsf_cfg_s {
+  bool bypass_ul_pfcp_rules;
+} nsf_cfg_t;
 class spgwu_config {
  private:
   int load_itti(const libconfig::Setting& itti_cfg, itti_cfg_t& cfg);
@@ -116,11 +125,13 @@ class spgwu_config {
   interface_cfg_t sgi;
   interface_cfg_t sx;
   itti_cfg_t itti;
+  nsf_cfg_t nsf;
 
   std::string gateway;
 
   uint32_t max_pfcp_sessions;
 
+  bool snat;
   std::vector<pdn_cfg_t> pdns;
   std::vector<pfcp::node_id_t> spgwcs;
 
@@ -135,7 +146,9 @@ class spgwu_config {
         itti(),
         pdns(),
         spgwcs(),
-        max_pfcp_sessions(100) {
+        max_pfcp_sessions(100),
+        nsf(),
+        snat(false) {
     itti.itti_timer_sched_params.sched_priority = 85;
     itti.s1u_sched_params.sched_priority        = 84;
     itti.sx_sched_params.sched_priority         = 84;

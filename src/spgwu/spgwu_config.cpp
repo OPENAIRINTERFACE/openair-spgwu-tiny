@@ -145,6 +145,14 @@ int spgwu_config::load_thread_sched_params(
         "%s : %s, using defaults", nfex.what(), nfex.getPath());
   }
 
+  try {
+    thread_sched_params_cfg.lookupValue(
+        SPGWU_CONFIG_STRING_THREAD_POOL_SIZE, cfg.thread_pool_size);
+    Logger::spgwu_app().info("THREAD_POOL_SIZE : %d", cfg.thread_pool_size);
+  } catch (const SettingNotFoundException& nfex) {
+    Logger::spgwu_app().info(
+        "%s : %s, using defaults", nfex.what(), nfex.getPath());
+  }
   return RETURNok;
 }
 //------------------------------------------------------------------------------
@@ -339,6 +347,22 @@ int spgwu_config::load(const string& config_file) {
       }
     }
 
+    try {
+      const Setting& nsf_cfg =
+          spgwu_cfg[SPGWU_CONFIG_STRING_NON_STANDART_FEATURES];
+      nsf.bypass_ul_pfcp_rules = false;
+      std::string astring      = {};
+      if (nsf_cfg.lookupValue(
+              SPGWU_CONFIG_STRING_BYPASS_UL_PFCP_RULES, astring)) {
+        if (boost::iequals(astring, "yes")) {
+          nsf.bypass_ul_pfcp_rules = true;
+        }
+      }
+    } catch (const SettingNotFoundException& nfex) {
+      Logger::spgwu_app().info(
+          "%s : %s, using defaults", nfex.what(), nfex.getPath());
+    }
+
     const Setting& pdn_network_list_cfg =
         spgwu_cfg[SPGWU_CONFIG_STRING_PDN_NETWORK_LIST];
     int count = pdn_network_list_cfg.getLength();
@@ -377,7 +401,10 @@ int spgwu_config::load(const string& config_file) {
               "CONFIG: BAD NETWORK ADDRESS "
               "in " SPGWU_CONFIG_STRING_PDN_NETWORK_LIST);
         }
-        pdn_cfg.prefix_ipv4 = std::stoul(ips.at(1), nullptr, 0);
+        pdn_cfg.prefix_ipv4          = std::stoul(ips.at(1), nullptr, 0);
+        pdn_cfg.network_ipv4_be      = htobe32(pdn_cfg.network_ipv4.s_addr);
+        pdn_cfg.network_mask_ipv4    = 0xFFFFFFFF << (32 - pdn_cfg.prefix_ipv4);
+        pdn_cfg.network_mask_ipv4_be = htobe32(pdn_cfg.network_mask_ipv4);
       }
 
       string network_ipv6 = {};
@@ -416,16 +443,16 @@ int spgwu_config::load(const string& config_file) {
             "  %s......: %s/%d", ips.at(0).c_str(),
             conv::toString(pdn_cfg.network_ipv6).c_str(), pdn_cfg.prefix_ipv6);
       }
-      pdn_cfg.snat        = false;
-      std::string astring = {};
-      if (pdn_network_cfg.lookupValue(SPGWU_CONFIG_STRING_SNAT, astring)) {
-        if (boost::iequals(astring, "yes")) {
-          pdn_cfg.snat = true;
-        }
-      }
       pdns.push_back(pdn_cfg);
     }
 
+    snat                = false;
+    std::string astring = {};
+    if (spgwu_cfg.lookupValue(SPGWU_CONFIG_STRING_SNAT, astring)) {
+      if (boost::iequals(astring, "yes")) {
+        snat = true;
+      }
+    }
     const Setting& spgwc_list_cfg = spgwu_cfg[SPGWU_CONFIG_STRING_SPGWC_LIST];
     count                         = spgwc_list_cfg.getLength();
     for (int i = 0; i < count; i++) {
@@ -520,6 +547,9 @@ void spgwu_config::display() {
   Logger::spgwu_app().info(
       "      sched priority..: %d",
       s1_up.thread_rd_sched_params.sched_priority);
+  Logger::spgwu_app().info(
+      "      thread pool size: %d",
+      s1_up.thread_rd_sched_params.thread_pool_size);
   Logger::spgwu_app().info("- SXA-SXB:");
   Logger::spgwu_app().info("    iface ............: %s", sx.if_name.c_str());
   Logger::spgwu_app().info("    ipv4.addr ........: %s", inet_ntoa(sx.addr4));
@@ -536,6 +566,9 @@ void spgwu_config::display() {
   Logger::spgwu_app().info(
       "      sched priority..: %d (TODO)",
       sx.thread_rd_sched_params.sched_priority);
+  Logger::spgwu_app().info(
+      "      thread pool size: %d (TODO)",
+      sx.thread_rd_sched_params.thread_pool_size);
   Logger::spgwu_app().info("- SGi:");
   Logger::spgwu_app().info("    iface ............: %s", sgi.if_name.c_str());
   Logger::spgwu_app().info("    ipv4.addr ........: %s", inet_ntoa(sgi.addr4));
@@ -550,11 +583,13 @@ void spgwu_config::display() {
       "      sched policy....: %d", sgi.thread_rd_sched_params.sched_policy);
   Logger::spgwu_app().info(
       "      sched priority..: %d", sgi.thread_rd_sched_params.sched_priority);
+  Logger::spgwu_app().info(
+      "      thread pool size: %d",
+      sgi.thread_rd_sched_params.thread_pool_size);
   Logger::spgwu_app().info("- PDN networks:");
+  Logger::spgwu_app().info("    SNAT .............: %s", (snat) ? "yes" : "no");
   int i = 1;
   for (auto it : pdns) {
-    Logger::spgwu_app().info(
-        "    PDN %d ............: snat %s", i, (it.snat) ? "yes" : "no");
     if (it.prefix_ipv4) {
       Logger::spgwu_app().info(
           "       NW .............: %s/%d",
@@ -567,4 +602,8 @@ void spgwu_config::display() {
     }
     i++;
   }
+  Logger::spgwu_app().info("- NON_STANDART_FEATURES:");
+  Logger::spgwu_app().info(
+      "    bypass_ul_pfcp_rules: %s",
+      (nsf.bypass_ul_pfcp_rules) ? "yes" : "no");
 }
