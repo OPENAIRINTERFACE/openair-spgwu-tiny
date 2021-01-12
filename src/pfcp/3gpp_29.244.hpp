@@ -3149,7 +3149,7 @@ class pfcp_node_id_ie : public pfcp_ie {
         ipv6_address = b.u1.ipv6_address;
         break;
       case pfcp::NODE_ID_TYPE_FQDN:
-        tlv.add_length(sizeof(b.fqdn));
+        tlv.add_length(b.fqdn.length());
         fqdn = b.fqdn;
         break;
       default:;
