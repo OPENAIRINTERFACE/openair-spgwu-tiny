@@ -66,11 +66,9 @@ int spgwu_config::execute() {
 int spgwu_config::get_pfcp_node_id(pfcp::node_id_t& node_id) {
   node_id = {};
   if (fqdn.length() >= 3) {
-    node_id.node_id_type    = pfcp::NODE_ID_TYPE_FQDN;
-    if (xgpp_conv::string_to_dotted(fqdn, node_id.fqdn)) {
-      return RETURNok;
-    }
-    return RETURNerror;
+    node_id.node_id_type = pfcp::NODE_ID_TYPE_FQDN;
+    node_id.fqdn = fqdn;
+    return RETURNok;
   }
   if (sx.addr4.s_addr) {
     node_id.node_id_type    = pfcp::NODE_ID_TYPE_IPV4_ADDRESS;
