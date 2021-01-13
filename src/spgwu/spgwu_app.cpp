@@ -33,6 +33,7 @@
 #include "spgwu_config.hpp"
 #include "spgwu_s1u.hpp"
 #include "spgwu_sx.hpp"
+#include "spgwu_nrf.hpp"
 
 #include <stdexcept>
 
@@ -44,6 +45,7 @@ using namespace std;
 
 spgwu_sx* spgwu_sx_inst   = nullptr;
 spgwu_s1u* spgwu_s1u_inst = nullptr;
+spgwu_nrf* spgwu_nrf_inst = nullptr;
 
 extern itti_mw* itti_inst;
 extern pfcp_switch* pfcp_switch_inst;
@@ -155,6 +157,12 @@ spgwu_app::spgwu_app(const std::string& config_file) {
     pfcp_switch_inst = new pfcp_switch();
   } catch (std::exception& e) {
     Logger::spgwu_app().error("Cannot create PFCP_SWITCH: %s", e.what());
+    throw;
+  }
+  try {
+    spgwu_nrf_inst = new spgwu_nrf();
+  } catch (std::exception& e) {
+    Logger::spgwu_app().error("Cannot create SPGWU_NRF: %s", e.what());
     throw;
   }
   Logger::spgwu_app().startup("Started");
