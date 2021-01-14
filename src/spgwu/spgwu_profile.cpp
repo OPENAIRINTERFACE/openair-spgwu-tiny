@@ -38,25 +38,27 @@ using namespace std;
 using namespace spgwu;
 
 //------------------------------------------------------------------------------
-void spgwu_profile::set_nf_instance_id(const std::string &instance_id) {
+void spgwu_profile::set_nf_instance_id(const std::string& instance_id) {
   nf_instance_id = instance_id;
 }
 
 //------------------------------------------------------------------------------
-void spgwu_profile::get_nf_instance_id(std::string &instance_id) const {
+void spgwu_profile::get_nf_instance_id(std::string& instance_id) const {
   instance_id = nf_instance_id;
 }
 
 //------------------------------------------------------------------------------
-std::string spgwu_profile::get_nf_instance_id() const { return nf_instance_id; }
+std::string spgwu_profile::get_nf_instance_id() const {
+  return nf_instance_id;
+}
 
 //------------------------------------------------------------------------------
-void spgwu_profile::set_nf_instance_name(const std::string &instance_name) {
+void spgwu_profile::set_nf_instance_name(const std::string& instance_name) {
   nf_instance_name = instance_name;
 }
 
 //------------------------------------------------------------------------------
-void spgwu_profile::get_nf_instance_name(std::string &instance_name) const {
+void spgwu_profile::get_nf_instance_name(std::string& instance_name) const {
   instance_name = nf_instance_name;
 }
 
@@ -66,90 +68,118 @@ std::string spgwu_profile::get_nf_instance_name() const {
 }
 
 //------------------------------------------------------------------------------
-void spgwu_profile::set_nf_type(const std::string &type) { nf_type = type; }
+void spgwu_profile::set_nf_type(const std::string& type) {
+  nf_type = type;
+}
 
 //------------------------------------------------------------------------------
-std::string spgwu_profile::get_nf_type() const { return nf_type; }
+std::string spgwu_profile::get_nf_type() const {
+  return nf_type;
+}
 //------------------------------------------------------------------------------
-void spgwu_profile::set_nf_status(const std::string &status) {
+void spgwu_profile::set_nf_status(const std::string& status) {
   nf_status = status;
 }
 
 //------------------------------------------------------------------------------
-void spgwu_profile::get_nf_status(std::string &status) const {
+void spgwu_profile::get_nf_status(std::string& status) const {
   status = nf_status;
 }
 
 //------------------------------------------------------------------------------
-std::string spgwu_profile::get_nf_status() const { return nf_status; }
+std::string spgwu_profile::get_nf_status() const {
+  return nf_status;
+}
 
 //------------------------------------------------------------------------------
-void spgwu_profile::set_nf_heartBeat_timer(const int32_t &timer) {
+void spgwu_profile::set_nf_heartBeat_timer(const int32_t& timer) {
   heartBeat_timer = timer;
 }
 
 //------------------------------------------------------------------------------
-void spgwu_profile::get_nf_heartBeat_timer(int32_t &timer) const {
+void spgwu_profile::get_nf_heartBeat_timer(int32_t& timer) const {
   timer = heartBeat_timer;
 }
 
 //------------------------------------------------------------------------------
-int32_t spgwu_profile::get_nf_heartBeat_timer() const { return heartBeat_timer; }
+int32_t spgwu_profile::get_nf_heartBeat_timer() const {
+  return heartBeat_timer;
+}
 
 //------------------------------------------------------------------------------
-void spgwu_profile::set_nf_priority(const uint16_t &p) { priority = p; }
+void spgwu_profile::set_nf_priority(const uint16_t& p) {
+  priority = p;
+}
 
 //------------------------------------------------------------------------------
-void spgwu_profile::get_nf_priority(uint16_t &p) const { p = priority; }
+void spgwu_profile::get_nf_priority(uint16_t& p) const {
+  p = priority;
+}
 
 //------------------------------------------------------------------------------
-uint16_t spgwu_profile::get_nf_priority() const { return priority; }
+uint16_t spgwu_profile::get_nf_priority() const {
+  return priority;
+}
 
 //------------------------------------------------------------------------------
-void spgwu_profile::set_nf_capacity(const uint16_t &c) { capacity = c; }
+void spgwu_profile::set_nf_capacity(const uint16_t& c) {
+  capacity = c;
+}
 
 //------------------------------------------------------------------------------
-void spgwu_profile::get_nf_capacity(uint16_t &c) const { c = capacity; }
+void spgwu_profile::get_nf_capacity(uint16_t& c) const {
+  c = capacity;
+}
 
 //------------------------------------------------------------------------------
-uint16_t spgwu_profile::get_nf_capacity() const { return capacity; }
+uint16_t spgwu_profile::get_nf_capacity() const {
+  return capacity;
+}
 
 //------------------------------------------------------------------------------
-void spgwu_profile::set_nf_snssais(const std::vector<snssai_t> &s) {
+void spgwu_profile::set_nf_snssais(const std::vector<snssai_t>& s) {
   snssais = s;
 }
 
 //------------------------------------------------------------------------------
-void spgwu_profile::get_nf_snssais(std::vector<snssai_t> &s) const {
+void spgwu_profile::get_nf_snssais(std::vector<snssai_t>& s) const {
   s = snssais;
 }
 
 //------------------------------------------------------------------------------
-void spgwu_profile::add_snssai(const snssai_t &s) { snssais.push_back(s); }
+void spgwu_profile::add_snssai(const snssai_t& s) {
+  snssais.push_back(s);
+}
 //------------------------------------------------------------------------------
-void spgwu_profile::set_nf_ipv4_addresses(const std::vector<struct in_addr> &a) {
+void spgwu_profile::set_nf_ipv4_addresses(
+    const std::vector<struct in_addr>& a) {
   ipv4_addresses = a;
 }
 
 //------------------------------------------------------------------------------
-void spgwu_profile::add_nf_ipv4_addresses(const struct in_addr &a) {
+void spgwu_profile::add_nf_ipv4_addresses(const struct in_addr& a) {
   ipv4_addresses.push_back(a);
 }
 //------------------------------------------------------------------------------
-void spgwu_profile::get_nf_ipv4_addresses(std::vector<struct in_addr> &a) const {
+void spgwu_profile::get_nf_ipv4_addresses(
+    std::vector<struct in_addr>& a) const {
   a = ipv4_addresses;
 }
 
 //------------------------------------------------------------------------------
-void spgwu_profile::set_upf_info(const upf_info_t &s) { upf_info = s; }
+void spgwu_profile::set_upf_info(const upf_info_t& s) {
+  upf_info = s;
+}
 
 //------------------------------------------------------------------------------
-void spgwu_profile::add_upf_info_item(const snssai_upf_info_item_t &s) {
+void spgwu_profile::add_upf_info_item(const snssai_upf_info_item_t& s) {
   upf_info.snssai_upf_info_list.push_back(s);
 }
 
 //------------------------------------------------------------------------------
-void spgwu_profile::get_upf_info(upf_info_t &s) const { s = upf_info; }
+void spgwu_profile::get_upf_info(upf_info_t& s) const {
+  s = upf_info;
+}
 
 //------------------------------------------------------------------------------
 void spgwu_profile::display() const {
@@ -185,8 +215,8 @@ void spgwu_profile::display() const {
   }
   for (auto s : upf_info.snssai_upf_info_list) {
     Logger::spgwu_app().debug("\t\tParameters supported by the UPF:");
-    Logger::spgwu_app().debug("\t\t\tSNSSAI (SST %d, SD %s)", s.snssai.sST,
-                            s.snssai.sD.c_str());
+    Logger::spgwu_app().debug(
+        "\t\t\tSNSSAI (SST %d, SD %s)", s.snssai.sST, s.snssai.sD.c_str());
     for (auto d : s.dnn_upf_info_list) {
       Logger::spgwu_app().debug("\t\t\tDNN %s", d.dnn.c_str());
     }
@@ -194,18 +224,18 @@ void spgwu_profile::display() const {
 }
 
 //------------------------------------------------------------------------------
-void spgwu_profile::to_json(nlohmann::json &data) const {
-  data["nfInstanceId"] = nf_instance_id;
+void spgwu_profile::to_json(nlohmann::json& data) const {
+  data["nfInstanceId"]   = nf_instance_id;
   data["nfInstanceName"] = nf_instance_name;
-  data["nfType"] = nf_type;
-  data["nfStatus"] = nf_status;
+  data["nfType"]         = nf_type;
+  data["nfStatus"]       = nf_status;
   data["heartBeatTimer"] = heartBeat_timer;
   // SNSSAIs
   data["sNssais"] = nlohmann::json::array();
   for (auto s : snssais) {
     nlohmann::json tmp = {};
-    tmp["sst"] = s.sST;
-    tmp["sd"] = s.sD;
+    tmp["sst"]         = s.sST;
+    tmp["sd"]          = s.sD;
     ;
     data["sNssais"].push_back(tmp);
   }
@@ -220,16 +250,16 @@ void spgwu_profile::to_json(nlohmann::json &data) const {
   data["capacity"] = capacity;
 
   // UPF info
-  data["smfInfo"] = {};
+  data["smfInfo"]                      = {};
   data["smfInfo"]["sNssaiSmfInfoList"] = nlohmann::json::array();
   for (auto s : upf_info.snssai_upf_info_list) {
-    nlohmann::json tmp = {};
-    tmp["sNssai"]["sst"] = s.snssai.sST;
-    tmp["sNssai"]["sd"] = s.snssai.sD;
+    nlohmann::json tmp    = {};
+    tmp["sNssai"]["sst"]  = s.snssai.sST;
+    tmp["sNssai"]["sd"]   = s.snssai.sD;
     tmp["dnnSmfInfoList"] = nlohmann::json::array();
     for (auto d : s.dnn_upf_info_list) {
       nlohmann::json dnn_json = {};
-      dnn_json["dnn"] = d.dnn;
+      dnn_json["dnn"]         = d.dnn;
       tmp["dnnSmfInfoList"].push_back(dnn_json);
     }
     data["smfInfo"]["sNssaiSmfInfoList"].push_back(tmp);
@@ -239,7 +269,7 @@ void spgwu_profile::to_json(nlohmann::json &data) const {
 }
 
 //------------------------------------------------------------------------------
-void spgwu_profile::from_json(const nlohmann::json &data) {
+void spgwu_profile::from_json(const nlohmann::json& data) {
   if (data.find("nfInstanceId") != data.end()) {
     nf_instance_id = data["nfInstanceId"].get<std::string>();
   }
@@ -263,8 +293,8 @@ void spgwu_profile::from_json(const nlohmann::json &data) {
   if (data.find("sNssais") != data.end()) {
     for (auto it : data["sNssais"]) {
       snssai_t s = {};
-      s.sST = it["sst"].get<int>();
-      s.sD = it["sd"].get<std::string>();
+      s.sST      = it["sst"].get<int>();
+      s.sD       = it["sd"].get<std::string>();
       snssais.push_back(s);
       // Logger::spgwu_app().debug("Added SNSSAI (SST %d, SD %s)", s.sST,
       // s.sD.c_str());
@@ -276,13 +306,13 @@ void spgwu_profile::from_json(const nlohmann::json &data) {
 
     for (auto it : addresses) {
       struct in_addr addr4 = {};
-      std::string address = it.get<std::string>();
+      std::string address  = it.get<std::string>();
       unsigned char buf_in_addr[sizeof(struct in_addr)];
       if (inet_pton(AF_INET, util::trim(address).c_str(), buf_in_addr) == 1) {
         memcpy(&addr4, buf_in_addr, sizeof(struct in_addr));
       } else {
-        Logger::spgwu_app().warn("Address conversion: Bad value %s",
-                               util::trim(address).c_str());
+        Logger::spgwu_app().warn(
+            "Address conversion: Bad value %s", util::trim(address).c_str());
       }
       // Logger::spgwu_app().debug("\tIPv4 Addr: %s", address.c_str());
       add_nf_ipv4_addresses(addr4);
@@ -333,7 +363,8 @@ void spgwu_profile::from_json(const nlohmann::json &data) {
 
 //------------------------------------------------------------------------------
 void spgwu_profile::handle_heartbeart_timeout(uint64_t ms) {
-  Logger::spgwu_app().info("Handle heartbeart timeout profile %s, time %d",
-                         nf_instance_id.c_str(), ms);
+  Logger::spgwu_app().info(
+      "Handle heartbeart timeout profile %s, time %d", nf_instance_id.c_str(),
+      ms);
   set_nf_status("SUSPENDED");
 }

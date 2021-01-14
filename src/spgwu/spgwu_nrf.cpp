@@ -71,18 +71,6 @@ void spgwu_nrf_task(void* args_p) {
     std::shared_ptr<itti_msg> shared_msg = itti_inst->receive_msg(task_id);
     auto* msg                            = shared_msg.get();
     switch (msg->msg_type) {
-      case NRF_REGISTER_NF_INSTANCE_REQUEST:
-        spgwu_nrf_inst->register_nf_instance(
-            std::static_pointer_cast<itti_nrf_register_nf_instance_request>(
-                shared_msg));
-        break;
-
-      case NRF_DEREGISTER_NF_INSTANCE:
-        spgwu_nrf_inst->deregister_nf_instance(
-            std::static_pointer_cast<itti_nrf_deregister_nf_instance>(
-                shared_msg));
-        break;
-
       case TIME_OUT:
         if (itti_msg_timeout* to = dynamic_cast<itti_msg_timeout*>(msg)) {
           Logger::spgwu_app().info("TIME-OUT event timer id %d", to->timer_id);
@@ -178,9 +166,7 @@ void spgwu_nrf::send_register_nf_instance(std::string& url) {
           "Response from NRF, Json data: \n %s", response_data.dump().c_str());
 
       // Update NF profile
-
       upf_profile.from_json(response_data);
-
       Logger::spgwu_app().debug("Updated UPF profile");
       upf_profile.display();
 
@@ -250,103 +236,9 @@ void spgwu_nrf::send_update_nf_instance(
 }
 
 //-----------------------------------------------------------------------------------------------------
-void spgwu_nrf::register_nf_instance(
-    std::shared_ptr<itti_nrf_register_nf_instance_request> msg) {
-  Logger::spgwu_app().debug(
-      "Send NF Instance Registration to NRF (HTTP version %d)",
-      msg->http_version);
-  nlohmann::json json_data = {};
-  msg->profile.to_json(json_data);
+void spgwu_nrf::send_deregister_nf_instance(std::string& url) {
+  Logger::spgwu_app().debug("Send NF De-register to NRF");
 
-  std::string url = "192.168.1.23:8080";
-
-  //     std::string(inet_ntoa(*((struct in_addr
-  //     *)&smf_cfg.nrf_addr.ipv4_addr))) +
-  //     ":" + std::to_string(smf_cfg.nrf_addr.port)
-  url = url + NNRF_NFM_BASE + "v1" + NNRF_NF_REGISTER_URL +
-        msg->profile.get_nf_instance_id();
-
-  Logger::spgwu_app().debug(
-      "Send NF Instance Registration to NRF (NRF URL %s)", url.c_str());
-
-  std::string body = json_data.dump();
-  Logger::spgwu_app().debug(
-      "Send NF Instance Registration to NRF, msg body: \n %s", body.c_str());
-
-  curl_global_init(CURL_GLOBAL_ALL);
-  CURL* curl = curl = curl_easy_init();
-
-  if (curl) {
-    CURLcode res               = {};
-    struct curl_slist* headers = nullptr;
-    // headers = curl_slist_append(headers, "charsets: utf-8");
-    headers = curl_slist_append(headers, "content-type: application/json");
-    curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers);
-    curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
-    curl_easy_setopt(curl, CURLOPT_HTTPGET, 1);
-    curl_easy_setopt(curl, CURLOPT_CUSTOMREQUEST, "PUT");
-    curl_easy_setopt(curl, CURLOPT_TIMEOUT_MS, NRF_CURL_TIMEOUT_MS);
-
-    // Response information.
-    long httpCode = {0};
-    std::unique_ptr<std::string> httpData(new std::string());
-    curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, &callback);
-    curl_easy_setopt(curl, CURLOPT_WRITEDATA, httpData.get());
-    curl_easy_setopt(curl, CURLOPT_POSTFIELDSIZE, body.length());
-    curl_easy_setopt(curl, CURLOPT_POSTFIELDS, body.c_str());
-    res = curl_easy_perform(curl);
-    curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &httpCode);
-
-    Logger::spgwu_app().debug("Response from NRF, Http Code: %d", httpCode);
-
-    if (httpCode == 201) {
-      json response_data = {};
-      try {
-        response_data = json::parse(*httpData.get());
-      } catch (json::exception& e) {
-        Logger::spgwu_app().warn("Could not parse json from the NRF response");
-      }
-      Logger::spgwu_app().debug(
-          "Response from NRF, Json data: \n %s", response_data.dump().c_str());
-
-      // send response to APP to process
-      std::shared_ptr<itti_nrf_register_nf_instance_response> itti_msg =
-          std::make_shared<itti_nrf_register_nf_instance_response>(
-              TASK_SPGWU_NRF, TASK_SPGWU_APP);
-      itti_msg->http_response_code = httpCode;
-      itti_msg->http_version       = msg->http_version;
-      Logger::spgwu_app().debug("Registered SMF profile (from NRF)");
-      itti_msg->profile.from_json(response_data);
-
-      int ret = itti_inst->send_msg(itti_msg);
-      if (RETURNok != ret) {
-        Logger::spgwu_app().error(
-            "Could not send ITTI message %s to task TASK_SPGWU_APP",
-            itti_msg->get_msg_name());
-      }
-    } else {
-      Logger::spgwu_app().warn("Could not get response from NRF");
-    }
-
-    curl_slist_free_all(headers);
-    curl_easy_cleanup(curl);
-  }
-  curl_global_cleanup();
-}
-
-//-----------------------------------------------------------------------------------------------------
-void spgwu_nrf::deregister_nf_instance(
-    std::shared_ptr<itti_nrf_deregister_nf_instance> msg) {
-  Logger::spgwu_app().debug(
-      "Send NF De-register to NRF (HTTP version %d)", msg->http_version);
-
-  std::string url;
-  /*=
-      std::string(inet_ntoa(*((struct in_addr *)&smf_cfg.nrf_addr.ipv4_addr))) +
-      ":" + std::to_string(smf_cfg.nrf_addr.port) + NNRF_NFM_BASE +
-      smf_cfg.nrf_addr.api_version + NNRF_NF_REGISTER_URL +
-      msg->smf_instance_id;
-*/
   Logger::spgwu_app().debug(
       "Send NF De-register to NRF (NRF URL %s)", url.c_str());
 
@@ -384,6 +276,7 @@ void spgwu_nrf::deregister_nf_instance(
 void spgwu_nrf::generate_upf_profile() {
   // generate UUID
   generate_uuid();
+  //TODO: get hardcoded values from configuration file
   upf_profile.set_nf_instance_id(upf_instance_id);
   upf_profile.set_nf_instance_name("OAI-SMF");
   upf_profile.set_nf_type("SMF");
@@ -392,23 +285,19 @@ void spgwu_nrf::generate_upf_profile() {
   upf_profile.set_nf_priority(1);
   upf_profile.set_nf_capacity(100);
   upf_profile.add_nf_ipv4_addresses(spgwu_cfg.s1_up.addr4);
+  // TODO: get SNSSAIS from Configuration file
+  snssai_t snssai = {};
+  snssai.sD       = "123";
+  snssai.sST      = 222;
+  upf_profile.add_snssai(snssai);
+  // TODO: get UPF info from configuration file
+  dnn_upf_info_item_t dnn_item         = {.dnn = "default"};
+  snssai_upf_info_item_t upf_info_item = {};
+  upf_info_item.dnn_upf_info_list.push_back(dnn_item);
+  upf_info_item.snssai.sD  = "123";
+  upf_info_item.snssai.sST = 222;
+  upf_profile.add_upf_info_item(upf_info_item);
 
-  /*
-
-     // SNSSAIS
-     snssai_t snssai = {};
-     snssai.sD = s.single_nssai.sD;
-     snssai.sST = s.single_nssai.sST;
-     upf_profile.add_snssai(snssai);
-
-     // SMF info
-     dnn_upf_info_item_t dnn_item = {.dnn = s.dnn};
-     snssai_upf_info_item_t upf_info_item = {};
-     upf_info_item.dnn_upf_info_list.push_back(dnn_item);
-     upf_info_item.snssai.sD = s.single_nssai.sD;
-     upf_info_item.snssai.sST = s.single_nssai.sST;
-     upf_profile.add_upf_info_item(upf_info_item);
- */
   // Display the profile
   upf_profile.display();
 }
@@ -418,53 +307,17 @@ void spgwu_nrf::register_to_nrf() {
   // create a NF profile to this instance
   generate_upf_profile();
   // register to NRF
-  //TODO: get NRF Addr from configuration file
-  std::string url = "192.168.1.23:8080";
-  //     std::string(inet_ntoa(*((struct in_addr
-  //     *)&smf_cfg.nrf_addr.ipv4_addr))) +
-  //     ":" + std::to_string(smf_cfg.nrf_addr.port)
-  url = url + NNRF_NFM_BASE + "v1" + NNRF_NF_REGISTER_URL + upf_instance_id;
-
+  std::string url =
+      std::string(
+          inet_ntoa(*((struct in_addr*) &spgwu_cfg.nrf_addr.ipv4_addr))) +
+      ":" + std::to_string(spgwu_cfg.nrf_addr.port) + NNRF_NFM_BASE +
+      spgwu_cfg.nrf_addr.api_version + NNRF_NF_REGISTER_URL + upf_instance_id;
   send_register_nf_instance(url);
 }
 
 //------------------------------------------------------------------------------
 void spgwu_nrf::generate_uuid() {
   upf_instance_id = to_string(boost::uuids::random_generator()());
-}
-
-//------------------------------------------------------------------------------
-void spgwu_nrf::trigger_nf_registration_request() {
-  Logger::spgwu_app().debug(
-      "Send ITTI msg to N11 task to trigger the registration request to NRF");
-
-  std::shared_ptr<itti_nrf_register_nf_instance_request> itti_msg =
-      std::make_shared<itti_nrf_register_nf_instance_request>(
-          TASK_SPGWU_APP, TASK_SPGWU_NRF);
-  itti_msg->profile = upf_profile;
-  int ret           = itti_inst->send_msg(itti_msg);
-  if (RETURNok != ret) {
-    Logger::spgwu_app().error(
-        "Could not send ITTI message %s to task TASK_SPGWU_NRF",
-        itti_msg->get_msg_name());
-  }
-}
-
-//------------------------------------------------------------------------------
-void spgwu_nrf::trigger_nf_deregistration() {
-  Logger::spgwu_app().debug(
-      "Send ITTI msg to N11 task to trigger the deregistration request to NRF");
-
-  std::shared_ptr<itti_nrf_deregister_nf_instance> itti_msg =
-      std::make_shared<itti_nrf_deregister_nf_instance>(
-          TASK_SPGWU_APP, TASK_SPGWU_NRF);
-  itti_msg->upf_instance_id = upf_instance_id;
-  int ret                   = itti_inst->send_msg(itti_msg);
-  if (RETURNok != ret) {
-    Logger::spgwu_app().error(
-        "Could not send ITTI message %s to task TASK_SPGWU_NRF",
-        itti_msg->get_msg_name());
-  }
 }
 
 //---------------------------------------------------------------------------------------------
@@ -482,12 +335,11 @@ void spgwu_nrf::timer_nrf_heartbeat_timeout(
   nlohmann::json item      = patch_item.to_json();
   json_data.push_back(item);
 
-  // TODO: to be updated to get NRF from configuration file
-  std::string url = "192.168.1.23:8080";
-  //     std::string(inet_ntoa(*((struct in_addr
-  //     *)&smf_cfg.nrf_addr.ipv4_addr))) +
-  //     ":" + std::to_string(smf_cfg.nrf_addr.port)
-  url = url + NNRF_NFM_BASE + "v1" + NNRF_NF_REGISTER_URL + upf_instance_id;
+  std::string url =
+      std::string(
+          inet_ntoa(*((struct in_addr*) &spgwu_cfg.nrf_addr.ipv4_addr))) +
+      ":" + std::to_string(spgwu_cfg.nrf_addr.port) + NNRF_NFM_BASE +
+      spgwu_cfg.nrf_addr.api_version + NNRF_NF_REGISTER_URL + upf_instance_id;
 
   Logger::spgwu_app().debug(
       "Set a timer to the next Heart-beat (%d)",
@@ -503,7 +355,12 @@ void spgwu_nrf::timer_nrf_heartbeat_timeout(
 //---------------------------------------------------------------------------------------------
 void spgwu_nrf::timer_nrf_deregistration(
     timer_id_t timer_id, uint64_t arg2_user) {
-  Logger::spgwu_app().debug(
-      "Send ITTI msg to N11 task to trigger NRF Deregistratino");
-  trigger_nf_deregistration();
+  Logger::spgwu_app().debug("Send NF De-registration to NRF");
+  std::string url =
+      std::string(
+          inet_ntoa(*((struct in_addr*) &spgwu_cfg.nrf_addr.ipv4_addr))) +
+      ":" + std::to_string(spgwu_cfg.nrf_addr.port) + NNRF_NFM_BASE +
+      spgwu_cfg.nrf_addr.api_version + NNRF_NF_REGISTER_URL + upf_instance_id;
+
+  send_deregister_nf_instance(url);
 }

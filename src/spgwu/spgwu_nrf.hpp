@@ -43,52 +43,41 @@ namespace spgwu {
 #define TASK_SPGWU_NRF_TIMEOUT_NRF_HEARTBEAT (1)
 #define TASK_SPGWU_NRF_TIMEOUT_NRF_DEREGISTRATION (2)
 
-
 class spgwu_nrf {
  private:
   std::thread::id thread_id;
   std::thread thread;
 
-  spgwu_profile upf_profile;       // UPF profile
+  spgwu_profile upf_profile;    // UPF profile
   std::string upf_instance_id;  // UPF instance id
   timer_id_t timer_nrf_heartbeat;
 
  public:
   spgwu_nrf();
-  spgwu_nrf(spgwu_nrf const &) = delete;
-  void operator=(spgwu_nrf const &) = delete;
+  spgwu_nrf(spgwu_nrf const&) = delete;
+  void operator=(spgwu_nrf const&) = delete;
 
   /*
    * Send NF instance registration to NRF
-   * @param [std::shared_ptr<itti_nrf_register_nf_instance_request>] msg:
-   * Content of message to be sent
+   * @param [std::string &] url: NRF's URL
    * @return void
    */
-  void register_nf_instance(
-      std::shared_ptr<itti_nrf_register_nf_instance_request> msg);
-
-
-  void send_register_nf_instance(std::string &url);
-
-  void send_update_nf_instance(std::string &url, nlohmann::json &data);
+  void send_register_nf_instance(std::string& url);
 
   /*
-   * Send NF instance update to NRF
-   * @param [std::shared_ptr<itti_nrf_update_nf_instance_request>] msg: Content
-   * of message to be sent
+   * Send NF instance registration to NRF
+   * @param [std::string &] url: NRF's URL
+   * @param [nlohmann::json &] data: Json data to be sent
    * @return void
    */
-
+  void send_update_nf_instance(std::string& url, nlohmann::json& data);
 
   /*
    * Send NF deregister to NRF
-   * @param [std::shared_ptr<itti_nrf_deregister_nf_instance>] msg: Content
-   * of message to be sent
+   * @param [std::string &] url: NRF's URL
    * @return void
    */
-  void deregister_nf_instance(
-      std::shared_ptr<itti_nrf_deregister_nf_instance> msg);
-
+  void send_deregister_nf_instance(std::string& url);
 
   /*
    * Trigger NF instance registration to NRF
@@ -98,32 +87,18 @@ class spgwu_nrf {
   void register_to_nrf();
 
   /*
-   * Generate a random UUID for SMF instance
+   * Generate a random UUID for UPF instance
    * @param [void]
    * @return void
    */
   void generate_uuid();
 
   /*
-   * Generate a SMF profile for this instance
+   * Generate a UPF profile for this instance
    * @param [void]
    * @return void
    */
   void generate_upf_profile();
-
-  /*
-   * Send request to N11 task to trigger NF instance registration to NRF
-   * @param [void]
-   * @return void
-   */
-  void trigger_nf_registration_request();
-
-  /*
-   * Send request to N11 task to trigger NF instance deregistration to NRF
-   * @param [void]
-   * @return void
-   */
-  void trigger_nf_deregistration();
 
   /*
    * will be executed when NRF Heartbeat timer expires
@@ -133,7 +108,13 @@ class spgwu_nrf {
    */
   void timer_nrf_heartbeat_timeout(timer_id_t timer_id, uint64_t arg2_user);
 
+  /*
+   * will be executed when NRF Heartbeat timer expires
+   * @param [timer_id_t] timer_id
+   * @param [uint64_t] arg2_user
+   * @return void
+   */
   void timer_nrf_deregistration(timer_id_t timer_id, uint64_t arg2_user);
 };
-}  // namespace smf
+}  // namespace spgwu
 #endif /* FILE_SPGWU_NRF_HPP_SEEN */
