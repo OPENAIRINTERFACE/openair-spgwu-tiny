@@ -40,10 +40,12 @@
 #include <sched.h>
 #include <sys/ioctl.h>
 #include <sys/socket.h>
+#include <sys/types.h>
 #include <linux/ip.h>
 #include <linux/if.h>
 #include <linux/if_ether.h>
 #include <linux/if_packet.h>
+#include <linux/if_tun.h>
 #include <stdexcept>
 #include <net/ethernet.h>
 
@@ -55,100 +57,91 @@ using namespace std;
 extern itti_mw* itti_inst;
 extern spgwu_config spgwu_cfg;
 extern spgwu_s1u* spgwu_s1u_inst;
-
-static std::string string_to_hex(const char* input, const size_t len) {
-  static const char* const lut = "0123456789ABCDEF";
-
-  std::string output;
-  output.reserve(2 * len);
-  for (size_t i = 0; i < len; ++i) {
-    const unsigned char c = input[i];
-    output.push_back(lut[c >> 4]);
-    output.push_back(lut[c & 15]);
-  }
-  return output;
-}
-//------------------------------------------------------------------------------
-void pfcp_switch::stop_timer_min_commit_interval() {
-  if (timer_min_commit_interval_id) {
-    itti_inst->timer_remove(timer_min_commit_interval_id);
-  }
-  timer_min_commit_interval_id = 0;
-}
-//------------------------------------------------------------------------------
-void pfcp_switch::start_timer_min_commit_interval() {
-  stop_timer_min_commit_interval();
-  timer_min_commit_interval_id = itti_inst->timer_setup(
-      PFCP_SWITCH_MIN_COMMIT_INTERVAL_MILLISECONDS / 1000,
-      PFCP_SWITCH_MIN_COMMIT_INTERVAL_MILLISECONDS % 1000, TASK_SPGWU_APP,
-      TASK_SPGWU_PFCP_SWITCH_MIN_COMMIT_INTERVAL);
-}
-//------------------------------------------------------------------------------
-void pfcp_switch::stop_timer_max_commit_interval() {
-  if (timer_max_commit_interval_id) {
-    itti_inst->timer_remove(timer_max_commit_interval_id);
-  }
-  timer_max_commit_interval_id = 0;
-}
-//------------------------------------------------------------------------------
-void pfcp_switch::start_timer_max_commit_interval() {
-  stop_timer_max_commit_interval();
-  timer_max_commit_interval_id = itti_inst->timer_setup(
-      PFCP_SWITCH_MAX_COMMIT_INTERVAL_MILLISECONDS / 1000,
-      PFCP_SWITCH_MAX_COMMIT_INTERVAL_MILLISECONDS % 1000, TASK_SPGWU_APP,
-      TASK_SPGWU_PFCP_SWITCH_MAX_COMMIT_INTERVAL);
-}
-//------------------------------------------------------------------------------
-void pfcp_switch::time_out_min_commit_interval(const uint32_t timer_id) {
-  if (timer_id == timer_min_commit_interval_id) {
-    stop_timer_max_commit_interval();
-    timer_min_commit_interval_id = 0;
-    commit_changes();
-  }
-}
-//------------------------------------------------------------------------------
-void pfcp_switch::time_out_max_commit_interval(const uint32_t timer_id) {
-  if (timer_id == timer_max_commit_interval_id) {
-    stop_timer_min_commit_interval();
-    timer_max_commit_interval_id = 0;
-    commit_changes();
-  }
-}
-//------------------------------------------------------------------------------
-void pfcp_switch::commit_changes() {}
+extern pfcp_switch* pfcp_switch_inst;
 
 //------------------------------------------------------------------------------
-void pfcp_switch::pdn_read_loop(const util::thread_sched_params& sched_params) {
-  int bytes_received = 0;
+void pfcp_switch::pdn_worker(
+    const int id, const util::thread_sched_params& sched_params) {
+  uint64_t count      = 0;
+  iovec_q_item_t* iov = nullptr;
+
+  sched_params.apply(TASK_NONE, Logger::udp());
+  while (1) {
+    work_pool_->blockingRead(iov);
+    ++count;
+    // std::cout << "DL worker " << id << " count " << count << std::endl;
+    // exit thread
+    if (iov->msg_iov.iov_base) {
+      pfcp_session_look_up_pack_in_core(
+          (const char*) iov->msg_iov.iov_base, iov->msg_iov.iov_len);
+      free_pool_->write(iov);
+    } else {
+      free(iov);
+      std::cout << "exit DL w" << id << " " << count << std::endl;
+      while (work_pool_->readIfNotEmpty(iov)) {
+        free(iov);
+        std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+      }
+      return;
+    }
+    iov = nullptr;
+  }
+}
+//------------------------------------------------------------------------------
+void pfcp_switch::pdn_read_loop(
+    int sock_r, const util::thread_sched_params& sched_params) {
+  uint64_t count      = 0;
+  uint64_t errors     = 0;
+  iovec_q_item_t* iov = nullptr;
+  // struct sockaddr_in   sin = {};
 
   sched_params.apply(TASK_NONE, Logger::pfcp_switch());
 
-  struct msghdr msg = {};
-  msg.msg_iov       = &msg_iov_;
-  msg.msg_iovlen    = 1;
-
   while (1) {
-    if ((bytes_received = recvmsg(sock_r, &msg, 0)) > 0) {
-      pfcp_session_look_up_pack_in_core(
-          (const char*) msg_iov_.iov_base, bytes_received);
+    if (!iov) {
+      free_pool_->blockingRead(iov);
+    }
+    // iov->msg.msg_name = &sin;
+    // iov->msg.msg_namelen = sizeof(sin);
+    // iov->msg.msg_iovlen = 1;
+    // iov->msg.msg_flags = 0;
+    iov->msg_iov.iov_len = PFCP_SWITCH_RECV_BUFFER_SIZE - ROOM_FOR_GTPV1U_G_PDU;
+    // iov->msg.msg_control = nullptr;      /* Set to NULL if not needed  */
+    // iov->msg.msg_controllen = 0;
+    // exit thread
+    if (iov->msg_iov.iov_base == nullptr) {
+      free(iov);
+      while (work_pool_->readIfNotEmpty(iov)) {
+        free(iov);
+      }
+      std::cout << "exit d" << count << std::endl;
+      return;
+    }
+    ssize_t nread;
+    if ((nread = read(sock_r, iov->msg_iov.iov_base, iov->msg_iov.iov_len)) >
+        0) {
+      ++count;
+      // std::cout << "pdn" << count << " " << nread << " bytes" << std::endl;
+      iov->msg_iov.iov_len = nread;
+      work_pool_->write(iov);
+      iov = nullptr;
     } else {
+      ++errors;
       Logger::pfcp_switch().error(
-          "recvmsg failed rc=%d:%s", bytes_received, strerror(errno));
+          "recvmsg failed rc=%d:%s nb_errors %d", nread, strerror(errno),
+          errors);
+      std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+      exit(0);
     }
   }
 }
 //------------------------------------------------------------------------------
 void pfcp_switch::send_to_core(char* const ip_packet, const ssize_t len) {
   ssize_t bytes_sent;
-  // Logger::pfcp_switch().info( "pfcp_switch::send_to_core %d bytes ", len);
-  struct sockaddr_in dst;  // no clear
-  dst.sin_addr.s_addr = ((struct iphdr*) ip_packet)->daddr;
-  dst.sin_family      = AF_INET;
-  if ((bytes_sent = sendto(
-           sock_w, ip_packet, len, 0, (struct sockaddr*) &dst, sizeof(dst))) <
-      0) {
+  // Logger::pfcp_switch().trace( "pfcp_switch::send_to_core %d bytes ", len);
+  if ((bytes_sent = write(sock_w, ip_packet, len)) < 0) {
     Logger::pfcp_switch().error(
-        "sendto failed rc=%d:%s", bytes_sent, strerror(errno));
+        "write fd %d failed rc=%d:%s", sock_w, bytes_sent, strerror(errno));
   }
 }
 //------------------------------------------------------------------------------
@@ -156,12 +149,6 @@ int pfcp_switch::create_pdn_socket(
     const char* const ifname, const bool promisc, int& if_index) {
   struct sockaddr_in addr = {};
   int sd                  = 0;
-
-  //  const int len = strnlen (ifname, IFNAMSIZ);
-  //  if (len == IFNAMSIZ) {
-  //    Logger::pfcp_switch().error( "Interface name too long %s", ifname);
-  //    return RETURNerror;
-  //  }
 
   /*
    * Create socket
@@ -194,6 +181,7 @@ int pfcp_switch::create_pdn_socket(
     sll.sll_family         = AF_PACKET;        /* Always AF_PACKET */
     sll.sll_protocol       = htons(ETH_P_ALL); /* Physical-layer protocol */
     sll.sll_ifindex        = ifr.ifr_ifindex;  /* Interface number */
+    sll.sll_pkttype        = PACKET_HOST;
     if (bind(sd, (struct sockaddr*) &sll, sizeof(sll)) < 0) {
       /*
        * Bind failed
@@ -264,80 +252,115 @@ int pfcp_switch::create_pdn_socket(const char* const ifname) {
   return RETURNerror;
 }
 //------------------------------------------------------------------------------
-void pfcp_switch::setup_pdn_interfaces() {
-  std::string cmd = fmt::format(
-      "ip link set dev {0} down > /dev/null 2>&1; ip link del {0} > /dev/null "
-      "2>&1; sync; sleep 1; ip link add {0} type dummy; ethtool -K {0} "
-      "tx-checksum-ip-generic off; ip link set dev {0} up",
-      PDN_INTERFACE_NAME);
-  int rc = system((const char*) cmd.c_str());
+int pfcp_switch::tun_open(char* devname, int flags) {
+  struct ifreq ifr;
+  int fd, err;
+  if ((fd = open("/dev/net/tun", flags)) == -1) {
+    Logger::pfcp_switch().error("open /dev/net/tun");
+    return RETURNerror;
+  }
+  memset(&ifr, 0, sizeof(ifr));
+  ifr.ifr_flags = IFF_TUN | IFF_NO_PI;
+  strncpy(ifr.ifr_name, devname, IFNAMSIZ);  // devname = tunX
 
-  for (auto it : spgwu_cfg.pdns) {
+  if ((err = ioctl(fd, TUNSETIFF, (void*) &ifr)) == -1) {
+    Logger::pfcp_switch().error("ioctl TUNSETIFF %d %s", err, strerror(errno));
+    close(fd);
+    return RETURNerror;
+  }
+  return fd;
+}
+//------------------------------------------------------------------------------
+void pfcp_switch::setup_pdn_interfaces() {
+  std::string cmd = {};
+  int rc          = 0;
+  int if_index    = 0;
+
+  int index = 0;
+  // TODO for loop on pdns
+  {
+    pdn_cfg_t it = spgwu_cfg.pdns[index];
+    int sock_r   = 0;
+
+    cmd = fmt::format("ip tuntap add mode tun dev tun{}", index);
+    rc  = system((const char*) cmd.c_str());
+
+    cmd = fmt::format("ip link set dev tun{} up", index);
+    rc  = system((const char*) cmd.c_str());
+
+    cmd = fmt::format("ethtool -K tun{0} tx-checksum-ip-generic off;", index);
+    rc  = system((const char*) cmd.c_str());
     if (it.prefix_ipv4) {
       struct in_addr address4 = {};
       address4.s_addr         = it.network_ipv4.s_addr + be32toh(1);
 
-      std::string cmd = fmt::format(
-          "ip -4 addr add {}/{} dev {}", conv::toString(address4).c_str(),
-          it.prefix_ipv4, PDN_INTERFACE_NAME);
+      cmd = fmt::format(
+          "ip addr add {}/{} dev tun{}", conv::toString(address4).c_str(),
+          it.prefix_ipv4, index);
       rc = system((const char*) cmd.c_str());
 
-      if (it.snat) {
+      if (spgwu_cfg.snat) {
         cmd = fmt::format(
-            "iptables -t nat -A POSTROUTING -s {}/{} -j SNAT --to-source {}",
-            conv::toString(address4).c_str(), it.prefix_ipv4,
+            "iptables -t nat -A POSTROUTING -s {}/{} -o {} -j SNAT --to-source "
+            "{}",
+            conv::toString(it.network_ipv4).c_str(), it.prefix_ipv4,
+            spgwu_cfg.sgi.if_name.c_str(),
             conv::toString(spgwu_cfg.sgi.addr4).c_str());
         rc = system((const char*) cmd.c_str());
       }
     }
     if (it.prefix_ipv6) {
       std::string cmd = fmt::format(
-          "echo 0 > /proc/sys/net/ipv6/conf/{}/disable_ipv6",
-          PDN_INTERFACE_NAME);
+          "echo 0 > /proc/sys/net/ipv6/conf/tun{}/disable_ipv6", index);
       rc = system((const char*) cmd.c_str());
 
       struct in6_addr addr6 = it.network_ipv6;
       addr6.s6_addr[15]     = 1;
       cmd                   = fmt::format(
-          "ip -6 addr add {}/{} dev {}", conv::toString(addr6).c_str(),
-          it.prefix_ipv6, PDN_INTERFACE_NAME);
+          "ip -6 addr add {}/{} dev tun{}", conv::toString(addr6).c_str(),
+          it.prefix_ipv6, index);
       rc = system((const char*) cmd.c_str());
-      //      if ((it.snat) && (/* SGI has IPv6 address*/)){
-      //        cmd = fmt::format("ip6tables -t nat -A POSTROUTING -s {}/{} -o
-      //        {} -j SNAT --to-source {}", conv::toString(addr6).c_str(),
-      //        it.prefix_ipv6, xxx);
-      //        rc = system ((const char*)cmd.c_str());
-      //      }
+      // if ((it.snat) && (/* SGI has IPv6 address*/)){
+      //    cmd = fmt::format("ip6tables -t nat -A POSTROUTING -s {}/{} -o {} -j
+      //    SNAT --to-source {}", conv::toString(addr6).c_str(), it.prefix_ipv6,
+      //    xxx); rc = system ((const char*)cmd.c_str());
+      //}
     }
+    // even if we do nat, we can receive ue ip destinated IP packet
+    // but do not forget to set routes outside SPGWu
+    cmd = fmt::format(
+        "/sbin/sysctl -w net.ipv4.conf.{}.rp_filter=0",
+        spgwu_cfg.sgi.if_name.c_str());
+    rc = system((const char*) cmd.c_str());
+
+    // Otherwise redirect incoming ingress UE IP to default gw
+    // cmd = fmt::format("/sbin/sysctl -w net.ipv4.conf.tun{}.send_redirects=0",
+    // index); rc = system ((const char*)cmd.c_str()); cmd =
+    // fmt::format("/sbin/sysctl -w net.ipv4.conf.tun{}.accept_redirects=0",
+    // index); rc = system ((const char*)cmd.c_str());
+
+    cmd = fmt::format("tun{}", index);
+    if ((sock_r = tun_open((char*) cmd.c_str(), O_RDWR)) == RETURNerror) {
+      Logger::pfcp_switch().error("Could not set PDN interface read socket");
+      sleep(2);
+      exit(EXIT_FAILURE);
+    }
+
+    sock_w = sock_r;
+
+    std::thread t = thread(
+        &pfcp_switch::pdn_read_loop, this, sock_r,
+        spgwu_cfg.sgi.thread_rd_sched_params);
+    t.detach();
+    threads_.push_back(std::move(t));
+    socks_r.push_back(sock_r);
   }
 
-  // Otherwise redirect incoming ingress UE IP to default gw
   rc = system("/sbin/sysctl -w net.ipv4.conf.all.forwarding=1");
   rc = system("/sbin/sysctl -w net.ipv4.conf.all.send_redirects=0");
   rc = system("/sbin/sysctl -w net.ipv4.conf.default.send_redirects=0");
   rc = system("/sbin/sysctl -w net.ipv4.conf.all.accept_redirects=0");
   rc = system("/sbin/sysctl -w net.ipv4.conf.default.accept_redirects=0");
-
-  cmd = fmt::format(
-      "/sbin/sysctl -w net.ipv4.conf.{}.send_redirects=0", PDN_INTERFACE_NAME);
-  rc  = system((const char*) cmd.c_str());
-  cmd = fmt::format(
-      "/sbin/sysctl -w net.ipv4.conf.{}.accept_redirects=0",
-      PDN_INTERFACE_NAME);
-  rc = system((const char*) cmd.c_str());
-
-  if ((sock_r = create_pdn_socket(PDN_INTERFACE_NAME, false, pdn_if_index)) <=
-      0) {
-    Logger::pfcp_switch().error("Could not set PDN dummy read socket");
-    sleep(2);
-    exit(EXIT_FAILURE);
-  }
-
-  if ((sock_w = create_pdn_socket(spgwu_cfg.sgi.if_name.c_str())) <= 0) {
-    Logger::pfcp_switch().error("Could not set PDN dummy write socket");
-    sleep(2);
-    exit(EXIT_FAILURE);
-  }
 }
 
 //------------------------------------------------------------------------------
@@ -359,20 +382,39 @@ pfcp_switch::pfcp_switch()
       teid_s1u_generator_(),
       ue_ipv4_hbo2pfcp_pdr(PFCP_SWITCH_MAX_PDRS),
       ul_s1u_teid2pfcp_pdr(PFCP_SWITCH_MAX_PDRS),
-      up_seid2pfcp_sessions(PFCP_SWITCH_MAX_SESSIONS) {
+      up_seid2pfcp_sessions(PFCP_SWITCH_MAX_SESSIONS),
+      threads_(16),
+      socks_r(16),
+      sock_w(0) {
+  num_threads_   = 8;
+  int num_blocks = num_threads_ * 16;
+  free_pool_     = new folly::MPMCQueue<iovec_q_item_t*>(num_blocks);
+  work_pool_     = new folly::MPMCQueue<iovec_q_item_t*>(num_blocks);
+
+  recv_buffer_alloc_ = (char*) calloc(num_blocks, PFCP_SWITCH_RECV_BUFFER_SIZE);
+
+  for (int i = 0; i < num_blocks; i++) {
+    iovec_q_item_s* v = (iovec_q_item_s*) calloc(1, sizeof(iovec_q_item_s));
+    v->msg_iov.iov_base =
+        (void*) ((uintptr_t) calloc(1, PFCP_SWITCH_RECV_BUFFER_SIZE) + (uintptr_t) ROOM_FOR_GTPV1U_G_PDU);
+    v->msg_iov.iov_len = PFCP_SWITCH_RECV_BUFFER_SIZE - ROOM_FOR_GTPV1U_G_PDU;
+    v->msg.msg_iovlen  = 1;
+    v->msg.msg_flags   = 0;
+    v->msg.msg_control = nullptr;
+    v->msg.msg_controllen = 0;
+    free_pool_->blockingWrite(v);
+  }
+  for (int i = 0; i < num_threads_; i++) {
+    std::thread t = std::thread(
+        &pfcp_switch::pdn_worker, this, i,
+        spgwu_cfg.sgi.thread_rd_sched_params);
+    threads_.push_back(std::move(t));
+  }
   timer_min_commit_interval_id = 0;
   timer_max_commit_interval_id = 0;
-  cp_fseid2pfcp_sessions       = {},
-  msg_iov_.iov_base =
-      &recv_buffer_[ROOM_FOR_GTPV1U_G_PDU];  // make room for GTPU G_PDU header
-  msg_iov_.iov_len = PFCP_SWITCH_RECV_BUFFER_SIZE - ROOM_FOR_GTPV1U_G_PDU;
-  sock_r           = -1;
-  sock_w           = -1;
-  pdn_if_index     = -1;
+  cp_fseid2pfcp_sessions = {}, sock_w = -1;
+  pdn_if_index = -1;
   setup_pdn_interfaces();
-  thread_sock_ =
-      thread(&pfcp_switch::pdn_read_loop, this, spgwu_cfg.itti.sx_sched_params);
-  thread_sock_.detach();
 }
 //------------------------------------------------------------------------------
 bool pfcp_switch::get_pfcp_session_by_cp_fseid(
@@ -896,40 +938,59 @@ void pfcp_switch::handle_pfcp_session_deletion_request(
 void pfcp_switch::pfcp_session_look_up_pack_in_access(
     struct iphdr* const iph, const std::size_t num_bytes,
     const endpoint& r_endpoint, const uint32_t tunnel_id) {
-  std::shared_ptr<std::vector<std::shared_ptr<pfcp::pfcp_pdr>>> pdrs = {};
-  if (get_pfcp_ul_pdrs_by_up_teid(tunnel_id, pdrs)) {
-    bool nocp = false;
-    bool buff = false;
-    for (std::vector<std::shared_ptr<pfcp::pfcp_pdr>>::iterator it_pdr =
-             pdrs->begin();
-         it_pdr < pdrs->end(); ++it_pdr) {
-      if ((*it_pdr)->look_up_pack_in_access(
-              iph, num_bytes, r_endpoint, tunnel_id)) {
-        std::shared_ptr<pfcp::pfcp_session> ssession = {};
-        uint64_t lseid                               = 0;
-        if ((*it_pdr)->get(lseid)) {
-          if (get_pfcp_session_by_up_seid(lseid, ssession)) {
-            pfcp::far_id_t far_id = {};
-            if ((*it_pdr)->get(far_id)) {
-              std::shared_ptr<pfcp::pfcp_far> sfar = {};
-              if (ssession->get(far_id.far_id, sfar)) {
-                sfar->apply_forwarding_rules(iph, num_bytes, nocp, buff);
+  if (!spgwu_cfg.nsf.bypass_ul_pfcp_rules) {
+    std::shared_ptr<std::vector<std::shared_ptr<pfcp::pfcp_pdr>>> pdrs = {};
+    if (get_pfcp_ul_pdrs_by_up_teid(tunnel_id, pdrs)) {
+      bool nocp = false;
+      bool buff = false;
+      for (std::vector<std::shared_ptr<pfcp::pfcp_pdr>>::iterator it_pdr =
+               pdrs->begin();
+           it_pdr < pdrs->end(); ++it_pdr) {
+        if ((*it_pdr)->look_up_pack_in_access(
+                iph, num_bytes, r_endpoint, tunnel_id)) {
+          std::shared_ptr<pfcp::pfcp_session> ssession = {};
+          uint64_t lseid                               = 0;
+          if ((*it_pdr)->get(lseid)) {
+            if (get_pfcp_session_by_up_seid(lseid, ssession)) {
+              pfcp::far_id_t far_id = {};
+              if ((*it_pdr)->get(far_id)) {
+                std::shared_ptr<pfcp::pfcp_far> sfar = {};
+                if (ssession->get(far_id.far_id, sfar)) {
+                  sfar->apply_forwarding_rules(iph, num_bytes, nocp, buff);
+                }
               }
             }
           }
+          return;
+        } else {
+          Logger::pfcp_switch().info(
+              "pfcp_session_look_up_pack_in_access failed PDR id %4x ",
+              (*it_pdr)->pdr_id.rule_id);
         }
-        return;
-      } else {
-        Logger::pfcp_switch().info(
-            "pfcp_session_look_up_pack_in_access failed PDR id %4x ",
-            (*it_pdr)->pdr_id.rule_id);
       }
+    } else {
+      // Logger::pfcp_switch().info( "pfcp_session_look_up_pack_in_access tunnel
+      // " TEID_FMT " not found", tunnel_id);
+      spgwu_s1u_inst->report_error_indication(r_endpoint, tunnel_id);
     }
   } else {
-    // Logger::pfcp_switch().info( "pfcp_session_look_up_pack_in_access tunnel "
-    // TEID_FMT " not found", tunnel_id);
-    spgwu_s1u_inst->report_error_indication(r_endpoint, tunnel_id);
+    // Do not check PFCP rules for all UL data packet
+    if (no_internal_loop(iph, num_bytes)) {
+      pfcp_switch_inst->send_to_core(
+          reinterpret_cast<char* const>(iph), num_bytes);
+    }
   }
+}
+//------------------------------------------------------------------------------
+bool pfcp_switch::no_internal_loop(
+    struct iphdr* const iph, const std::size_t num_bytes) {
+  pdn_cfg_t& pdn = spgwu_cfg.pdns[0];
+  if ((pdn.network_ipv4.s_addr == (iph->daddr & pdn.network_mask_ipv4_be)) &&
+      ((be32toh(iph->daddr) & 0x000000FF) != 0X00000001)) {
+    pfcp_session_look_up_pack_in_core((const char*) iph, num_bytes);
+    return false;
+  }
+  return true;
 }
 //------------------------------------------------------------------------------
 void pfcp_switch::pfcp_session_look_up_pack_in_access(
@@ -960,31 +1021,33 @@ void pfcp_switch::pfcp_session_look_up_pack_in_core(
               pfcp::far_id_t far_id = {};
               if ((*it)->get(far_id)) {
                 std::shared_ptr<pfcp::pfcp_far> sfar = {};
-#if TRACE_IS_ON
-                Logger::pfcp_switch().trace(
-                    "pfcp_session_look_up_pack_in_core %d bytes, far id %08X",
-                    num_bytes, far_id);
-#endif
+                //#if TRACE_IS_ON
+                //                Logger::pfcp_switch().trace(
+                //                "pfcp_session_look_up_pack_in_core %d bytes,
+                //                far id %08X", num_bytes, far_id);
+                //#endif
                 if (ssession->get(far_id.far_id, sfar)) {
-#if TRACE_IS_ON
-                  Logger::pfcp_switch().trace(
-                      "pfcp_session_look_up_pack_in_core %d bytes, got far, "
-                      "far id %08X",
-                      num_bytes, far_id);
-#endif
+                  //#if TRACE_IS_ON
+                  //                  Logger::pfcp_switch().trace(
+                  //                  "pfcp_session_look_up_pack_in_core %d
+                  //                  bytes, got far, far id %08X", num_bytes,
+                  //                  far_id);
+                  //#endif
                   sfar->apply_forwarding_rules(iph, num_bytes, nocp, buff);
                   if (buff) {
-#if TRACE_IS_ON
-                    Logger::pfcp_switch().trace(
-                        "Buffering %d bytes, far id %08X", num_bytes, far_id);
-#endif
+                    //#if TRACE_IS_ON
+                    //                    Logger::pfcp_switch().trace(
+                    //                    "Buffering %d bytes, far id %08X",
+                    //                    num_bytes, far_id);
+                    //#endif
                     (*it)->buffering_requested(buffer, num_bytes);
                   }
                   if (nocp) {
-#if TRACE_IS_ON
-                    Logger::pfcp_switch().trace(
-                        "Notify CP %d bytes, far id %08X", num_bytes, far_id);
-#endif
+                    //#if TRACE_IS_ON
+                    //                    Logger::pfcp_switch().trace( "Notify
+                    //                    CP %d bytes, far id %08X", num_bytes,
+                    //                    far_id);
+                    //#endif
                     (*it)->notify_cp_requested(ssession);
                   }
                 }

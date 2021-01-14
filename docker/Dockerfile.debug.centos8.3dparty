@@ -28,8 +28,37 @@
 #---------------------------------------------------------------------
 # BUILDER IMAGE
 #---------------------------------------------------------------------
-FROM oai-spgwu-tiny:centos8-spgwu-debug-3rd-party as centos8-spgwu-debug
+FROM centos:8 as centos8-spgwu-debug-3rd-party
 
+ARG HTTP_PROXY
+
+RUN yum update -y \
+  && yum install epel-release -y \
+  && yum install dnf-plugins-core -y \
+  && yum config-manager --set-enabled powertools \
+  && yum install -y \
+    psmisc \
+    git \
+    iptables \
+    ethtool \
+    glog \
+    double-conversion \
+    libconfig \
+    libevent \
+    boost-system \
+    # debugging
+    gdb \
+    valgrind \
+    diffutils \
+    iputils \
+    tree \
+    tcpdump \
+    wireshark-cli \
+    net-tools \
+    openssh-server \
+    procps-ng \  
+  && yum clean all -y \
+  && rm -rf /var/cache/yum
 
 # Some GIT configuration command quite useful
 RUN /bin/bash -c "if [[ -v HTTP_PROXY ]]; then git config --global http.proxy $HTTP_PROXY; fi"
@@ -41,23 +70,4 @@ COPY ./ /openair-spgwu-tiny
 
 # Installing and Building SPGW-U
 WORKDIR /openair-spgwu-tiny/build/scripts
-RUN ./build_spgwu --clean --build-type Debug --jobs --Verbose
-
-# Copying executable and generated libraries
-WORKDIR /openair-spgwu-tiny/bin
-RUN cp /openair-spgwu-tiny/build/spgw_u/build/spgwu oai_spgwu \
-    && cp /openair-spgwu-tiny/scripts/entrypoint.sh . \
-    && cp /openair-spgwu-tiny/build/spgw_u/build/spgwu /openair-spgwu-tiny/bin/oai_spgwu.deb
-    
-# WORKDIR /openair-spgwu-tiny/build/scripts
-# RUN ./build_spgwu --clean --build-type Release --jobs --Verbose && \
-#    cp /openair-spgwu-tiny/build/spgw_u/build/spgwu /openair-spgwu-tiny/bin/oai_spgwu.rel && \
-#    ./build_spgwu --clean --build-type RelWithDebInfo --jobs --Verbose && \
-#    cp /openair-spgwu-tiny/build/spgw_u/build/spgwu /openair-spgwu-tiny/bin/oai_spgwu.red && \
-#    ./build_spgwu --clean --build-type MinSizeRel --jobs --Verbose && \
-#    cp /openair-spgwu-tiny/build/spgw_u/build/spgwu /openair-spgwu-tiny/bin/oai_spgwu.min
-
-WORKDIR /openair-spgwu-tiny
-
-# expose ports
-EXPOSE 2152/udp 8805/udp 22/tcp
+RUN ./build_spgwu --install-deps --force

@@ -3,7 +3,16 @@
 set -euo pipefail
 
 CONFIG_DIR="/openair-spgwu-tiny/etc"
+# Default value for "Natting" option
 NETWORK_UE_NAT_OPTION=${NETWORK_UE_NAT_OPTION:-no}
+# Default values for the performance management
+THREAD_S1U_PRIO=${THREAD_S1U_PRIO:-80}
+S1U_THREADS=${S1U_THREADS:-8}
+THREAD_SX_PRIO=${THREAD_SX_PRIO:-81}
+SX_THREADS=${SX_THREADS:-1}
+THREAD_SGI_PRIO=${THREAD_SGI_PRIO:-80}
+SGI_THREADS=${SGI_THREADS:-8}
+BYPASS_UL_PFCP_RULES=${BYPASS_UL_PFCP_RULES:-no}
 
 for c in ${CONFIG_DIR}/*.conf; do
     # grep variable names (format: ${VAR}) from template to be rendered

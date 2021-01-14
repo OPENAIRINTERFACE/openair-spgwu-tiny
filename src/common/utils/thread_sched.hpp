@@ -36,10 +36,14 @@ namespace util {
 class thread_sched_params {
  public:
   thread_sched_params()
-      : cpu_id(0), sched_policy(SCHED_FIFO), sched_priority(84) {}
+      : cpu_id(0),
+        sched_policy(SCHED_FIFO),
+        sched_priority(84),
+        thread_pool_size(1) {}
   int cpu_id;
   int sched_policy;
   int sched_priority;
+  unsigned int thread_pool_size;
   void apply(const int task_id, _Logger& logger) const;
 };
 

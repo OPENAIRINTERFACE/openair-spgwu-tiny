@@ -100,10 +100,10 @@ void spgwu_app_task(void* args_p) {
         if (itti_msg_timeout* to = dynamic_cast<itti_msg_timeout*>(msg)) {
           switch (to->arg1_user) {
             case TASK_SPGWU_PFCP_SWITCH_MIN_COMMIT_INTERVAL:
-              pfcp_switch_inst->time_out_min_commit_interval(to->timer_id);
+              // pfcp_switch_inst->time_out_min_commit_interval(to->timer_id);
               break;
             case TASK_SPGWU_PFCP_SWITCH_MAX_COMMIT_INTERVAL:
-              pfcp_switch_inst->time_out_max_commit_interval(to->timer_id);
+              // pfcp_switch_inst->time_out_max_commit_interval(to->timer_id);
               break;
             default:;
           }
