@@ -250,19 +250,19 @@ void spgwu_profile::to_json(nlohmann::json& data) const {
   data["capacity"] = capacity;
 
   // UPF info
-  data["smfInfo"]                      = {};
-  data["smfInfo"]["sNssaiSmfInfoList"] = nlohmann::json::array();
+  data["upfInfo"]                      = {};
+  data["upfInfo"]["sNssaiUpfInfoList"] = nlohmann::json::array();
   for (auto s : upf_info.snssai_upf_info_list) {
     nlohmann::json tmp    = {};
     tmp["sNssai"]["sst"]  = s.snssai.sST;
     tmp["sNssai"]["sd"]   = s.snssai.sD;
-    tmp["dnnSmfInfoList"] = nlohmann::json::array();
+    tmp["dnnUpfInfoList"] = nlohmann::json::array();
     for (auto d : s.dnn_upf_info_list) {
       nlohmann::json dnn_json = {};
       dnn_json["dnn"]         = d.dnn;
-      tmp["dnnSmfInfoList"].push_back(dnn_json);
+      tmp["dnnUpfInfoList"].push_back(dnn_json);
     }
-    data["smfInfo"]["sNssaiSmfInfoList"].push_back(tmp);
+    data["upfInfo"]["sNssaiUpfInfoList"].push_back(tmp);
   }
 
   Logger::spgwu_app().debug("UPF profile to json:\n %s", data.dump().c_str());
@@ -328,14 +328,14 @@ void spgwu_profile::from_json(const nlohmann::json& data) {
   }
 
   // UPF info
-  if (data.find("smfInfo") != data.end()) {
-    nlohmann::json info = data["smfInfo"];
+  if (data.find("upfInfo") != data.end()) {
+    nlohmann::json info = data["upfInfo"];
 
     dnn_upf_info_item_t dnn_item = {};
 
-    if (info.find("sNssaiSmfInfoList") != info.end()) {
+    if (info.find("sNssaiUpfInfoList") != info.end()) {
       nlohmann::json snssai_upf_info_list =
-          data["smfInfo"]["sNssaiSmfInfoList"];
+          data["upfInfo"]["sNssaiUpfInfoList"];
 
       for (auto it : snssai_upf_info_list) {
         snssai_upf_info_item_t upf_info_item = {};
@@ -345,8 +345,8 @@ void spgwu_profile::from_json(const nlohmann::json& data) {
           if (it["sNssai"].find("sd") != it["sNssai"].end())
             upf_info_item.snssai.sD = it["sNssai"]["sd"].get<std::string>();
         }
-        if (it.find("dnnSmfInfoList") != it.end()) {
-          for (auto d : it["dnnSmfInfoList"]) {
+        if (it.find("dnnUpfInfoList") != it.end()) {
+          for (auto d : it["dnnUpfInfoList"]) {
             if (d.find("dnn") != d.end()) {
               dnn_item.dnn = d["dnn"].get<std::string>();
               upf_info_item.dnn_upf_info_list.push_back(dnn_item);

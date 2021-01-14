@@ -272,8 +272,8 @@ void spgwu_nrf::generate_upf_profile() {
   generate_uuid();
   // TODO: get hardcoded values from configuration file
   upf_profile.set_nf_instance_id(upf_instance_id);
-  upf_profile.set_nf_instance_name("OAI-SMF");
-  upf_profile.set_nf_type("SMF");
+  upf_profile.set_nf_instance_name("OAI-UPF");
+  upf_profile.set_nf_type("UPF");
   upf_profile.set_nf_status("REGISTERED");
   upf_profile.set_nf_heartBeat_timer(50);
   upf_profile.set_nf_priority(1);

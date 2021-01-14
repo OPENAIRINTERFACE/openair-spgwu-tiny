@@ -279,14 +279,14 @@ class spgwu_profile : public std::enable_shared_from_this<spgwu_profile> {
 
   /*
    * Add an snssai_upf_info_item to the upf info
-   * @param [const snssai_upf_info_item_t &] s: snssai_smf_info_item
+   * @param [const snssai_upf_info_item_t &] s: snssai_upf_info_item
    * @return void
    */
   void add_upf_info_item(const snssai_upf_info_item_t& s);
 
   /*
-   * Get NF instance smf info
-   * @param [smf_info_t &] s: store instance's smf info
+   * Get NF instance upf info
+   * @param [upf_info_t &] s: store instance's upf info
    * @return void:
    */
   void get_upf_info(upf_info_t& s) const;
@@ -306,7 +306,7 @@ class spgwu_profile : public std::enable_shared_from_this<spgwu_profile> {
   void to_json(nlohmann::json& data) const;
 
   /*
-   * Covert from a json represetation to SMF profile
+   * Covert from a json represetation to UPF profile
    * @param [nlohmann::json &] data: Json data
    * @return void
    */
