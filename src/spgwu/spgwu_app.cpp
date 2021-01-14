@@ -35,6 +35,8 @@
 #include "spgwu_sx.hpp"
 #include "spgwu_nrf.hpp"
 
+#include <boost/uuid/random_generator.hpp>
+#include <boost/uuid/uuid_io.hpp>
 #include <stdexcept>
 
 using namespace pfcp;
@@ -271,3 +273,5 @@ void spgwu_app::handle_itti_msg(
   Logger::spgwu_app().info(
       "Received SXAB_SESSION_REPORT_RESPONSE seid " SEID_FMT " ", m->seid);
 }
+
+

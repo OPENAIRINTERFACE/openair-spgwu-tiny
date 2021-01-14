@@ -80,6 +80,7 @@ class spgwu_app {
   //  void handle_itti_msg (itti_sxab_session_deletion_response& m);
   //  void handle_itti_msg (itti_sxab_session_report_request& m);
   void handle_itti_msg(std::shared_ptr<itti_sxab_session_report_response> m);
+
 };
 }  // namespace spgwu
 #endif /* FILE_SPGWU_APP_HPP_SEEN */

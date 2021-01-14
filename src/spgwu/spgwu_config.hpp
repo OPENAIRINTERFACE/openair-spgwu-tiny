@@ -63,6 +63,10 @@ namespace spgwu {
 #define SPGWU_CONFIG_STRING_SNAT "SNAT"
 #define SPGWU_CONFIG_STRING_MAX_PFCP_SESSIONS "MAX_PFCP_SESSIONS"
 #define SPGWU_CONFIG_STRING_SPGWC_LIST "SPGW-C_LIST"
+#define SPGWU_CONFIG_STRING_NRF "NRF"
+#define SPGWU_CONFIG_STRING_NRF_IPV4_ADDRESS "IPV4_ADDRESS"
+#define SPGWU_CONFIG_STRING_NRF_PORT "PORT"
+#define SPGWU_CONFIG_STRING_API_VERSION "API_VERSION"
 #define SPGWU_CONFIG_STRING_ITTI_TASKS "ITTI_TASKS"
 #define SPGWU_CONFIG_STRING_ITTI_TIMER_SCHED_PARAMS "ITTI_TIMER_SCHED_PARAMS"
 #define SPGWU_CONFIG_STRING_S1U_SCHED_PARAMS "S1U_SCHED_PARAMS"
@@ -124,6 +128,12 @@ class spgwu_config {
   std::vector<pdn_cfg_t> pdns;
   std::vector<pfcp::node_id_t> spgwcs;
 
+  struct {
+    struct in_addr ipv4_addr;
+    unsigned int port;
+    std::string api_version;
+  } nrf_addr;
+
   spgwu_config()
       : m_rw_lock(),
         pid_dir(),
@@ -149,6 +159,10 @@ class spgwu_config {
 
     sx.thread_rd_sched_params.sched_priority = 95;
     sx.port                                  = pfcp::default_port;
+
+    nrf_addr.ipv4_addr.s_addr = INADDR_ANY;
+    nrf_addr.port = 80;
+    nrf_addr.api_version = "v1";
   };
   void lock() { m_rw_lock.lock(); };
   void unlock() { m_rw_lock.unlock(); };

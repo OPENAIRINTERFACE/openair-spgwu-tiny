@@ -23,6 +23,7 @@
 #define FILE_3GPP_29_510_NRF_SEEN
 
 #include <vector>
+#include <nlohmann/json.hpp>
 
 typedef struct s_nssai  // section 28.4, TS23.003
 {
@@ -59,7 +60,23 @@ typedef struct upf_info_s {
   std::vector<snssai_upf_info_item_t> snssai_upf_info_list;
 } upf_info_t;
 
+typedef struct patch_item_s {
+  std::string op;
+  std::string path;
+  // std::string from;
+  std::string value;
+
+  nlohmann::json to_json() const {
+    nlohmann::json json_data = {};
+    json_data["op"]          = op;
+    json_data["path"]        = path;
+    json_data["value"]       = value;
+    return json_data;
+  }
+} patch_item_t;
 
 #define NRF_CURL_TIMEOUT_MS 100L
+#define NNRF_NFM_BASE "/nnrf-nfm/"
+#define NNRF_NF_REGISTER_URL "/nf-instances/"
 
 #endif

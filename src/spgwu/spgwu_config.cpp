@@ -453,6 +453,31 @@ int spgwu_config::load(const string& config_file) {
             SPGWU_CONFIG_STRING_SPGWC_LIST, i, config_file.c_str());
       }
     }
+
+    // NRF
+    const Setting &nrf_cfg = spgwu_cfg[SPGWU_CONFIG_STRING_NRF];
+    struct in_addr nrf_ipv4_addr;
+    unsigned int nrf_port = 0;
+    std::string nrf_api_version;
+    string nrf_address = {};
+    nrf_cfg.lookupValue(SPGWU_CONFIG_STRING_NRF_IPV4_ADDRESS, nrf_address);
+    IPV4_STR_ADDR_TO_INADDR(util::trim(nrf_address).c_str(), nrf_ipv4_addr,
+                            "BAD IPv4 ADDRESS FORMAT FOR NRF !");
+    nrf_addr.ipv4_addr = nrf_ipv4_addr;
+    if (!(nrf_cfg.lookupValue(SPGWU_CONFIG_STRING_NRF_PORT, nrf_port))) {
+      Logger::spgwu_app().error(SPGWU_CONFIG_STRING_NRF_PORT "failed");
+      throw(SPGWU_CONFIG_STRING_NRF_PORT "failed");
+    }
+    nrf_addr.port = nrf_port;
+
+    if (!(nrf_cfg.lookupValue(SPGWU_CONFIG_STRING_API_VERSION,
+                              nrf_api_version))) {
+      Logger::spgwu_app().error(SPGWU_CONFIG_STRING_API_VERSION "failed");
+      throw(SPGWU_CONFIG_STRING_API_VERSION "failed");
+    }
+    nrf_addr.api_version = nrf_api_version;
+
+
   } catch (const SettingNotFoundException& nfex) {
     Logger::spgwu_app().error("%s : %s", nfex.what(), nfex.getPath());
     return RETURNerror;
