@@ -68,6 +68,7 @@ class spgwuConfigGen():
 		spgwuFile.write('SPGWU_CONF[@SPGWC0_IP_ADDRESS@]=\'' + str(self.spgwc0_ip_addr) + '\'\n')
 		spgwuFile.write('SPGWU_CONF[@NETWORK_UE_IP@]=\'' + str(self.networkUeIp) + '\'\n')
 		spgwuFile.write('SPGWU_CONF[@NETWORK_UE_NAT_OPTION@]=\'' + self.networkUeNatOption + '\'\n')
+		# Adding Multi-threading options
 		spgwuFile.write('SPGWU_CONF[@THREAD_S1U_PRIO@]=80\n')
 		spgwuFile.write('SPGWU_CONF[@S1U_THREADS@]=8\n')
 		spgwuFile.write('SPGWU_CONF[@THREAD_SX_PRIO@]=81\n')
@@ -94,6 +95,7 @@ class spgwuConfigGen():
 		spgwuFile.write('SPGWC0_IP_ADDRESS=' + str(self.spgwc0_ip_addr) + '\n')
 		spgwuFile.write('NETWORK_UE_IP=' + str(self.networkUeIp) + '\n')
 		spgwuFile.write('NETWORK_UE_NAT_OPTION=' + self.networkUeNatOption + '\n')
+		# Adding Multi-threading options
 		spgwuFile.write('THREAD_S1U_PRIO=80\n')
 		spgwuFile.write('S1U_THREADS=8\n')
 		spgwuFile.write('THREAD_SX_PRIO=81\n')
