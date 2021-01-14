@@ -32,19 +32,13 @@
 #include <stdexcept>
 #include <boost/uuid/random_generator.hpp>
 #include <boost/uuid/uuid_io.hpp>
-
 #include <curl/curl.h>
-#include <pistache/http.h>
-#include <pistache/mime.h>
 #include <nlohmann/json.hpp>
 
 #include "itti.hpp"
 #include "logger.hpp"
 #include "3gpp_29.510.h"
 #include "spgwu_config.hpp"
-
-using namespace Pistache::Http;
-using namespace Pistache::Http::Mime;
 
 using namespace spgwu;
 using json = nlohmann::json;
@@ -276,7 +270,7 @@ void spgwu_nrf::send_deregister_nf_instance(std::string& url) {
 void spgwu_nrf::generate_upf_profile() {
   // generate UUID
   generate_uuid();
-  //TODO: get hardcoded values from configuration file
+  // TODO: get hardcoded values from configuration file
   upf_profile.set_nf_instance_id(upf_instance_id);
   upf_profile.set_nf_instance_name("OAI-SMF");
   upf_profile.set_nf_type("SMF");
