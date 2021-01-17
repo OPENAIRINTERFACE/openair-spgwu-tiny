@@ -337,6 +337,77 @@ void spgwu_sx::handle_receive_association_setup_response(
   // else ignore ?
 }
 
+void spgwu_sx::handle_receive_association_setup_request(
+    pfcp::pfcp_msg& msg, const endpoint& remote_endpoint) {
+  bool error                                       = true;
+  uint64_t trxn_id                                 = 0;
+  pfcp_association_setup_request msg_ies_container = {};
+  msg.to_core_type(msg_ies_container);
+
+  handle_receive_message_cb(
+      msg, remote_endpoint, TASK_SPGWU_SX, error, trxn_id);
+  if (!error) {
+    if (not msg_ies_container.node_id.first) {
+      // Should be detected by lower layers
+      Logger::spgwu_sx().warn(
+          "Received SX ASSOCIATION SETUP REQUEST without node id IE!, ignore "
+          "message");
+      return;
+    }
+    if (not msg_ies_container.recovery_time_stamp.first) {
+      // Should be detected by lower layers
+      Logger::spgwu_sx().warn(
+          "Received SX ASSOCIATION SETUP REQUEST without recovery time stamp "
+          "IE!, ignore message");
+      return;
+    }
+    // bool restore_n4_sessions = false;
+    if (msg_ies_container.cp_function_features.first) {
+      // Should be detected by lower layers
+      pfcp_associations::get_instance().add_association(
+          msg_ies_container.node_id.second,
+          msg_ies_container.recovery_time_stamp.second,
+          msg_ies_container.cp_function_features.second);
+    } else {
+      pfcp_associations::get_instance().add_association(
+          msg_ies_container.node_id.second,
+          msg_ies_container.recovery_time_stamp.second);
+    }
+
+    // always yes (for the time being)
+    itti_sxab_association_setup_response a(TASK_SPGWU_SX, TASK_SPGWU_SX);
+    a.trxn_id           = trxn_id;
+    pfcp::cause_t cause = {.cause_value = pfcp::CAUSE_VALUE_REQUEST_ACCEPTED};
+    a.pfcp_ies.set(cause);
+    pfcp::node_id_t node_id = {};
+    if (spgwu_cfg.get_pfcp_node_id(node_id) == RETURNok) {
+      a.pfcp_ies.set(node_id);
+      pfcp::recovery_time_stamp_t r = {.recovery_time_stamp =
+                                           (uint32_t) recovery_time_stamp};
+      a.pfcp_ies.set(r);
+      a.pfcp_ies.set(up_function_features);
+      if (node_id.node_id_type == pfcp::NODE_ID_TYPE_IPV4_ADDRESS) {
+        a.r_endpoint = remote_endpoint;
+        send_sx_msg(a);
+      } else {
+        Logger::spgwu_sx().warn(
+            "Received SX ASSOCIATION SETUP REQUEST node_id IPV6, FQDN!, "
+            "ignore message");
+        return;
+      }
+    } else {
+      Logger::spgwu_sx().warn(
+          "Received SX ASSOCIATION SETUP REQUEST could not set node id!, "
+          "ignore message");
+      return;
+    }
+
+    //	    if (restore_n4_sessions) {
+    //	      pfcp_associations::get_instance().restore_n4_sessions(
+    //	          msg_ies_container.node_id.second);
+    //	    }
+  }
+}
 //------------------------------------------------------------------------------
 void spgwu_sx::handle_receive_session_establishment_request(
     pfcp_msg& msg, const endpoint& remote_endpoint) {
@@ -486,9 +557,13 @@ void spgwu_sx::handle_receive_pfcp_msg(
       handle_receive_heartbeat_response(msg, remote_endpoint);
       break;
 
+    case PFCP_ASSOCIATION_SETUP_REQUEST:
+      handle_receive_association_setup_request(msg, remote_endpoint);
+      break;
+
     case PFCP_PFCP_PFD_MANAGEMENT_REQUEST:
     case PFCP_PFCP_PFD_MANAGEMENT_RESPONSE:
-    case PFCP_ASSOCIATION_SETUP_REQUEST:
+      //    case PFCP_ASSOCIATION_SETUP_REQUEST:
     case PFCP_ASSOCIATION_UPDATE_REQUEST:
     case PFCP_ASSOCIATION_UPDATE_RESPONSE:
     case PFCP_ASSOCIATION_RELEASE_REQUEST:
