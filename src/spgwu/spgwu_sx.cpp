@@ -339,6 +339,7 @@ void spgwu_sx::handle_receive_association_setup_response(
 
 void spgwu_sx::handle_receive_association_setup_request(
     pfcp::pfcp_msg& msg, const endpoint& remote_endpoint) {
+Logger::spgwu_sx().info("Handle SX ASSOCIATION SETUP REQUEST");
   bool error                                       = true;
   uint64_t trxn_id                                 = 0;
   pfcp_association_setup_request msg_ies_container = {};
@@ -388,7 +389,7 @@ void spgwu_sx::handle_receive_association_setup_request(
       a.pfcp_ies.set(up_function_features);
       if (node_id.node_id_type == pfcp::NODE_ID_TYPE_IPV4_ADDRESS) {
         a.r_endpoint = remote_endpoint;
-        send_sx_msg(a);
+	send_sx_msg(a);
       } else {
         Logger::spgwu_sx().warn(
             "Received SX ASSOCIATION SETUP REQUEST node_id IPV6, FQDN!, "
@@ -401,11 +402,6 @@ void spgwu_sx::handle_receive_association_setup_request(
           "ignore message");
       return;
     }
-
-    //	    if (restore_n4_sessions) {
-    //	      pfcp_associations::get_instance().restore_n4_sessions(
-    //	          msg_ies_container.node_id.second);
-    //	    }
   }
 }
 //------------------------------------------------------------------------------
@@ -603,6 +599,10 @@ void spgwu_sx::handle_itti_msg(itti_sxab_session_deletion_response& msg) {
 //------------------------------------------------------------------------------
 void spgwu_sx::send_sx_msg(itti_sxab_association_setup_request& i) {
   send_request(i.r_endpoint, i.pfcp_ies, TASK_SPGWU_SX, i.trxn_id);
+}
+//------------------------------------------------------------------------------
+void spgwu_sx::send_sx_msg(itti_sxab_association_setup_response& i) {
+  send_response(i.r_endpoint, i.pfcp_ies, i.trxn_id);
 }
 //------------------------------------------------------------------------------
 void spgwu_sx::send_sx_msg(itti_sxab_session_establishment_response& i) {
