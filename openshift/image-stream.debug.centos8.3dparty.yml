@@ -26,3 +26,7 @@ metadata:
     namespace: oai
 status:
     tag: debug-centos8-3rd-party
+spec:
+    lookupPolicy:
+        local: true
+    
