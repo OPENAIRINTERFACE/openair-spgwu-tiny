@@ -22,7 +22,7 @@
 apiVersion: v1
 kind: ImageStream
 metadata:
-    name: oai-spgwc
+    name: oai-spgwu-tiny
     namespace: oai
 status:
     tag: Dockerfile-centos8
