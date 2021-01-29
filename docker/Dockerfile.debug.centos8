@@ -61,3 +61,7 @@ WORKDIR /openair-spgwu-tiny
 
 # expose ports
 EXPOSE 2152/udp 8805/udp 22/tcp
+
+
+CMD ["/openair-spgwu-tiny/bin/oai_spgwu", "-c", "/openair-spgwu-tiny/etc/spgw_u.conf", "-o"]
+ENTRYPOINT ["/openair-spgwu-tiny/bin/entrypoint.sh"]
