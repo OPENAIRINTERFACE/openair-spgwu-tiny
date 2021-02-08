@@ -3,9 +3,9 @@
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
  * The OpenAirInterface Software Alliance licenses this file to You under
- * the OAI Public License, Version 1.1  (the "License"); you may not use this file
- * except in compliance with the License.
- * You may obtain a copy of the License at
+ * the OAI Public License, Version 1.1  (the "License"); you may not use this
+ * file except in compliance with the License. You may obtain a copy of the
+ * License at
  *
  *      http://www.openairinterface.org/?page_id=698
  *
@@ -31,7 +31,7 @@
 #include <utility>
 
 typedef enum {
-  TASK_FIRST = 0,
+  TASK_FIRST      = 0,
   TASK_ITTI_TIMER = TASK_FIRST,
   TASK_ASYNC_SHELL_CMD,
   TASK_ENB_S1U,
@@ -69,9 +69,9 @@ typedef enum message_priorities_e {
 } message_priorities_t;
 
 typedef enum {
-  ITTI_MSG_TYPE_NONE = -1,
+  ITTI_MSG_TYPE_NONE  = -1,
   ITTI_MSG_TYPE_FIRST = 0,
-  ASYNC_SHELL_CMD = ITTI_MSG_TYPE_FIRST,
+  ASYNC_SHELL_CMD     = ITTI_MSG_TYPE_FIRST,
   RESTORE_SX_SESSIONS,
   S11_REMOTE_PEER_NOT_RESPONDING,
   S11_CREATE_SESSION_REQUEST,
@@ -94,7 +94,7 @@ typedef enum {
   S1U_ERROR_INDICATION,
   S1U_SUPPORTED_EXTENSION_HEADERS_NOTIFICATION,
   S1U_END_MARKER,
-  S1U_G_PDU, // UNUSED
+  S1U_G_PDU,  // UNUSED
   S5S8_REMOTE_PEER_NOT_RESPONDING,
   S5S8_CREATE_SESSION_REQUEST,
   S5S8_CREATE_SESSION_RESPONSE,
@@ -146,13 +146,14 @@ typedef enum {
 typedef unsigned long message_number_t;
 
 class itti_msg {
-public:
+ public:
   itti_msg();
-  itti_msg(const itti_msg_type_t  msg_type, const task_id_t origin, const task_id_t destination);
+  itti_msg(
+      const itti_msg_type_t msg_type, const task_id_t origin,
+      const task_id_t destination);
   itti_msg(const itti_msg& i);
 
-  itti_msg& operator=(itti_msg other)
-  {
+  itti_msg& operator=(itti_msg other) {
     std::swap(msg_num, other.msg_num);
     std::swap(origin, other.origin);
     std::swap(destination, other.destination);
@@ -164,36 +165,47 @@ public:
   static const char* get_msg_name();
 
   message_number_t msg_num;
-  task_id_t        origin;
-  task_id_t        destination;
-  itti_msg_type_t  msg_type;
+  task_id_t origin;
+  task_id_t destination;
+  itti_msg_type_t msg_type;
 };
 
 class itti_msg_timeout : public itti_msg {
-public:
-  itti_msg_timeout(const task_id_t origin, const task_id_t destination, uint32_t timer_id, uint64_t arg1_user, uint64_t arg2_user):
-    itti_msg(TIME_OUT, origin, destination), timer_id(timer_id), arg1_user(arg1_user), arg2_user(arg2_user) {}
-  itti_msg_timeout(const itti_msg_timeout& i) : itti_msg(i), timer_id(i.timer_id), arg1_user(i.arg1_user), arg2_user(i.arg2_user) {}
-  static const char* get_msg_name() {return "TIME_OUT";};
+ public:
+  itti_msg_timeout(
+      const task_id_t origin, const task_id_t destination, uint32_t timer_id,
+      uint64_t arg1_user, uint64_t arg2_user)
+      : itti_msg(TIME_OUT, origin, destination),
+        timer_id(timer_id),
+        arg1_user(arg1_user),
+        arg2_user(arg2_user) {}
+  itti_msg_timeout(const itti_msg_timeout& i)
+      : itti_msg(i),
+        timer_id(i.timer_id),
+        arg1_user(i.arg1_user),
+        arg2_user(i.arg2_user) {}
+  static const char* get_msg_name() { return "TIME_OUT"; };
   uint32_t timer_id;
   uint64_t arg1_user;
   uint64_t arg2_user;
 };
 
 class itti_msg_ping : public itti_msg {
-public:
-  itti_msg_ping(const task_id_t origin, const task_id_t destination, uint32_t seq): itti_msg(HEALTH_PING, origin, destination), seq(seq) {}
+ public:
+  itti_msg_ping(
+      const task_id_t origin, const task_id_t destination, uint32_t seq)
+      : itti_msg(HEALTH_PING, origin, destination), seq(seq) {}
   itti_msg_ping(const itti_msg_ping& i) : itti_msg(i), seq(i.seq) {}
-  static const char* get_msg_name() {return "HEALTH_PING";};
+  static const char* get_msg_name() { return "HEALTH_PING"; };
   uint32_t seq;
 };
 
 class itti_msg_terminate : public itti_msg {
-public:
-  itti_msg_terminate(const task_id_t origin, const task_id_t destination):
-    itti_msg(TERMINATE, origin, destination) {}
+ public:
+  itti_msg_terminate(const task_id_t origin, const task_id_t destination)
+      : itti_msg(TERMINATE, origin, destination) {}
   itti_msg_terminate(const itti_msg_terminate& i) : itti_msg(i) {}
-  static const char* get_msg_name() {return "TERMINATE";};
+  static const char* get_msg_name() { return "TERMINATE"; };
 };
 
 #endif /* SRC_ITTI_ITTI_MSG_HPP_INCLUDED_ */

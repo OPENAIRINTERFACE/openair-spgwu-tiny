@@ -3,9 +3,9 @@
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
  * The OpenAirInterface Software Alliance licenses this file to You under
- * the OAI Public License, Version 1.1  (the "License"); you may not use this file
- * except in compliance with the License.
- * You may obtain a copy of the License at
+ * the OAI Public License, Version 1.1  (the "License"); you may not use this
+ * file except in compliance with the License. You may obtain a copy of the
+ * License at
  *
  *      http://www.openairinterface.org/?page_id=698
  *
@@ -31,143 +31,224 @@
 #include <cstdlib>
 
 //------------------------------------------------------------------------------
-void udp_application::handle_receive(char* recv_buffer, const std::size_t bytes_transferred, const endpoint& r_endpoint)
-{
-  Logger::udp().warn( "Missing implementation of interface udp_application\n");
+void udp_application::handle_receive(
+    char* recv_buffer, const std::size_t bytes_transferred,
+    const endpoint& r_endpoint) {
+  Logger::udp().warn("Missing implementation of interface udp_application\n");
 }
 
 //------------------------------------------------------------------------------
-void udp_application::start_receive(udp_application * gtp_stack, const util::thread_sched_params& sched_params)
-{
-  Logger::udp().warn( "Missing implementation of interface udp_application\n");
+void udp_application::start_receive(
+    udp_application* gtp_stack, const util::thread_sched_params& sched_params) {
+  Logger::udp().warn("Missing implementation of interface udp_application\n");
 }
 
 //------------------------------------------------------------------------------
-static std::string string_to_hex(const std::string& input)
-{
-    static const char* const lut = "0123456789ABCDEF";
-    size_t len = input.length();
+static std::string string_to_hex(const std::string& input) {
+  static const char* const lut = "0123456789ABCDEF";
+  size_t len                   = input.length();
 
-    std::string output;
-    output.reserve(2 * len);
-    for (size_t i = 0; i < len; ++i)
-    {
-        const unsigned char c = input[i];
-        output.push_back(lut[c >> 4]);
-        output.push_back(lut[c & 15]);
+  std::string output;
+  output.reserve(2 * len);
+  for (size_t i = 0; i < len; ++i) {
+    const unsigned char c = input[i];
+    output.push_back(lut[c >> 4]);
+    output.push_back(lut[c & 15]);
+  }
+  return output;
+}
+//------------------------------------------------------------------------------
+void udp_server::udp_worker_loop(
+    const int id, const util::thread_sched_params& sched_params) {
+  uint64_t count              = 0;
+  udp_packet_q_item_t* worker = nullptr;
+
+  sched_params.apply(TASK_NONE, Logger::udp());
+  while (1) {
+    work_pool_->blockingRead(worker);
+    ++count;
+    // std::cout << "w" << id << " " << count << std::endl;
+    // exit thread
+    if (worker->buffer) {
+      app_->handle_receive(worker->buffer, worker->size, worker->r_endpoint);
+      free_pool_->write(worker);
+    } else {
+      free(worker);
+      // std::cout << "exit w" << id << " " << count << std::endl;
+      while (work_pool_->readIfNotEmpty(worker)) {
+        free(worker);
+        std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+      }
+      return;
     }
-    return output;
+    worker = nullptr;
+  }
 }
+
 //------------------------------------------------------------------------------
-void udp_server::udp_read_loop(const util::thread_sched_params& sched_params)
-{
-  endpoint                                r_endpoint = {};
-  size_t                                  bytes_received = 0;
+void udp_server::udp_read_loop(const util::thread_sched_params& sched_params) {
+  uint64_t count              = 0;
+  udp_packet_q_item_t* worker = nullptr;
 
   sched_params.apply(TASK_NONE, Logger::udp());
 
   while (1) {
-    r_endpoint.addr_storage_len = sizeof(struct sockaddr_storage);
-    if ((bytes_received = recvfrom (socket_, recv_buffer_, UDP_RECV_BUFFER_SIZE, 0, (struct sockaddr *)&r_endpoint.addr_storage, &r_endpoint.addr_storage_len)) > 0) {
-      app_->handle_receive(recv_buffer_, bytes_received, r_endpoint);
-    } else {
-      Logger::udp().error( "Recvfrom failed %s\n", strerror (errno));
+    free_pool_->blockingRead(worker);
+    ++count;
+    // std::cout << "d" << count << std::endl;
+    // exit thread
+    if (worker->buffer == nullptr) {
+      free(worker);
+      while (work_pool_->readIfNotEmpty(worker)) {
+        free(worker);
+      }
+      // std::cout << "exit d" << count << std::endl;
+      return;
     }
+    worker->r_endpoint.addr_storage_len = sizeof(struct sockaddr_storage);
+    if ((worker->size = recvfrom(
+             socket_, worker->buffer, UDP_RECV_BUFFER_SIZE, 0,
+             (struct sockaddr*) &worker->r_endpoint.addr_storage,
+             &worker->r_endpoint.addr_storage_len)) > 0) {
+      work_pool_->write(worker);
+    } else {
+      Logger::udp().error("Recvfrom failed %s\n", strerror(errno));
+      free_pool_->write(worker);
+    }
+    worker = nullptr;
   }
 }
 //------------------------------------------------------------------------------
-int udp_server::create_socket (const struct in_addr &address, const uint16_t port)
-{
-  struct sockaddr_in                      addr = {};
-  int                                     sd = 0;
+int udp_server::create_socket(
+    const struct in_addr& address, const uint16_t port) {
+  struct sockaddr_in addr = {};
+  int sd                  = 0;
 
   /*
    * Create UDP socket
    */
-  if ((sd = socket (AF_INET, SOCK_DGRAM, IPPROTO_UDP)) < 0) {
+  if ((sd = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP)) < 0) {
     /*
      * Socket creation has failed...
      */
-    Logger::udp().error( "Socket creation failed (%s)\n", strerror (errno));
+    Logger::udp().error("Socket creation failed (%s)\n", strerror(errno));
     return errno;
   }
 
-  addr.sin_family = AF_INET;
-  addr.sin_port = htons (port);
+  addr.sin_family      = AF_INET;
+  addr.sin_port        = htons(port);
   addr.sin_addr.s_addr = address.s_addr;
 
   std::string ipv4 = conv::toString(address);
-  Logger::udp().debug("Creating new listen socket on address %s and port %" PRIu16 "\n", ipv4.c_str(), port);
+  Logger::udp().debug(
+      "Creating new listen socket on address %s and port %" PRIu16 "\n",
+      ipv4.c_str(), port);
 
-  if (bind (sd, (struct sockaddr *)&addr, sizeof (struct sockaddr_in)) < 0) {
+  if (bind(sd, (struct sockaddr*) &addr, sizeof(struct sockaddr_in)) < 0) {
     /*
      * Bind failed
      */
-    Logger::udp().error("Socket bind failed (%s) for address %s and port %" PRIu16 "\n", strerror (errno), ipv4.c_str(), port);
-    close (sd);
+    Logger::udp().error(
+        "Socket bind failed (%s) for address %s and port %" PRIu16 "\n",
+        strerror(errno), ipv4.c_str(), port);
+    close(sd);
     return errno;
   }
   sa_family = AF_INET;
   return sd;
 }
 //------------------------------------------------------------------------------
-int udp_server::create_socket (const struct in6_addr &address, const uint16_t port)
-{
-  struct sockaddr_in6                     addr = {};
-  int                                     sd = 0;
+int udp_server::create_socket(
+    const struct in6_addr& address, const uint16_t port) {
+  struct sockaddr_in6 addr = {};
+  int sd                   = 0;
 
   /*
    * Create UDP socket
    */
-  if ((sd = socket (AF_INET6, SOCK_DGRAM, IPPROTO_UDP)) < 0) {
+  if ((sd = socket(AF_INET6, SOCK_DGRAM, IPPROTO_UDP)) < 0) {
     /*
      * Socket creation has failed...
      */
-    Logger::udp().error( "Socket creation failed (%s)\n", strerror (errno));
+    Logger::udp().error("Socket creation failed (%s)\n", strerror(errno));
     return errno;
   }
 
   addr.sin6_family = AF_INET6;
-  addr.sin6_port = htons (port);
-  addr.sin6_addr = address;
+  addr.sin6_port   = htons(port);
+  addr.sin6_addr   = address;
 
   std::string ipv6 = conv::toString(address);
-  Logger::udp().debug("Creating new listen socket on address %s and port %" PRIu16 "\n", ipv6.c_str(), port);
+  Logger::udp().debug(
+      "Creating new listen socket on address %s and port %" PRIu16 "\n",
+      ipv6.c_str(), port);
 
-  if (bind (sd, (struct sockaddr *)&addr, sizeof (struct sockaddr_in6)) < 0) {
+  if (bind(sd, (struct sockaddr*) &addr, sizeof(struct sockaddr_in6)) < 0) {
     /*
      * Bind failed
      */
-    Logger::udp().error("Socket bind failed (%s) for address %s and port %" PRIu16 "\n", strerror (errno), ipv6.c_str(), port);
-    close (sd);
+    Logger::udp().error(
+        "Socket bind failed (%s) for address %s and port %" PRIu16 "\n",
+        strerror(errno), ipv6.c_str(), port);
+    close(sd);
     return errno;
   }
   sa_family = AF_INET6;
   return sd;
 }
 //------------------------------------------------------------------------------
-int udp_server::create_socket (const char * address, const uint16_t port_num)
-{
+int udp_server::create_socket(const char* address, const uint16_t port_num) {
   unsigned char buf_in_addr[sizeof(struct in6_addr)];
-  if (inet_pton (AF_INET, address, buf_in_addr) == 1) {
-    struct in_addr  addr4 = {};
-    memcpy (&addr4, buf_in_addr, sizeof (struct in_addr));
+  if (inet_pton(AF_INET, address, buf_in_addr) == 1) {
+    struct in_addr addr4 = {};
+    memcpy(&addr4, buf_in_addr, sizeof(struct in_addr));
     return create_socket(addr4, port_num);
-  } else if (inet_pton (AF_INET6, address, buf_in_addr) == 1) {
+  } else if (inet_pton(AF_INET6, address, buf_in_addr) == 1) {
     struct in6_addr addr6 = {};
-    memcpy (&addr6, buf_in_addr, sizeof (struct in6_addr));
+    memcpy(&addr6, buf_in_addr, sizeof(struct in6_addr));
     return create_socket(addr6, port_num);
   } else {
-    Logger::udp().error( "udp_server::create_socket(%s:%d)", address, port_num);
+    Logger::udp().error("udp_server::create_socket(%s:%d)", address, port_num);
     std::this_thread::sleep_for(std::chrono::milliseconds(500));
-    throw std::system_error(socket_, std::generic_category(), "UDP socket creation failed!");
+    throw std::system_error(
+        socket_, std::generic_category(), "UDP socket creation failed!");
   }
 }
 //------------------------------------------------------------------------------
-void udp_server::start_receive(udp_application * app, const util::thread_sched_params& sched_params)
-{
-  app_ = app;
-  Logger::udp().trace( "udp_server::start_receive");
-  thread_ = std::thread(&udp_server::udp_read_loop,this, sched_params);
-  thread_.detach();
+void udp_server::start_receive(
+    udp_application* app, const util::thread_sched_params& sched_params) {
+  num_threads_   = sched_params.thread_pool_size;
+  int num_blocks = num_threads_ * 16;
+  app_           = app;
+  Logger::udp().trace("udp_server::start_receive");
+  free_pool_         = new folly::MPMCQueue<udp_packet_q_item_t*>(num_blocks);
+  work_pool_         = new folly::MPMCQueue<udp_packet_q_item_t*>(num_blocks);
+  recv_buffer_alloc_ = (char*) calloc(num_blocks, UDP_RECV_BUFFER_SIZE);
+  // udp_packet_q_item_alloc_ = (udp_packet_q_item_t*)calloc(1,
+  // sizeof(udp_packet_q_item_t)*num_blocks);
+  for (int i = 0; i < num_blocks; i++) {
+    udp_packet_q_item_t* p =
+        (udp_packet_q_item_t*) calloc(1, sizeof(udp_packet_q_item_t));
+    p->buffer = &recv_buffer_alloc_[i * UDP_RECV_BUFFER_SIZE];
+    free_pool_->blockingWrite(p);
+  }
+  for (int i = 0; i < num_threads_; i++) {
+    std::thread t =
+        std::thread(&udp_server::udp_worker_loop, this, i, sched_params);
+    threads_.push_back(std::move(t));
+  }
+  std::thread t = std::thread(&udp_server::udp_read_loop, this, sched_params);
+  t.detach();
+  threads_.push_back(std::move(t));
+}
+//------------------------------------------------------------------------------
+void udp_server::stop(void) {
+  for (int i = 0; i < num_threads_; i++) {
+    udp_packet_q_item_t* p =
+        (udp_packet_q_item_t*) calloc(1, sizeof(udp_packet_q_item_t));
+    work_pool_->blockingWrite(p);
+  }
+  udp_packet_q_item_t* p =
+      (udp_packet_q_item_t*) calloc(1, sizeof(udp_packet_q_item_t));
+  free_pool_->blockingWrite(p);
 }
