@@ -61,8 +61,25 @@ class deploySanityCheckTest():
             pass
 
     def deploySPGWC(self):
+        # First check if soon-to-be-deployed SPGW-U supports multi-SPGWU and requires FDQN
         res = ''
-        # first check if tag exists
+        try:
+            res = subprocess.check_output('grep --color=never LABEL docker/Dockerfile.ubuntu18.04', shell=True, universal_newlines=True)
+        except:
+            sys.exit(-1)
+        multi_supported = re.search('LABEL support-multi-sgwu-instances="true"', str(res))
+        if multi_supported is not None:
+            try:
+                res = subprocess.check_output('docker image inspect --format="{{.Config.Labels}}" oai-spgwc:' + self.tag, shell=True, universal_newlines=True)
+            except:
+                sys.exit(-1)
+            multi_supported = re.search('support-multi-sgwu-instances:true', str(res))
+            if multi_supported is None:
+                self.tag = 'multi-spgwu'
+                branch = 'multi-spgwu'
+
+        # Then check if tag exists
+        res = ''
         try:
             res = subprocess.check_output('docker image inspect oai-spgwc:' + self.tag, shell=True, universal_newlines=True)
         except:
@@ -71,7 +88,7 @@ class deploySanityCheckTest():
         # check if there is an entrypoint
         entrypoint = re.search('entrypoint', str(res))
         if entrypoint is not None:
-            subprocess_run_w_echo('wget --quiet https://raw.githubusercontent.com/OPENAIRINTERFACE/openair-spgwc/develop/ci-scripts/generateConfigFiles.py -O ci-scripts/generateSpgwcConfigFiles.py')
+            subprocess_run_w_echo('wget --quiet https://raw.githubusercontent.com/OPENAIRINTERFACE/openair-spgwc/' + branch + '/ci-scripts/generateConfigFiles.py -O ci-scripts/generateSpgwcConfigFiles.py')
             subprocess_run_w_echo('python3 ci-scripts/generateSpgwcConfigFiles.py --kind=SPGW-C --s11c=eth0 --sxc=eth1 --from_docker_file --env_for_entrypoint')
             # S11 to MME will be on `eth0`
             # SX to SPGWU will be on `eth1`

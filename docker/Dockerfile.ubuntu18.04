@@ -87,6 +87,9 @@ COPY --from=oai-spgwu-tiny-builder /openair-spgwu-tiny/etc/spgw_u.conf .
 
 WORKDIR /openair-spgwu-tiny
 
+# use this label for CI purpose
+LABEL support-multi-sgwu-instances="true"
+
 # expose ports
 EXPOSE 2152/udp 8805/udp
 

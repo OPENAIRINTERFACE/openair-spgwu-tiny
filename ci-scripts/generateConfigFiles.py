@@ -86,7 +86,11 @@ class spgwuConfigGen():
 	def GenerateSpgwuEnvList(self):
 		spgwuFile = open('./spgwu-env.list', 'w')
 		spgwuFile.write('# Environment Variables used by the OAI-SPGW-U-TINY Entrypoint Script\n')
-		spgwuFile.write('INSTANCE=1\n')
+		spgwuFile.write('MCC=208\n')
+		spgwuFile.write('MNC=99\n')
+		spgwuFile.write('MNC03=099\n')
+		spgwuFile.write('REALM=openairinterface.org\n')
+		spgwuFile.write('GW_ID=1\n')
 		spgwuFile.write('PID_DIRECTORY=/var/run\n')
 		spgwuFile.write('SGW_INTERFACE_NAME_FOR_S1U_S12_S4_UP=' + self.s1u_name + '\n')
 		spgwuFile.write('SGW_INTERFACE_NAME_FOR_SX=' + self.sxu_name + '\n')
