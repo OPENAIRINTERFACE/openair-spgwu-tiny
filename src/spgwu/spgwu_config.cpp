@@ -27,6 +27,7 @@
 */
 
 #include "3gpp_29.274.hpp"
+#include "3gpp_conversions.hpp"
 #include "async_shell_cmd.hpp"
 #include "common_defs.h"
 #include "conversions.hpp"
@@ -64,6 +65,11 @@ int spgwu_config::execute() {
 //------------------------------------------------------------------------------
 int spgwu_config::get_pfcp_node_id(pfcp::node_id_t& node_id) {
   node_id = {};
+  if (fqdn.length() >= 3) {
+    node_id.node_id_type = pfcp::NODE_ID_TYPE_FQDN;
+    node_id.fqdn         = fqdn;
+    return RETURNok;
+  }
   if (sx.addr4.s_addr) {
     node_id.node_id_type    = pfcp::NODE_ID_TYPE_IPV4_ADDRESS;
     node_id.u1.ipv4_address = sx.addr4;
@@ -301,6 +307,14 @@ int spgwu_config::load(const string& config_file) {
   }
 
   try {
+    spgwu_cfg.lookupValue(SPGWU_CONFIG_STRING_FQDN, fqdn);
+    util::trim(fqdn);
+  } catch (const SettingNotFoundException& nfex) {
+    Logger::spgwu_app().info(
+        "%s : %s, No FQDN configured", nfex.what(), nfex.getPath());
+  }
+
+  try {
     spgwu_cfg.lookupValue(SPGWU_CONFIG_STRING_PID_DIRECTORY, pid_dir);
     util::trim(pid_dir);
   } catch (const SettingNotFoundException& nfex) {
@@ -492,6 +506,7 @@ void spgwu_config::display() {
   Logger::spgwu_app().info(
       "==== EURECOM %s v%s ====", PACKAGE_NAME, PACKAGE_VERSION);
   Logger::spgwu_app().info("Configuration:");
+  Logger::spgwu_app().info("- FQDN ..................: %s", fqdn.c_str());
   Logger::spgwu_app().info("- Instance ..............: %d", instance);
   Logger::spgwu_app().info("- PID dir ...............: %s", pid_dir.c_str());
   Logger::spgwu_app().info("- ITTI tasks:");

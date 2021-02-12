@@ -45,6 +45,7 @@ namespace spgwu {
 #define SPGWU_CONFIG_STRING_SPGWU_CONFIG "SPGW-U"
 #define SPGWU_CONFIG_STRING_PID_DIRECTORY "PID_DIRECTORY"
 #define SPGWU_CONFIG_STRING_INSTANCE "INSTANCE"
+#define SPGWU_CONFIG_STRING_FQDN "FQDN"
 #define SPGWU_CONFIG_STRING_INTERFACES "INTERFACES"
 #define SPGWU_CONFIG_STRING_INTERFACE_NAME "INTERFACE_NAME"
 #define SPGWU_CONFIG_STRING_IPV4_ADDRESS "IPV4_ADDRESS"
@@ -121,6 +122,7 @@ class spgwu_config {
   std::mutex m_rw_lock;
   std::string pid_dir;
   unsigned int instance;
+  std::string fqdn;
   interface_cfg_t s1_up;
   interface_cfg_t sgi;
   interface_cfg_t sx;
@@ -139,6 +141,7 @@ class spgwu_config {
       : m_rw_lock(),
         pid_dir(),
         instance(0),
+        fqdn(),
         s1_up(),
         sgi(),
         gateway(),
