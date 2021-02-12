@@ -67,7 +67,7 @@ int spgwu_config::get_pfcp_node_id(pfcp::node_id_t& node_id) {
   node_id = {};
   if (fqdn.length() >= 3) {
     node_id.node_id_type = pfcp::NODE_ID_TYPE_FQDN;
-    node_id.fqdn = fqdn;
+    node_id.fqdn         = fqdn;
     return RETURNok;
   }
   if (sx.addr4.s_addr) {
