@@ -30,6 +30,7 @@
 #define FILE_SPGWU_CONFIG_HPP_SEEN
 
 #include "3gpp_29.244.h"
+#include "3gpp_29.510.h"
 #include "gtpv1u.hpp"
 #include "pfcp.hpp"
 #include "thread_sched.hpp"
@@ -73,6 +74,14 @@ namespace spgwu {
 #define SPGWU_CONFIG_STRING_SX_SCHED_PARAMS "SX_SCHED_PARAMS"
 #define SPGWU_CONFIG_STRING_SPGWU_APP_SCHED_PARAMS "SPGWU_APP_SCHED_PARAMS"
 #define SPGWU_CONFIG_STRING_ASYNC_CMD_SCHED_PARAMS "ASYNC_CMD_SCHED_PARAMS"
+
+#define SPGWU_CONFIG_STRING_SUPPORT_FEATURES "SUPPORT_FEATURES"
+#define SPGWU_CONFIG_STRING_SUPPORT_FEATURES_REGISTER_NRF "REGISTER_NRF"
+
+#define SPGWU_CONFIG_STRING_UPF_INFO "UPF_INFO"
+#define SPGWU_CONFIG_STRING_NSSAI_SST "NSSAI_SST"
+#define SPGWU_CONFIG_STRING_NSSAI_SD "NSSAI_SD"
+#define SPGWU_CONFIG_STRING_DNN "DNN"
 
 #define SPGW_ABORT_ON_ERROR true
 #define SPGW_WARN_ON_ERROR false
@@ -128,6 +137,9 @@ class spgwu_config {
   std::vector<pdn_cfg_t> pdns;
   std::vector<pfcp::node_id_t> spgwcs;
 
+  bool register_nrf;
+  upf_info_t upf_info;
+
   struct {
     struct in_addr ipv4_addr;
     unsigned int port;
@@ -161,8 +173,11 @@ class spgwu_config {
     sx.port                                  = pfcp::default_port;
 
     nrf_addr.ipv4_addr.s_addr = INADDR_ANY;
-    nrf_addr.port = 80;
-    nrf_addr.api_version = "v1";
+    nrf_addr.port             = 80;
+    nrf_addr.api_version      = "v1";
+
+    register_nrf = false;
+    upf_info     = {};
   };
   void lock() { m_rw_lock.lock(); };
   void unlock() { m_rw_lock.unlock(); };

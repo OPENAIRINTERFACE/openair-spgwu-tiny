@@ -58,6 +58,30 @@ typedef struct snssai_upf_info_item_s {
 
 typedef struct upf_info_s {
   std::vector<snssai_upf_info_item_t> snssai_upf_info_list;
+  void add_snssai(snssai_t snssai, std::string dnn) {
+    bool found                   = false;
+    dnn_upf_info_item_t dnn_item = {};
+    dnn_item.dnn                 = dnn;
+    for (int i = 0; i < snssai_upf_info_list.size(); i++) {
+      if (snssai_upf_info_list[i].snssai == snssai) {
+        for (int j = 0; j < snssai_upf_info_list[i].dnn_upf_info_list.size();
+             j++) {
+          if (snssai_upf_info_list[i].dnn_upf_info_list[j].dnn.compare(dnn) !=
+              0) {
+            snssai_upf_info_list[i].dnn_upf_info_list.push_back(dnn_item);
+            break;
+          }
+        }
+        found = true;
+      }
+    }
+    if (!found) {
+      snssai_upf_info_item_t snssai_item = {};
+      snssai_item.snssai                 = snssai;
+      snssai_item.dnn_upf_info_list.push_back(dnn_item);
+      snssai_upf_info_list.push_back(snssai_item);
+    }
+  }
 } upf_info_t;
 
 typedef struct patch_item_s {

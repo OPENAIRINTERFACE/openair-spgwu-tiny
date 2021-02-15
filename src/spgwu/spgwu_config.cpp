@@ -455,14 +455,15 @@ int spgwu_config::load(const string& config_file) {
     }
 
     // NRF
-    const Setting &nrf_cfg = spgwu_cfg[SPGWU_CONFIG_STRING_NRF];
+    const Setting& nrf_cfg = spgwu_cfg[SPGWU_CONFIG_STRING_NRF];
     struct in_addr nrf_ipv4_addr;
     unsigned int nrf_port = 0;
     std::string nrf_api_version;
     string nrf_address = {};
     nrf_cfg.lookupValue(SPGWU_CONFIG_STRING_NRF_IPV4_ADDRESS, nrf_address);
-    IPV4_STR_ADDR_TO_INADDR(util::trim(nrf_address).c_str(), nrf_ipv4_addr,
-                            "BAD IPv4 ADDRESS FORMAT FOR NRF !");
+    IPV4_STR_ADDR_TO_INADDR(
+        util::trim(nrf_address).c_str(), nrf_ipv4_addr,
+        "BAD IPv4 ADDRESS FORMAT FOR NRF !");
     nrf_addr.ipv4_addr = nrf_ipv4_addr;
     if (!(nrf_cfg.lookupValue(SPGWU_CONFIG_STRING_NRF_PORT, nrf_port))) {
       Logger::spgwu_app().error(SPGWU_CONFIG_STRING_NRF_PORT "failed");
@@ -470,13 +471,44 @@ int spgwu_config::load(const string& config_file) {
     }
     nrf_addr.port = nrf_port;
 
-    if (!(nrf_cfg.lookupValue(SPGWU_CONFIG_STRING_API_VERSION,
-                              nrf_api_version))) {
+    if (!(nrf_cfg.lookupValue(
+            SPGWU_CONFIG_STRING_API_VERSION, nrf_api_version))) {
       Logger::spgwu_app().error(SPGWU_CONFIG_STRING_API_VERSION "failed");
       throw(SPGWU_CONFIG_STRING_API_VERSION "failed");
     }
     nrf_addr.api_version = nrf_api_version;
 
+    // Support features
+    const Setting& support_features =
+        spgwu_cfg[SPGWU_CONFIG_STRING_SUPPORT_FEATURES];
+    string opt;
+    support_features.lookupValue(
+        SPGWU_CONFIG_STRING_SUPPORT_FEATURES_REGISTER_NRF, opt);
+    if (boost::iequals(opt, "yes")) {
+      register_nrf = true;
+    } else {
+      register_nrf = false;
+    }
+
+    // UPF info
+    const Setting& upf_info_cfg = spgwu_cfg[SPGWU_CONFIG_STRING_UPF_INFO];
+
+    count = upf_info_cfg.getLength();
+    for (int i = 0; i < count; i++) {
+      const Setting& upf_info_item_cfg = upf_info_cfg[i];
+
+      unsigned int nssai_sst = 0;
+      string nssai_sd        = {};
+      string dnn             = {};
+
+      upf_info_item_cfg.lookupValue(SPGWU_CONFIG_STRING_NSSAI_SST, nssai_sst);
+      upf_info_item_cfg.lookupValue(SPGWU_CONFIG_STRING_NSSAI_SD, nssai_sd);
+      upf_info_item_cfg.lookupValue(SPGWU_CONFIG_STRING_DNN, dnn);
+      snssai_t snssai = {};
+      snssai.sST      = nssai_sst;
+      snssai.sD       = nssai_sd;
+      upf_info.add_snssai(snssai, dnn);
+    }
 
   } catch (const SettingNotFoundException& nfex) {
     Logger::spgwu_app().error("%s : %s", nfex.what(), nfex.getPath());
@@ -591,5 +623,18 @@ void spgwu_config::display() {
           conv::toString(it.network_ipv6).c_str(), it.prefix_ipv6);
     }
     i++;
+  }
+  if (register_nrf) {
+    if (upf_info.snssai_upf_info_list.size() > 0) {
+      Logger::spgwu_app().debug("\tUPF Info:");
+    }
+    for (auto s : upf_info.snssai_upf_info_list) {
+      Logger::spgwu_app().debug("\t\tParameters supported by the UPF:");
+      Logger::spgwu_app().debug(
+          "\t\t\tSNSSAI (SST %d, SD %s)", s.snssai.sST, s.snssai.sD.c_str());
+      for (auto d : s.dnn_upf_info_list) {
+        Logger::spgwu_app().debug("\t\t\tDNN %s", d.dnn.c_str());
+      }
+    }
   }
 }
