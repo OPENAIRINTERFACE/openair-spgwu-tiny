@@ -626,14 +626,14 @@ void spgwu_config::display() {
   }
   if (register_nrf) {
     if (upf_info.snssai_upf_info_list.size() > 0) {
-      Logger::spgwu_app().debug("\tUPF Info:");
+      Logger::spgwu_app().debug("- UPF Info:");
     }
     for (auto s : upf_info.snssai_upf_info_list) {
-      Logger::spgwu_app().debug("\t\tParameters supported by the UPF:");
+      Logger::spgwu_app().debug("\tParameters supported by the UPF:");
       Logger::spgwu_app().debug(
-          "\t\t\tSNSSAI (SST %d, SD %s)", s.snssai.sST, s.snssai.sD.c_str());
+          "\t\tSNSSAI (SST %d, SD %s)", s.snssai.sST, s.snssai.sD.c_str());
       for (auto d : s.dnn_upf_info_list) {
-        Logger::spgwu_app().debug("\t\t\tDNN %s", d.dnn.c_str());
+        Logger::spgwu_app().debug("\t\tDNN %s", d.dnn.c_str());
       }
     }
   }

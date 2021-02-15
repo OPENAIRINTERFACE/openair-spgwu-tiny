@@ -162,7 +162,7 @@ spgwu_app::spgwu_app(const std::string& config_file) {
     throw;
   }
   try {
-    spgwu_nrf_inst = new spgwu_nrf();
+    if (spgwu_cfg.register_nrf) spgwu_nrf_inst = new spgwu_nrf();
   } catch (std::exception& e) {
     Logger::spgwu_app().error("Cannot create SPGWU_NRF: %s", e.what());
     throw;
@@ -273,5 +273,3 @@ void spgwu_app::handle_itti_msg(
   Logger::spgwu_app().info(
       "Received SXAB_SESSION_REPORT_RESPONSE seid " SEID_FMT " ", m->seid);
 }
-
-
