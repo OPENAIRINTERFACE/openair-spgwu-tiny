@@ -67,6 +67,7 @@ class deploySanityCheckTest():
             res = subprocess.check_output('grep --color=never LABEL docker/Dockerfile.ubuntu18.04', shell=True, universal_newlines=True)
         except:
             sys.exit(-1)
+        branch = 'develop'
         multi_supported = re.search('LABEL support-multi-sgwu-instances="true"', str(res))
         if multi_supported is not None:
             try:
