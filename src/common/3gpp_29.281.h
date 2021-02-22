@@ -134,6 +134,7 @@ public:
   virtual ~gtpu_ie_value_exception() throw(){}
 };
 
+#define GTPU_NO_MORE_EXTENSION_HEADER                                        (0)
 #define GTPU_IE_RECOVERY                                                     14
 #define GTPU_IE_TUNNEL_ENDPOINT_IDENTIFIER_DATA_I                            16
 #define GTPU_IE_GTP_U_PEER_ADDRESS                                           133
@@ -147,6 +148,9 @@ public:
 #define GTPU_END_MARKER                                                     (254)
 #define GTPU_G_PDU                                                          (255)
 
+#define GTPU_DL_PDU_SESSION_INFORMATION                                     (0)
+#define GTPU_UL_PDU_SESSION_INFORMATION                                     (1)
+#define GTPU_PDU_SESSION_CONTAINER                                          (133)
 } // namespace
 
   // 8.2 Recovery
