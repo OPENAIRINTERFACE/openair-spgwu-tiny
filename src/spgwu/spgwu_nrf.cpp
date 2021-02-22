@@ -279,18 +279,7 @@ void spgwu_nrf::generate_upf_profile() {
   upf_profile.set_nf_priority(1);
   upf_profile.set_nf_capacity(100);
   upf_profile.add_nf_ipv4_addresses(spgwu_cfg.s1_up.addr4);
-  // TODO: get SNSSAIS from Configuration file
-  snssai_t snssai = {};
-  snssai.sD       = "123";
-  snssai.sST      = 222;
-  upf_profile.add_snssai(snssai);
-  // TODO: get UPF info from configuration file
-  dnn_upf_info_item_t dnn_item         = {.dnn = "default"};
-  snssai_upf_info_item_t upf_info_item = {};
-  upf_info_item.dnn_upf_info_list.push_back(dnn_item);
-  upf_info_item.snssai.sD  = "123";
-  upf_info_item.snssai.sST = 222;
-  upf_profile.add_upf_info_item(upf_info_item);
+  upf_profile.set_upf_info(spgwu_cfg.upf_info);
 
   // Display the profile
   upf_profile.display();

@@ -629,9 +629,8 @@ void spgwu_config::display() {
       Logger::spgwu_app().debug("- UPF Info:");
     }
     for (auto s : upf_info.snssai_upf_info_list) {
-      Logger::spgwu_app().debug("\tParameters supported by the UPF:");
       Logger::spgwu_app().debug(
-          "\t\tSNSSAI (SST %d, SD %s)", s.snssai.sST, s.snssai.sD.c_str());
+          "\tSNSSAI (SST %d, SD %s)", s.snssai.sST, s.snssai.sD.c_str());
       for (auto d : s.dnn_upf_info_list) {
         Logger::spgwu_app().debug("\t\tDNN %s", d.dnn.c_str());
       }

@@ -39,6 +39,10 @@ typedef struct s_nssai  // section 28.4, TS23.003
       return false;
     }
   }
+  s_nssai& operator=(const s_nssai& s) {
+    sST = s.sST;
+    sD  = s.sD;
+  }
 
 } snssai_t;
 
@@ -49,11 +53,17 @@ typedef struct dnn_upf_info_item_s {
   std::string dnn;
   // std::vector<std::string> dnai_list
   // std::vector<std::string> pdu_session_types
+  dnn_upf_info_item_s& operator=(const dnn_upf_info_item_s& d) { dnn = d.dnn; }
+
 } dnn_upf_info_item_t;
 
 typedef struct snssai_upf_info_item_s {
   snssai_t snssai;
   std::vector<dnn_upf_info_item_t> dnn_upf_info_list;
+  snssai_upf_info_item_s& operator=(const snssai_upf_info_item_s& s) {
+    dnn_upf_info_list = s.dnn_upf_info_list;
+    snssai            = s.snssai;
+  }
 } snssai_upf_info_item_t;
 
 typedef struct upf_info_s {
@@ -82,6 +92,10 @@ typedef struct upf_info_s {
       snssai_upf_info_list.push_back(snssai_item);
     }
   }
+  upf_info_s& operator=(const upf_info_s& u) {
+    snssai_upf_info_list = u.snssai_upf_info_list;
+  }
+
 } upf_info_t;
 
 typedef struct patch_item_s {
