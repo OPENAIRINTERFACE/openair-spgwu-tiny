@@ -194,7 +194,7 @@ void spgwu_s1u::handle_receive_gtpv1u_msg(
 void spgwu_s1u::send_g_pdu(
     const struct in_addr& peer_addr, const uint16_t peer_udp_port,
     const uint32_t tunnel_id, const char* send_buffer,
-    const ssize_t num_bytes) {
+    const ssize_t num_bytes, uint8_t  qfi) {
   // Logger::spgwu_s1u().info( "spgwu_s1u::send_g_pdu() TEID " TEID_FMT " %d
   // bytes", num_bytes);
   struct sockaddr_in peer_sock_addr;
@@ -202,7 +202,7 @@ void spgwu_s1u::send_g_pdu(
   peer_sock_addr.sin_addr   = peer_addr;
   peer_sock_addr.sin_port   = htobe16(peer_udp_port);
   gtpu_l4_stack::send_g_pdu(
-      peer_sock_addr, (teid_t) tunnel_id, send_buffer, num_bytes);
+      peer_sock_addr, (teid_t) tunnel_id, send_buffer, num_bytes, qfi);
 }
 //------------------------------------------------------------------------------
 void spgwu_s1u::send_g_pdu(

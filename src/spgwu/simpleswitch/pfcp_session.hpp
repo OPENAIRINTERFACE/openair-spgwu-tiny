@@ -48,7 +48,8 @@ class pfcp_session {
  public:
   pfcp::fseid_t cp_fseid;
   uint64_t seid;  // User plane
-
+  uint8_t  qfi;
+  
   // TO DO better than this :(sooner the better)  when inserting or removing new
   // PDRs, FARS, should not conflict with switching operations
   std::vector<std::shared_ptr<pfcp::pfcp_pdr>> pdrs;

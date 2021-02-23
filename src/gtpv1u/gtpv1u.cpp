@@ -160,7 +160,7 @@ void gtpu_l4_stack::handle_receive_message_cb(
 //------------------------------------------------------------------------------
 void gtpu_l4_stack::send_g_pdu(
     const struct sockaddr_in& peer_addr, const teid_t teid, const char* payload,
-    const ssize_t payload_len) {
+    const ssize_t payload_len, uint8_t qfi) {
 /*    struct gtpuhdr* gtpuhdr = reinterpret_cast<struct gtpuhdr*>(
       reinterpret_cast<uintptr_t>(payload) -
       (uintptr_t) sizeof(struct gtpuhdr));
@@ -198,7 +198,7 @@ void gtpu_l4_stack::send_g_pdu(
   gtpu_ext_hdr->gtpu_hdr.next_ext_type  = GTPU_PDU_SESSION_CONTAINER;
   gtpu_ext_hdr->message_length          = 0x01;
   gtpu_ext_hdr->pdu_type                = GTPU_DL_PDU_SESSION_INFORMATION;
-  gtpu_ext_hdr->qfi                     = 0x06;
+  gtpu_ext_hdr->qfi                     = qfi; // Taken from uplink PDR
   gtpu_ext_hdr->next_ext_type           = GTPU_NO_MORE_EXTENSION_HEADER;
 
   udp_s.async_send_to(

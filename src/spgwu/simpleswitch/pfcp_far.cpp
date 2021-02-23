@@ -40,7 +40,7 @@ extern spgwu_config spgwu_cfg;
 //------------------------------------------------------------------------------
 void pfcp_far::apply_forwarding_rules(
     struct iphdr* const iph, const std::size_t num_bytes, bool& nocp,
-    bool& buff) {
+    bool& buff, uint8_t  qfi) {
   // TODO dupl
   // TODO nocp
   // TODO buff
@@ -61,7 +61,7 @@ void pfcp_far::apply_forwarding_rules(
                     spgwu_cfg.s1_up.port,
                     forwarding_parameters.second.outer_header_creation.second
                         .teid,
-                    reinterpret_cast<const char*>(iph), num_bytes);
+                    reinterpret_cast<const char*>(iph), num_bytes, qfi);
 
                 break;
               case OUTER_HEADER_CREATION_GTPU_UDP_IPV6:

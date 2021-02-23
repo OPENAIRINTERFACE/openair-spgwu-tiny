@@ -89,7 +89,7 @@ class gtpu_l4_stack : public udp_application {
 
   void send_g_pdu(
       const struct sockaddr_in& peer_addr, const teid_t teid,
-      const char* payload, const ssize_t payload_len);
+      const char* payload, const ssize_t payload_lenz, uint8_t qfi);
   void send_g_pdu(
       const struct sockaddr_in6& peer_addr, const teid_t teid,
       const char* payload, const ssize_t payload_len);

@@ -913,7 +913,10 @@ void pfcp_switch::pfcp_session_look_up_pack_in_access(
             if ((*it_pdr)->get(far_id)) {
               std::shared_ptr<pfcp::pfcp_far> sfar = {};
               if (ssession->get(far_id.far_id, sfar)) {
-                sfar->apply_forwarding_rules(iph, num_bytes, nocp, buff);
+		//Maintain uplink QFI in session
+                uint8_t  qfi = (*it_pdr)->pdi.second.qfi.second.qfi;
+                ssession->qfi = qfi;
+                sfar->apply_forwarding_rules(iph, num_bytes, nocp, buff, 0);
               }
             }
           }
@@ -940,7 +943,6 @@ void pfcp_switch::pfcp_session_look_up_pack_in_access(
 //------------------------------------------------------------------------------
 void pfcp_switch::pfcp_session_look_up_pack_in_core(
     const char* buffer, const std::size_t num_bytes) {
-  // Logger::pfcp_switch().info( "pfcp_session_look_up_pack_in_core %d bytes",
   // num_bytes);
   struct iphdr* iph = (struct iphdr*) buffer;
   std::shared_ptr<std::vector<std::shared_ptr<pfcp::pfcp_pdr>>> pdrs;
@@ -960,6 +962,9 @@ void pfcp_switch::pfcp_session_look_up_pack_in_core(
               pfcp::far_id_t far_id = {};
               if ((*it)->get(far_id)) {
                 std::shared_ptr<pfcp::pfcp_far> sfar = {};
+                // uint8_t  qfi = (*it)->pdi.second.qfi.second.qfi;
+		// Retrieve uplink QFI value
+                uint8_t  qfi = ssession->qfi;
 #if TRACE_IS_ON
                 Logger::pfcp_switch().trace(
                     "pfcp_session_look_up_pack_in_core %d bytes, far id %08X",
@@ -972,7 +977,7 @@ void pfcp_switch::pfcp_session_look_up_pack_in_core(
                       "far id %08X",
                       num_bytes, far_id);
 #endif
-                  sfar->apply_forwarding_rules(iph, num_bytes, nocp, buff);
+                  sfar->apply_forwarding_rules(iph, num_bytes, nocp, buff, qfi);
                   if (buff) {
 #if TRACE_IS_ON
                     Logger::pfcp_switch().trace(
