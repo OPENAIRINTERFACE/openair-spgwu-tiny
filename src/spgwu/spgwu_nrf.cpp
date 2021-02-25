@@ -280,9 +280,6 @@ void spgwu_nrf::generate_upf_profile() {
   upf_profile.set_nf_capacity(100);
   upf_profile.add_nf_ipv4_addresses(spgwu_cfg.s1_up.addr4);
   upf_profile.set_upf_info(spgwu_cfg.upf_info);
-
-  // Display the profile
-  upf_profile.display();
 }
 
 //---------------------------------------------------------------------------------------------
