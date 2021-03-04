@@ -65,6 +65,7 @@ ENV TZ=Europe/Paris
 RUN apt-get update && \
     DEBIAN_FRONTEND=noninteractive apt-get upgrade --yes && \
     DEBIAN_FRONTEND=noninteractive apt-get install --yes \
+      tzdata \
       psmisc \
       net-tools \
       iproute2 \

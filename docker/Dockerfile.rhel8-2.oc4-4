@@ -70,7 +70,7 @@ ENV TZ=Europe/Paris
 # We install some debug tools for the moment in addition of mandatory libraries
 RUN yum update -y && \
     yum -y install --enablerepo="ubi-8-codeready-builder" \
-      tzadata \
+      tzdata \
       psmisc \
       net-tools \
       ethtool \
