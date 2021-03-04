@@ -66,9 +66,11 @@ RUN ./build_spgwu --clean --build-type Release --jobs --Verbose
 # TARGET IMAGE
 #---------------------------------------------------------------------
 FROM registry.access.redhat.com/ubi8/ubi:latest as oai-spgwu-tiny
+ENV TZ=Europe/Paris
 # We install some debug tools for the moment in addition of mandatory libraries
 RUN yum update -y && \
     yum -y install --enablerepo="ubi-8-codeready-builder" \
+      tzadata \
       psmisc \
       net-tools \
       ethtool \
