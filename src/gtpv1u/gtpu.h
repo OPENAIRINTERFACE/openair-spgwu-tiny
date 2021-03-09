@@ -72,5 +72,21 @@ struct gtpuhdr {
   uint32_t teid;
 
   /*The options start here. */
+  uint16_t sequence;
+  uint8_t pdu_number;
+  uint8_t next_ext_type;
+   };
+ #endif
+
+struct gtpu_ext_hdr{
+    struct gtpuhdr gtpu_hdr;
+    uint8_t message_length;
+    // PDU Type - This value indicates the structure of the PDU session UP frame. The field takes the value of the PDU
+    // Type it identifies; i.e. "0" for PDU Type 0. The PDU type is in bit 4 to bit 7 in the first octet of the frame.
+    uint8_t  pdu_type;
+    // QoS Flow Identifier (QFI): This parameter indicates the QoS Flow Identifier of the QoS flow to which
+    // the transferred packet bel
+    uint8_t qfi;
+    // Next Extension Header Type - This field defines the type of Extension Header that follows this field in the GTP-PDU
+    uint8_t next_ext_type;
 };
-#endif
