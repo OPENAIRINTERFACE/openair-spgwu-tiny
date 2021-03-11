@@ -956,6 +956,9 @@ void pfcp_switch::pfcp_session_look_up_pack_in_access(
               if ((*it_pdr)->get(far_id)) {
                 std::shared_ptr<pfcp::pfcp_far> sfar = {};
                 if (ssession->get(far_id.far_id, sfar)) {
+                  // Maintain uplink QFI in session
+                  uint8_t qfi   = (*it_pdr)->pdi.second.qfi.second.qfi;
+                  ssession->qfi = qfi;
                   sfar->apply_forwarding_rules(iph, num_bytes, nocp, buff, 0);
                 }
               }
@@ -1021,7 +1024,7 @@ void pfcp_switch::pfcp_session_look_up_pack_in_core(
               pfcp::far_id_t far_id = {};
               if ((*it)->get(far_id)) {
                 std::shared_ptr<pfcp::pfcp_far> sfar = {};
-                uint8_t qfi = ssession->qfi;
+                uint8_t qfi                          = ssession->qfi;
                 //#if TRACE_IS_ON
                 //                Logger::pfcp_switch().trace(
                 //                "pfcp_session_look_up_pack_in_core %d bytes,
