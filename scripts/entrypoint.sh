@@ -13,6 +13,7 @@ SX_THREADS=${SX_THREADS:-1}
 THREAD_SGI_PRIO=${THREAD_SGI_PRIO:-80}
 SGI_THREADS=${SGI_THREADS:-8}
 BYPASS_UL_PFCP_RULES=${BYPASS_UL_PFCP_RULES:-no}
+GTP_EXTENSION_HEADER_PRESENT=${GTP_EXTENSION_HEADER_PRESENT:-yes}
 
 for c in ${CONFIG_DIR}/*.conf; do
     # grep variable names (format: ${VAR}) from template to be rendered
