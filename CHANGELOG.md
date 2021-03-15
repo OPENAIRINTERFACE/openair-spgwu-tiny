@@ -1,5 +1,10 @@
 # RELEASE NOTES: #
 
+## v1.1.1 -- March 2021 ##
+
+* GTP-U extension headers for 5G support
+  - disabled by default for 4G usage
+
 ## v1.1.0 -- February 2021 ##
 
 *  Cloud-native support
