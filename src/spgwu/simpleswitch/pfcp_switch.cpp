@@ -276,7 +276,7 @@ void pfcp_switch::setup_pdn_interfaces() {
   int rc          = 0;
   int if_index    = 0;
 
-  int index = 0;
+  int index = spgwu_cfg.instance*1; // Max one PDN network supported per spgwu
   // TODO for loop on pdns
   {
     pdn_cfg_t it = spgwu_cfg.pdns[index];
@@ -284,12 +284,20 @@ void pfcp_switch::setup_pdn_interfaces() {
 
     cmd = fmt::format("ip tuntap add mode tun dev tun{}", index);
     rc  = system((const char*) cmd.c_str());
-
+    if (rc) {
+      Logger::pfcp_switch().warn("%s returned %d", cmd.c_str(), rc);
+    }
     cmd = fmt::format("ip link set dev tun{} up", index);
     rc  = system((const char*) cmd.c_str());
+    if (rc) {
+      Logger::pfcp_switch().warn("%s returned %d", cmd.c_str(), rc);
+    }
 
     cmd = fmt::format("ethtool -K tun{0} tx-checksum-ip-generic off;", index);
     rc  = system((const char*) cmd.c_str());
+    if (rc) {
+      Logger::pfcp_switch().warn("%s returned %d", cmd.c_str(), rc);
+    }
     if (it.prefix_ipv4) {
       struct in_addr address4 = {};
       address4.s_addr         = it.network_ipv4.s_addr + be32toh(1);
@@ -298,6 +306,9 @@ void pfcp_switch::setup_pdn_interfaces() {
           "ip addr add {}/{} dev tun{}", conv::toString(address4).c_str(),
           it.prefix_ipv4, index);
       rc = system((const char*) cmd.c_str());
+      if (rc) {
+        Logger::pfcp_switch().warn("%s returned %d", cmd.c_str(), rc);
+      }
 
       if (spgwu_cfg.snat) {
         cmd = fmt::format(
@@ -307,6 +318,9 @@ void pfcp_switch::setup_pdn_interfaces() {
             spgwu_cfg.sgi.if_name.c_str(),
             conv::toString(spgwu_cfg.sgi.addr4).c_str());
         rc = system((const char*) cmd.c_str());
+        if (rc) {
+          Logger::pfcp_switch().warn("%s returned %d", cmd.c_str(), rc);
+        }
       }
     }
     if (it.prefix_ipv6) {
@@ -332,7 +346,9 @@ void pfcp_switch::setup_pdn_interfaces() {
         "/sbin/sysctl -w net.ipv4.conf.{}.rp_filter=0",
         spgwu_cfg.sgi.if_name.c_str());
     rc = system((const char*) cmd.c_str());
-
+    if (rc) {
+      Logger::pfcp_switch().warn("%s returned %d", cmd.c_str(), rc);
+    }
     // Otherwise redirect incoming ingress UE IP to default gw
     // cmd = fmt::format("/sbin/sysctl -w net.ipv4.conf.tun{}.send_redirects=0",
     // index); rc = system ((const char*)cmd.c_str()); cmd =
