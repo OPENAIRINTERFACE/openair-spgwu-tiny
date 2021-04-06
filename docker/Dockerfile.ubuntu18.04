@@ -33,7 +33,7 @@ FROM ubuntu:bionic as oai-spgwu-tiny-builder
 ARG EURECOM_PROXY
 
 ENV DEBIAN_FRONTEND=noninteractive
-ENV TZ=Europe
+ENV TZ=Europe/Paris
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get upgrade --yes && DEBIAN_FRONTEND=noninteractive apt-get install --yes \
     psmisc \
@@ -56,24 +56,23 @@ RUN ./build_spgwu --clean --build-type Release --jobs --Verbose
 #---------------------------------------------------------------------
 # TARGET IMAGE
 #---------------------------------------------------------------------
-FROM ubuntu:bionic as oai-spgwu-tiny
-ENV DEBIAN_FRONTEND=noninteractive
-ENV TZ=Europe
-RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
+FROM ubuntu:bionic as oai-spgwu-tinyENV DEBIAN_FRONTEND=noninteractive
+ENV TZ=Europe/Paris
 # We install some debug tools for the moment in addition of mandatory libraries
 RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get upgrade --yes && DEBIAN_FRONTEND=noninteractive apt-get install --yes \
+    tzdata\
     psmisc \
     net-tools \
     iproute2 \
     ethtool \
     iptables \
     tshark \
+    libcurl4-gnutls-dev \
     libgoogle-glog0v5 \
     libdouble-conversion1 \
     libconfig++9v5 \
     libboost-system1.65.1 \
   && rm -rf /var/lib/apt/lists/*
-
 
 # Copying executable and generated libraries
 WORKDIR /openair-spgwu-tiny/bin
