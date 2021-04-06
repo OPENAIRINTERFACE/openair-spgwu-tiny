@@ -56,7 +56,8 @@ RUN ./build_spgwu --clean --build-type Release --jobs --Verbose
 #---------------------------------------------------------------------
 # TARGET IMAGE
 #---------------------------------------------------------------------
-FROM ubuntu:bionic as oai-spgwu-tinyENV DEBIAN_FRONTEND=noninteractive
+FROM ubuntu:bionic as oai-spgwu-tiny
+ENV DEBIAN_FRONTEND=noninteractive
 ENV TZ=Europe/Paris
 # We install some debug tools for the moment in addition of mandatory libraries
 RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get upgrade --yes && DEBIAN_FRONTEND=noninteractive apt-get install --yes \
