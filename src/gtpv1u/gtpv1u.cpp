@@ -184,32 +184,39 @@ void gtpu_l4_stack::send_g_pdu(
         reinterpret_cast<const char*>(gtpuhdr),
         payload_len + sizeof(struct gtpuhdr) + 4, peer_addr);
   } else {
-    struct gtpu_ext_hdr* gtpu_ext_hdr = reinterpret_cast<struct gtpu_ext_hdr*>(
+    struct gtpuhdr* gtpuhdr = reinterpret_cast<struct gtpuhdr*>(
         reinterpret_cast<uintptr_t>(payload) -
-        (uintptr_t) sizeof(struct gtpu_ext_hdr));
-    gtpu_ext_hdr->gtpu_hdr.spare        = 0;
-    //  gtpuhdr->e              = 0;
-    gtpu_ext_hdr->gtpu_hdr.e            = 1;
-    gtpu_ext_hdr->gtpu_hdr.s            = 0;
-    gtpu_ext_hdr->gtpu_hdr.pn           = 0;
-    gtpu_ext_hdr->gtpu_hdr.pt           = 1;
-    gtpu_ext_hdr->gtpu_hdr.version      = 1;
-    gtpu_ext_hdr->gtpu_hdr.message_type = GTPU_G_PDU;
-    //  gtpuhdr->message_length = htobe16(payload_len);
-    gtpu_ext_hdr->gtpu_hdr.message_length = htobe16(payload_len + 8);
-    gtpu_ext_hdr->gtpu_hdr.teid           = htobe32(teid);
+        (uintptr_t) sizeof(struct gtpuhdr) -
+        (uintptr_t) sizeof(struct gtpu_extn_pdu_session_container));
+    gtpuhdr->spare          = 0;
+    gtpuhdr->e              = 1;
+    gtpuhdr->s              = 0;
+    gtpuhdr->pn             = 0;
+    gtpuhdr->pt             = 1;
+    gtpuhdr->version        = 1;
+    gtpuhdr->message_type   = GTPU_G_PDU;
+    gtpuhdr->message_length = htobe16(
+        payload_len + sizeof(struct gtpu_extn_pdu_session_container) + 4);
+    gtpuhdr->teid          = htobe32(teid);
+    gtpuhdr->pdu_number    = 0x00;
+    gtpuhdr->sequence      = 0x00;
+    gtpuhdr->next_ext_type = GTPU_PDU_SESSION_CONTAINER;
 
-    gtpu_ext_hdr->gtpu_hdr.pdu_number    = 0x00;
-    gtpu_ext_hdr->gtpu_hdr.sequence      = 0x00;
-    gtpu_ext_hdr->gtpu_hdr.next_ext_type = GTPU_PDU_SESSION_CONTAINER;
-    gtpu_ext_hdr->message_length         = 0x01;
-    gtpu_ext_hdr->pdu_type               = GTPU_DL_PDU_SESSION_INFORMATION;
-    gtpu_ext_hdr->qfi                    = qfi;  // Taken from uplink PDR
-    gtpu_ext_hdr->next_ext_type          = GTPU_NO_MORE_EXTENSION_HEADER;
+    struct gtpu_extn_pdu_session_container* gtpu_ext_hdr =
+        reinterpret_cast<struct gtpu_extn_pdu_session_container*>(
+            reinterpret_cast<uintptr_t>(payload) -
+            (uintptr_t) sizeof(struct gtpu_extn_pdu_session_container));
+
+    gtpu_ext_hdr->message_length = 0x01;
+    gtpu_ext_hdr->pdu_type       = GTPU_DL_PDU_SESSION_INFORMATION;
+    gtpu_ext_hdr->qfi            = qfi;  // Taken from uplink PDR
+    gtpu_ext_hdr->next_ext_type  = GTPU_NO_MORE_EXTENSION_HEADER;
 
     udp_s.async_send_to(
-        reinterpret_cast<const char*>(gtpu_ext_hdr),
-        payload_len + sizeof(struct gtpu_ext_hdr), peer_addr);
+        reinterpret_cast<const char*>(gtpuhdr),
+        payload_len + sizeof(struct gtpuhdr) +
+            sizeof(struct gtpu_extn_pdu_session_container),
+        peer_addr);
   }
 }
 //------------------------------------------------------------------------------
