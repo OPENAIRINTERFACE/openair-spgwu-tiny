@@ -101,7 +101,7 @@ void spgwu_s1u_task(void* args_p) {
 spgwu_s1u::spgwu_s1u()
     : gtpu_l4_stack(
           spgwu_cfg.s1_up.addr4, spgwu_cfg.s1_up.port,
-          spgwu_cfg.s1_up.thread_rd_sched_params) {
+          spgwu_cfg.s1_up.thread_rd_sched_params, spgwu_cfg.gtp_ext_hdr) {
   Logger::spgwu_s1u().startup("Starting...");
   if (itti_inst->create_task(
           TASK_SPGWU_S1U, spgwu_s1u_task, &spgwu_cfg.itti.s1u_sched_params)) {
