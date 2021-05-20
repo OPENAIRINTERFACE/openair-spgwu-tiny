@@ -123,8 +123,7 @@ void spgwu_s1u::handle_receive(
     if (gtpuh->message_type == GTPU_G_PDU) {
       uint8_t gtp_flags = recv_buffer[GTPU_MESSAGE_FLAGS_POS_IN_UDP_PAYLOAD];
       std::size_t gtp_payload_offset = GTPV1U_MSG_HEADER_MIN_SIZE;
-      if (gtp_flags == 0x34)
-        gtp_payload_offset += 4;
+      if (gtp_flags == 0x34) gtp_payload_offset += 4;
       std::size_t gtp_payload_length = be16toh(gtpuh->message_length);
       if (gtp_flags & 0x07) {
         gtp_payload_offset += 4;
@@ -195,8 +194,8 @@ void spgwu_s1u::handle_receive_gtpv1u_msg(
 //------------------------------------------------------------------------------
 void spgwu_s1u::send_g_pdu(
     const struct in_addr& peer_addr, const uint16_t peer_udp_port,
-    const uint32_t tunnel_id, const char* send_buffer,
-    const ssize_t num_bytes, uint8_t qfi) {
+    const uint32_t tunnel_id, const char* send_buffer, const ssize_t num_bytes,
+    uint8_t qfi) {
   // Logger::spgwu_s1u().info( "spgwu_s1u::send_g_pdu() TEID " TEID_FMT " %d
   // bytes", num_bytes);
   struct sockaddr_in peer_sock_addr;

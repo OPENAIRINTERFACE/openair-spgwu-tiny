@@ -66,7 +66,7 @@ extern itti_mw* itti_inst;
 gtpu_l4_stack::gtpu_l4_stack(
     const struct in_addr& address, const uint16_t port_num,
     const util::thread_sched_params& sched_params, const bool send_ext_hdr)
-    : udp_s(udp_server(address, port_num)), send_ext_hdr(send_ext_hdr)  {
+    : udp_s(udp_server(address, port_num)), send_ext_hdr(send_ext_hdr) {
   Logger::gtpv1_u().info(
       "gtpu_l4_stack created listening to %s:%d",
       conv::toString(address).c_str(), port_num);

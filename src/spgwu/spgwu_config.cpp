@@ -468,7 +468,7 @@ int spgwu_config::load(const string& config_file) {
       }
     }
 
-    gtp_ext_hdr          = false;
+    gtp_ext_hdr = false;
     if (spgwu_cfg.lookupValue(SPGWU_CONFIG_STRING_GTP_EXT_HDR, astring)) {
       if (boost::iequals(astring, "yes")) {
         gtp_ext_hdr = true;
