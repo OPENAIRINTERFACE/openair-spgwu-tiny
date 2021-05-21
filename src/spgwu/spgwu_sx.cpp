@@ -387,7 +387,7 @@ Logger::spgwu_sx().info("Handle SX ASSOCIATION SETUP REQUEST");
                                            (uint32_t) recovery_time_stamp};
       a.pfcp_ies.set(r);
       a.pfcp_ies.set(up_function_features);
-      if (node_id.node_id_type == pfcp::NODE_ID_TYPE_IPV4_ADDRESS) {
+      if (node_id.node_id_type != pfcp::NODE_ID_TYPE_IPV6_ADDRESS){
         a.r_endpoint = remote_endpoint;
 	send_sx_msg(a);
       } else {
