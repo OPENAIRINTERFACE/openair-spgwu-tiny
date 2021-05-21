@@ -204,7 +204,7 @@ void gtpu_l4_stack::send_g_pdu(
             reinterpret_cast<uintptr_t>(payload) -
             (uintptr_t) sizeof(struct gtpu_extn_pdu_session_container));
 
-    gtpu_ext_hdr->message_length = htobe16(1);
+    gtpu_ext_hdr->message_length = 0x01;
     gtpu_ext_hdr->pdu_type       = GTPU_DL_PDU_SESSION_INFORMATION;
     gtpu_ext_hdr->qfi            = qfi;  // Taken from uplink PDR
     gtpu_ext_hdr->next_ext_type  = GTPU_NO_MORE_EXTENSION_HEADER;
