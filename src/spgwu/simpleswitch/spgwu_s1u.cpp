@@ -101,7 +101,7 @@ void spgwu_s1u_task(void* args_p) {
 spgwu_s1u::spgwu_s1u()
     : gtpu_l4_stack(
           spgwu_cfg.s1_up.addr4, spgwu_cfg.s1_up.port,
-          spgwu_cfg.s1_up.thread_rd_sched_params) {
+          spgwu_cfg.s1_up.thread_rd_sched_params, spgwu_cfg.gtp_ext_hdr) {
   Logger::spgwu_s1u().startup("Starting...");
   if (itti_inst->create_task(
           TASK_SPGWU_S1U, spgwu_s1u_task, &spgwu_cfg.itti.s1u_sched_params)) {
@@ -123,6 +123,7 @@ void spgwu_s1u::handle_receive(
     if (gtpuh->message_type == GTPU_G_PDU) {
       uint8_t gtp_flags = recv_buffer[GTPU_MESSAGE_FLAGS_POS_IN_UDP_PAYLOAD];
       std::size_t gtp_payload_offset = GTPV1U_MSG_HEADER_MIN_SIZE;
+      if (gtp_flags == 0x34) gtp_payload_offset += 4;
       std::size_t gtp_payload_length = be16toh(gtpuh->message_length);
       if (gtp_flags & 0x07) {
         gtp_payload_offset += 4;
@@ -193,8 +194,8 @@ void spgwu_s1u::handle_receive_gtpv1u_msg(
 //------------------------------------------------------------------------------
 void spgwu_s1u::send_g_pdu(
     const struct in_addr& peer_addr, const uint16_t peer_udp_port,
-    const uint32_t tunnel_id, const char* send_buffer,
-    const ssize_t num_bytes) {
+    const uint32_t tunnel_id, const char* send_buffer, const ssize_t num_bytes,
+    uint8_t qfi) {
   // Logger::spgwu_s1u().info( "spgwu_s1u::send_g_pdu() TEID " TEID_FMT " %d
   // bytes", num_bytes);
   struct sockaddr_in peer_sock_addr;
@@ -202,7 +203,7 @@ void spgwu_s1u::send_g_pdu(
   peer_sock_addr.sin_addr   = peer_addr;
   peer_sock_addr.sin_port   = htobe16(peer_udp_port);
   gtpu_l4_stack::send_g_pdu(
-      peer_sock_addr, (teid_t) tunnel_id, send_buffer, num_bytes);
+      peer_sock_addr, (teid_t) tunnel_id, send_buffer, num_bytes, qfi);
 }
 //------------------------------------------------------------------------------
 void spgwu_s1u::send_g_pdu(

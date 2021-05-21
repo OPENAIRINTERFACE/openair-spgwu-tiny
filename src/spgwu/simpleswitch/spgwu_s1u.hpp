@@ -76,7 +76,7 @@ class spgwu_s1u : public gtpv1u::gtpu_l4_stack {
   void send_g_pdu(
       const struct in_addr& peer_addr, const uint16_t peer_udp_port,
       const uint32_t tunnel_id, const char* send_buffer,
-      const ssize_t num_bytes);
+      const ssize_t num_bytes, uint8_t qfi);
   void send_g_pdu(
       const struct in6_addr& peer_addr, const uint16_t peer_udp_port,
       const uint32_t tunnel_id, const char* send_buffer,

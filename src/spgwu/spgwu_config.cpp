@@ -467,6 +467,14 @@ int spgwu_config::load(const string& config_file) {
         snat = true;
       }
     }
+
+    gtp_ext_hdr = false;
+    if (spgwu_cfg.lookupValue(SPGWU_CONFIG_STRING_GTP_EXT_HDR, astring)) {
+      if (boost::iequals(astring, "yes")) {
+        gtp_ext_hdr = true;
+      }
+    }
+
     const Setting& spgwc_list_cfg = spgwu_cfg[SPGWU_CONFIG_STRING_SPGWC_LIST];
     count                         = spgwc_list_cfg.getLength();
     for (int i = 0; i < count; i++) {

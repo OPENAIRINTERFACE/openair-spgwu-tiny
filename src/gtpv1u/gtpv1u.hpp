@@ -56,6 +56,7 @@ class gtpu_l4_stack : public udp_application {
 
  protected:
   uint32_t id;
+  bool send_ext_hdr;
   udp_server udp_s;
 
   // seems no need for std::atomic_uint32_t
@@ -72,13 +73,13 @@ class gtpu_l4_stack : public udp_application {
   static const uint8_t version = 1;
   gtpu_l4_stack(
       const struct in_addr& address, const uint16_t port_num,
-      const util::thread_sched_params& sched_params);
+      const util::thread_sched_params& sched_params, const bool send_ext_hdr);
   gtpu_l4_stack(
       const struct in6_addr& address, const uint16_t port_num,
-      const util::thread_sched_params& sched_params);
+      const util::thread_sched_params& sched_params, const bool send_ext_hdr);
   gtpu_l4_stack(
       char* ip_address, const uint16_t port_num,
-      const util::thread_sched_params& sched_params);
+      const util::thread_sched_params& sched_params, const bool send_ext_hdr);
   virtual void handle_receive(
       char* recv_buffer, const std::size_t bytes_transferred,
       const endpoint& r_endpoint);
@@ -89,7 +90,7 @@ class gtpu_l4_stack : public udp_application {
 
   void send_g_pdu(
       const struct sockaddr_in& peer_addr, const teid_t teid,
-      const char* payload, const ssize_t payload_len);
+      const char* payload, const ssize_t payload_len, uint8_t qfi);
   void send_g_pdu(
       const struct sockaddr_in6& peer_addr, const teid_t teid,
       const char* payload, const ssize_t payload_len);
