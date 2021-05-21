@@ -109,7 +109,8 @@ class spgwu_sx : public pfcp::pfcp_l4_stack {
       pfcp::pfcp_msg& msg, const endpoint& remote_endpoint);
   void handle_receive_association_setup_response(
       pfcp::pfcp_msg& msg, const endpoint& remote_endpoint);
-  void handle_receive_association_setup_request(pfcp::pfcp_msg& msg, const endpoint& remote_endpoint);
+  void handle_receive_association_setup_request(
+      pfcp::pfcp_msg& msg, const endpoint& remote_endpoint);
   // session related
   void handle_receive_session_establishment_request(
       pfcp::pfcp_msg& msg, const endpoint& remote_endpoint);

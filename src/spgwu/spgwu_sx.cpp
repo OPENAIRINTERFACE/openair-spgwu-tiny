@@ -339,7 +339,7 @@ void spgwu_sx::handle_receive_association_setup_response(
 
 void spgwu_sx::handle_receive_association_setup_request(
     pfcp::pfcp_msg& msg, const endpoint& remote_endpoint) {
-Logger::spgwu_sx().info("Handle SX ASSOCIATION SETUP REQUEST");
+  Logger::spgwu_sx().info("Handle SX ASSOCIATION SETUP REQUEST");
   bool error                                       = true;
   uint64_t trxn_id                                 = 0;
   pfcp_association_setup_request msg_ies_container = {};
@@ -383,13 +383,13 @@ Logger::spgwu_sx().info("Handle SX ASSOCIATION SETUP REQUEST");
     pfcp::node_id_t node_id = {};
     if (spgwu_cfg.get_pfcp_node_id(node_id) == RETURNok) {
       a.pfcp_ies.set(node_id);
-      pfcp::recovery_time_stamp_t r = {.recovery_time_stamp =
-                                           (uint32_t) recovery_time_stamp};
+      pfcp::recovery_time_stamp_t r = {
+          .recovery_time_stamp = (uint32_t) recovery_time_stamp};
       a.pfcp_ies.set(r);
       a.pfcp_ies.set(up_function_features);
-      if (node_id.node_id_type != pfcp::NODE_ID_TYPE_IPV6_ADDRESS){
+      if (node_id.node_id_type != pfcp::NODE_ID_TYPE_IPV6_ADDRESS) {
         a.r_endpoint = remote_endpoint;
-	send_sx_msg(a);
+        send_sx_msg(a);
       } else {
         Logger::spgwu_sx().warn(
             "Received SX ASSOCIATION SETUP REQUEST node_id IPV6, FQDN!, "
@@ -630,8 +630,8 @@ void spgwu_sx::start_association(const pfcp::node_id_t& node_id) {
   pfcp::node_id_t this_node_id = {};
   if (spgwu_cfg.get_pfcp_node_id(this_node_id) == RETURNok) {
     a.pfcp_ies.set(this_node_id);
-    pfcp::recovery_time_stamp_t r = {.recovery_time_stamp =
-                                         (uint32_t) recovery_time_stamp};
+    pfcp::recovery_time_stamp_t r = {
+        .recovery_time_stamp = (uint32_t) recovery_time_stamp};
     a.pfcp_ies.set(r);
     a.pfcp_ies.set(up_function_features);
     if (node_id.node_id_type == pfcp::NODE_ID_TYPE_IPV4_ADDRESS) {
@@ -673,8 +673,8 @@ void spgwu_sx::send_sx_msg(
 //------------------------------------------------------------------------------
 void spgwu_sx::send_heartbeat_request(std::shared_ptr<pfcp_association>& a) {
   pfcp::pfcp_heartbeat_request h = {};
-  pfcp::recovery_time_stamp_t r  = {.recovery_time_stamp =
-                                       (uint32_t) recovery_time_stamp};
+  pfcp::recovery_time_stamp_t r  = {
+      .recovery_time_stamp = (uint32_t) recovery_time_stamp};
   h.set(r);
 
   pfcp::node_id_t& node_id = a->node_id;
@@ -696,8 +696,8 @@ void spgwu_sx::send_heartbeat_request(std::shared_ptr<pfcp_association>& a) {
 void spgwu_sx::send_heartbeat_response(
     const endpoint& r_endpoint, const uint64_t trxn_id) {
   pfcp::pfcp_heartbeat_response h = {};
-  pfcp::recovery_time_stamp_t r   = {.recovery_time_stamp =
-                                       (uint32_t) recovery_time_stamp};
+  pfcp::recovery_time_stamp_t r   = {
+      .recovery_time_stamp = (uint32_t) recovery_time_stamp};
   h.set(r);
   send_response(r_endpoint, h, trxn_id);
 }
