@@ -33,7 +33,10 @@
 #include "spgwu_config.hpp"
 #include "spgwu_s1u.hpp"
 #include "spgwu_sx.hpp"
+#include "spgwu_nrf.hpp"
 
+#include <boost/uuid/random_generator.hpp>
+#include <boost/uuid/uuid_io.hpp>
 #include <stdexcept>
 
 using namespace pfcp;
@@ -44,6 +47,7 @@ using namespace std;
 
 spgwu_sx* spgwu_sx_inst   = nullptr;
 spgwu_s1u* spgwu_s1u_inst = nullptr;
+spgwu_nrf* spgwu_nrf_inst = nullptr;
 
 extern itti_mw* itti_inst;
 extern pfcp_switch* pfcp_switch_inst;
@@ -157,12 +161,20 @@ spgwu_app::spgwu_app(const std::string& config_file) {
     Logger::spgwu_app().error("Cannot create PFCP_SWITCH: %s", e.what());
     throw;
   }
+  try {
+    if (spgwu_cfg.upf_5g_features.register_nrf)
+      spgwu_nrf_inst = new spgwu_nrf();
+  } catch (std::exception& e) {
+    Logger::spgwu_app().error("Cannot create SPGWU_NRF: %s", e.what());
+    throw;
+  }
   Logger::spgwu_app().startup("Started");
 }
 
 //------------------------------------------------------------------------------
 spgwu_app::~spgwu_app() {
   if (spgwu_sx_inst) delete spgwu_sx_inst;
+  if (spgwu_nrf_inst) delete spgwu_nrf_inst;
 }
 //------------------------------------------------------------------------------
 void spgwu_app::handle_itti_msg(std::shared_ptr<itti_s1u_echo_request> m) {
