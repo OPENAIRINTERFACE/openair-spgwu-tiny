@@ -281,6 +281,7 @@ check_install_spgwu_deps() {
       doxygen \
       flex \
       gdb \
+      wget \
       git"
   elif [[ "$OS_BASEDISTRO" == "fedora" ]]; then
     PACKAGE_LIST="\
@@ -330,6 +331,7 @@ check_install_spgwu_deps() {
       libxml2-dev \
       openssl \
       python \
+      wget \
       pkg-config"
   elif [[ "$OS_BASEDISTRO" == "fedora" ]]; then
     case "$(get_distribution_release)" in
