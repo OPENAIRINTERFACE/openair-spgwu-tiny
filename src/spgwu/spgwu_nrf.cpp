@@ -296,7 +296,7 @@ void spgwu_nrf::send_curl(
     curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers);
     curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
     curl_easy_setopt(curl, CURLOPT_HTTPGET, 1);
-    curl_easy_setopt(curl, CURLOPT_CUSTOMREQUEST, method);
+    curl_easy_setopt(curl, CURLOPT_CUSTOMREQUEST, method.c_str());
     curl_easy_setopt(curl, CURLOPT_TIMEOUT_MS, NRF_CURL_TIMEOUT_MS);
     curl_easy_setopt(
         curl, CURLOPT_INTERFACE,
@@ -304,6 +304,7 @@ void spgwu_nrf::send_curl(
                                         // to communicate with NRF
 
     // Response information
+    uint32_t code = {0};
     std::unique_ptr<std::string> httpData(new std::string());
     curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, &callback);
     curl_easy_setopt(curl, CURLOPT_WRITEDATA, httpData.get());
@@ -313,9 +314,10 @@ void spgwu_nrf::send_curl(
     }
 
     res = curl_easy_perform(curl);
-    curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &http_code);
-    Logger::spgwu_app().debug("Response from NRF, HTTP Code: %d", http_code);
-    response = *httpData.get();
+    curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &code);
+    Logger::spgwu_app().debug("Response from NRF, HTTP Code: %u", code);
+    http_code = code;
+    if (code != HTTP_STATUS_CODE_204_NO_CONTENT) response = *httpData.get();
 
     curl_slist_free_all(headers);
     curl_easy_cleanup(curl);
