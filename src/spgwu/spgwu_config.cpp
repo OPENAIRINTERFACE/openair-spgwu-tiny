@@ -504,7 +504,7 @@ int spgwu_config::load(const string& config_file) {
       }
     }
 
-    // Support features
+    // Support 5G features
     const Setting& support_features =
         spgwu_cfg[SPGWU_CONFIG_STRING_5G_FEATURES];
     string opt;
@@ -593,10 +593,19 @@ int spgwu_config::load(const string& config_file) {
         unsigned int nssai_sst           = 0;
         string nssai_sd                  = {};
 
-        upf_info_item_cfg.lookupValue(
-            SPGWU_CONFIG_STRING_5G_FEATURES_NSSAI_SST, nssai_sst);
-        upf_info_item_cfg.lookupValue(
-            SPGWU_CONFIG_STRING_5G_FEATURES_NSSAI_SD, nssai_sd);
+        if (!(upf_info_item_cfg.lookupValue(
+                SPGWU_CONFIG_STRING_5G_FEATURES_NSSAI_SST, nssai_sst))) {
+          Logger::spgwu_app().error(SPGWU_CONFIG_STRING_5G_FEATURES_NSSAI_SST
+                                    "failed");
+          throw(SPGWU_CONFIG_STRING_5G_FEATURES_NSSAI_SST "failed");
+        }
+
+        if (!(upf_info_item_cfg.lookupValue(
+                SPGWU_CONFIG_STRING_5G_FEATURES_NSSAI_SD, nssai_sd))) {
+          Logger::spgwu_app().error(SPGWU_CONFIG_STRING_5G_FEATURES_NSSAI_SD
+                                    "failed");
+          throw(SPGWU_CONFIG_STRING_5G_FEATURES_NSSAI_SD "failed");
+        }
 
         snssai_upf_info_item_t snssai_item = {};
         snssai_t snssai                    = {};
@@ -610,7 +619,13 @@ int spgwu_config::load(const string& config_file) {
         for (int i = 0; i < number_dnns; i++) {
           string dnn                  = {};
           const Setting& dnn_item_cfg = dnn_cfg[i];
-          dnn_item_cfg.lookupValue(SPGWU_CONFIG_STRING_5G_FEATURES_DNN, dnn);
+          if (!(dnn_item_cfg.lookupValue(
+                  SPGWU_CONFIG_STRING_5G_FEATURES_DNN, dnn))) {
+            Logger::spgwu_app().error(SPGWU_CONFIG_STRING_5G_FEATURES_DNN
+                                      "failed");
+            throw(SPGWU_CONFIG_STRING_5G_FEATURES_DNN "failed");
+          }
+
           dnn_upf_info_item_t dnn_item = {};
           dnn_item.dnn                 = dnn;
           snssai_item.dnn_upf_info_list.push_back(dnn_item);
