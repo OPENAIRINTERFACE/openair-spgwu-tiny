@@ -305,6 +305,7 @@ check_install_spgwu_deps() {
   if [[ $OS_DISTRO == "ubuntu" ]]; then
     case "$(get_distribution_release)" in
   "ubuntu18.04")
+      var_ubuntu_18_04=1
       specific_packages="libconfig++-dev"
       ;;
       *)
