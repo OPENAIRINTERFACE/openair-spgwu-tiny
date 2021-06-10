@@ -73,7 +73,6 @@ enum protocol_application_error_e {
   PROTOCOL_APP_ERROR_UNSPECIFIED_NF_FAILURE = 16,  // 500 Internal Server Error
   PROTOCOL_APP_ERROR_SYSTEM_FAILURE         = 17,  // 500 Internal Server Error
   PROTOCOL_APP_ERROR_NF_CONGESTION          = 18,  // 503 Service Unavailable
-
 };
 
 static const std::vector<std::string> protocol_application_error_e2str{

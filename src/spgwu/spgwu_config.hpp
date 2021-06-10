@@ -76,7 +76,7 @@ namespace spgwu {
 #define SPGWU_CONFIG_STRING_BYPASS_UL_PFCP_RULES "BYPASS_UL_PFCP_RULES"
 #define SPGWU_CONFIG_STRING_GTP_EXT_HDR "GTP_EXT_HDR"
 
-#define SPGWU_CONFIG_STRING_5G_FEATURES "5G_FEATURES"
+#define SPGWU_CONFIG_STRING_5G_FEATURES "SUPPORT_5G_FEATURES"
 #define SPGWU_CONFIG_STRING_ENABLE_5G_FEATURES "ENABLE_5G_FEATURES"
 #define SPGWU_CONFIG_STRING_5G_FEATURES_REGISTER_NRF "REGISTER_NRF"
 #define SPGWU_CONFIG_STRING_5G_FEATURES_NRF "NRF"
@@ -163,7 +163,7 @@ class spgwu_config {
       struct in_addr ipv4_addr;
       unsigned int port;
       std::string api_version;
-      // std::string fqdn;
+      std::string fqdn;
     } nrf_addr;
   } upf_5g_features;
 
@@ -203,7 +203,7 @@ class spgwu_config {
     upf_5g_features.nrf_addr.ipv4_addr.s_addr = INADDR_ANY;
     upf_5g_features.nrf_addr.port             = 80;
     upf_5g_features.nrf_addr.api_version      = "v1";
-    // upf_5g_features.nrf_addr.fqdn = {};
+    upf_5g_features.nrf_addr.fqdn             = {};
   };
 
   void lock() { m_rw_lock.lock(); };

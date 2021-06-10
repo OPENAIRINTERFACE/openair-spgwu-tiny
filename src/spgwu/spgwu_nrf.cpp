@@ -139,10 +139,10 @@ void spgwu_nrf::send_register_nf_instance(const std::string& url) {
     try {
       response_data = json::parse(response.c_str());
     } catch (json::exception& e) {
-      Logger::spgwu_app().warn("Could not parse json from the NRF response");
+      Logger::spgwu_app().warn("Could not parse JSON from the NRF response");
     }
     Logger::spgwu_app().debug(
-        "Response from NRF, Json data: \n %s", response_data.dump().c_str());
+        "Response from NRF, JSON data: \n %s", response_data.dump().c_str());
 
     // Update NF profile
     upf_profile.from_json(response_data);
@@ -298,7 +298,10 @@ void spgwu_nrf::send_curl(
     curl_easy_setopt(curl, CURLOPT_HTTPGET, 1);
     curl_easy_setopt(curl, CURLOPT_CUSTOMREQUEST, method);
     curl_easy_setopt(curl, CURLOPT_TIMEOUT_MS, NRF_CURL_TIMEOUT_MS);
-    curl_easy_setopt(curl, CURLOPT_INTERFACE, spgwu_cfg.sx.if_name.c_str());
+    curl_easy_setopt(
+        curl, CURLOPT_INTERFACE,
+        spgwu_cfg.sx.if_name.c_str());  // TODO: use another interface for UPF
+                                        // to communicate with NRF
 
     // Response information
     std::unique_ptr<std::string> httpData(new std::string());
@@ -311,9 +314,7 @@ void spgwu_nrf::send_curl(
 
     res = curl_easy_perform(curl);
     curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &http_code);
-
     Logger::spgwu_app().debug("Response from NRF, HTTP Code: %d", http_code);
-
     response = *httpData.get();
 
     curl_slist_free_all(headers);

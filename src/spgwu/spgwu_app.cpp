@@ -162,7 +162,8 @@ spgwu_app::spgwu_app(const std::string& config_file) {
     throw;
   }
   try {
-    if (spgwu_cfg.upf_5g_features.register_nrf)
+    if (spgwu_cfg.upf_5g_features.enable_5g_features and
+        spgwu_cfg.upf_5g_features.register_nrf)
       spgwu_nrf_inst = new spgwu_nrf();
   } catch (std::exception& e) {
     Logger::spgwu_app().error("Cannot create SPGWU_NRF: %s", e.what());

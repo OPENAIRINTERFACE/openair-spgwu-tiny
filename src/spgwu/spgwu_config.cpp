@@ -534,7 +534,8 @@ int spgwu_config::load(const string& config_file) {
       }
 
       // NRF
-      const Setting& nrf_cfg = spgwu_cfg[SPGWU_CONFIG_STRING_5G_FEATURES_NRF];
+      const Setting& nrf_cfg =
+          support_features[SPGWU_CONFIG_STRING_5G_FEATURES_NRF];
       struct in_addr nrf_ipv4_addr;
       unsigned int nrf_port = 0;
       std::string nrf_api_version;
@@ -564,10 +565,11 @@ int spgwu_config::load(const string& config_file) {
         }
         upf_5g_features.nrf_addr.api_version = nrf_api_version;
       } else {
+        Logger::spgwu_app().info("USE FQDN");
         std::string nrf_fqdn = {};
         nrf_cfg.lookupValue(SPGWU_CONFIG_STRING_FQDN, nrf_fqdn);
-        // upf_5g_features.nrf_addr.fqdn = nrf_fqdn;  // TODO: Resolve FQDN at
-        // Runtime
+        upf_5g_features.nrf_addr.fqdn =
+            nrf_fqdn;  // TODO: Resolve FQDN at runtime
         uint8_t addr_type = {};
         fqdn::resolve(nrf_fqdn, nrf_address, nrf_port, addr_type);
         if (addr_type != 0) {  // IPv6: TODO
@@ -578,13 +580,13 @@ int spgwu_config::load(const string& config_file) {
               "BAD IPv4 ADDRESS FORMAT FOR NRF !");
           upf_5g_features.nrf_addr.ipv4_addr   = nrf_ipv4_addr;
           upf_5g_features.nrf_addr.port        = nrf_port;
-          upf_5g_features.nrf_addr.api_version = "v1";  // TODO: get API version
+          upf_5g_features.nrf_addr.api_version = "v2";  // TODO: get API version
         }
       }
 
       // UPF info
       const Setting& upf_info_cfg =
-          spgwu_cfg[SPGWU_CONFIG_STRING_5G_FEATURES_UPF_INFO];
+          support_features[SPGWU_CONFIG_STRING_5G_FEATURES_UPF_INFO];
       count = upf_info_cfg.getLength();
       for (int i = 0; i < count; i++) {
         const Setting& upf_info_item_cfg = upf_info_cfg[i];
@@ -746,32 +748,42 @@ void spgwu_config::display() {
       "    bypass_ul_pfcp_rules: %s",
       (nsf.bypass_ul_pfcp_rules) ? "yes" : "no");
 
+  Logger::spgwu_app().info("- SUPPORT_5G_FEATURES:");
   Logger::spgwu_app().info(
       "    enable_5g_features: %s",
       (upf_5g_features.enable_5g_features) ? "yes" : "no");
 
   if (upf_5g_features.enable_5g_features) {
-    Logger::spgwu_app().debug("- 5G Features:");
+    Logger::spgwu_app().info(
+        "    register_nrf: %s", (upf_5g_features.register_nrf) ? "yes" : "no");
+    Logger::spgwu_app().info(
+        "    use_fqdn_nrf: %s", (upf_5g_features.use_fqdn_nrf) ? "yes" : "no");
     if (upf_5g_features.register_nrf) {
-      Logger::spgwu_app().info("- NRF:");
+      Logger::spgwu_app().info("    NRF:");
       Logger::spgwu_app().info(
-          "    IPv4 Addr ...........: %s",
+          "        IPv4 Addr .......: %s",
           inet_ntoa(*((struct in_addr*) &upf_5g_features.nrf_addr.ipv4_addr)));
       Logger::spgwu_app().info(
-          "    Port ................: %lu  ", upf_5g_features.nrf_addr.port);
+          "        Port ............: %lu  ", upf_5g_features.nrf_addr.port);
       Logger::spgwu_app().info(
-          "    API version .........: %s",
+          "        API version .....: %s",
           upf_5g_features.nrf_addr.api_version.c_str());
+      if (upf_5g_features.use_fqdn_nrf)
+        Logger::spgwu_app().info(
+            "        FQDN ............: %s",
+            upf_5g_features.nrf_addr.fqdn.c_str());
 
       if (upf_5g_features.upf_info.snssai_upf_info_list.size() > 0) {
-        Logger::spgwu_app().debug("- UPF Info:");
+        Logger::spgwu_app().debug("    UPF Info:");
       }
       for (auto s : upf_5g_features.upf_info.snssai_upf_info_list) {
-        Logger::spgwu_app().debug("\tParameters supported by the UPF:");
+        // Logger::spgwu_app().debug("        Parameters supported by the
+        // UPF:");
         Logger::spgwu_app().debug(
-            "\t\tSNSSAI (SST %d, SD %s)", s.snssai.sST, s.snssai.sD.c_str());
+            "        SNSSAI (SST %d, SD %s)", s.snssai.sST,
+            s.snssai.sD.c_str());
         for (auto d : s.dnn_upf_info_list) {
-          Logger::spgwu_app().debug("\t\tDNN %s", d.dnn.c_str());
+          Logger::spgwu_app().debug("            DNN %s", d.dnn.c_str());
         }
       }
     }

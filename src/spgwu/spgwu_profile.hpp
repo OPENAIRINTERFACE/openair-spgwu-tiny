@@ -82,7 +82,7 @@ class spgwu_profile : public std::enable_shared_from_this<spgwu_profile> {
   // spgwu_profile(spgwu_profile &b) = delete;
 
   virtual ~spgwu_profile() {
-    Logger::spgwu_app().debug("Delete UPF Profile instance...");
+    // Logger::spgwu_app().debug("Delete UPF Profile instance...");
   }
 
   /*

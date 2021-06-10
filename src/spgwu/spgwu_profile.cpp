@@ -182,42 +182,39 @@ void spgwu_profile::get_upf_info(upf_info_t& s) const {
 
 //------------------------------------------------------------------------------
 void spgwu_profile::display() const {
-  Logger::spgwu_app().debug("NF instance info");
-
-  Logger::spgwu_app().debug("\tInstance ID: %s", nf_instance_id.c_str());
-
-  Logger::spgwu_app().debug("\tInstance name: %s", nf_instance_name.c_str());
-  Logger::spgwu_app().debug("\tInstance type: %s", nf_type.c_str());
-  Logger::spgwu_app().debug("\tStatus: %s", nf_status.c_str());
-  Logger::spgwu_app().debug("\tHeartBeat timer: %d", heartBeat_timer);
-  Logger::spgwu_app().debug("\tPriority: %d", priority);
-  Logger::spgwu_app().debug("\tCapacity: %d", capacity);
+  Logger::spgwu_app().debug("- NF instance info");
+  Logger::spgwu_app().debug("    Instance ID: %s", nf_instance_id.c_str());
+  Logger::spgwu_app().debug("    Instance name: %s", nf_instance_name.c_str());
+  Logger::spgwu_app().debug("    Instance type: %s", nf_type.c_str());
+  Logger::spgwu_app().debug("    Status: %s", nf_status.c_str());
+  Logger::spgwu_app().debug("    HeartBeat timer: %d", heartBeat_timer);
+  Logger::spgwu_app().debug("    Priority: %d", priority);
+  Logger::spgwu_app().debug("    Capacity: %d", capacity);
   // SNSSAIs
   if (snssais.size() > 0) {
-    Logger::spgwu_app().debug("\tSNSSAI:");
+    Logger::spgwu_app().debug("    SNSSAI:");
   }
   for (auto s : snssais) {
-    Logger::spgwu_app().debug("\t\t SST, SD: %d, %s", s.sST, s.sD.c_str());
+    Logger::spgwu_app().debug("        SST, SD: %d, %s", s.sST, s.sD.c_str());
   }
 
   // IPv4 Addresses
   if (ipv4_addresses.size() > 0) {
-    Logger::spgwu_app().debug("\tIPv4 Addr:");
+    Logger::spgwu_app().debug("    IPv4 Addr:");
   }
   for (auto address : ipv4_addresses) {
-    Logger::spgwu_app().debug("\t\t %s", inet_ntoa(address));
+    Logger::spgwu_app().debug("        %s", inet_ntoa(address));
   }
 
   // UPF info
   if (upf_info.snssai_upf_info_list.size() > 0) {
-    Logger::spgwu_app().debug("\tUPF Info:");
+    Logger::spgwu_app().debug("    UPF Info:");
   }
   for (auto s : upf_info.snssai_upf_info_list) {
-    Logger::spgwu_app().debug("\t\tParameters supported by the UPF:");
     Logger::spgwu_app().debug(
-        "\t\t\tSNSSAI (SST %d, SD %s)", s.snssai.sST, s.snssai.sD.c_str());
+        "        SNSSAI (SST %d, SD %s)", s.snssai.sST, s.snssai.sD.c_str());
     for (auto d : s.dnn_upf_info_list) {
-      Logger::spgwu_app().debug("\t\t\tDNN %s", d.dnn.c_str());
+      Logger::spgwu_app().debug("            DNN %s", d.dnn.c_str());
     }
   }
 }
@@ -263,7 +260,7 @@ void spgwu_profile::to_json(nlohmann::json& data) const {
     data["upfInfo"]["sNssaiUpfInfoList"].push_back(tmp);
   }
 
-  Logger::spgwu_app().debug("UPF profile to json:\n %s", data.dump().c_str());
+  Logger::spgwu_app().debug("UPF profile to JSON:\n %s", data.dump().c_str());
 }
 
 //------------------------------------------------------------------------------
@@ -294,8 +291,6 @@ void spgwu_profile::from_json(const nlohmann::json& data) {
       s.sST      = it["sst"].get<int>();
       s.sD       = it["sd"].get<std::string>();
       snssais.push_back(s);
-      // Logger::spgwu_app().debug("Added SNSSAI (SST %d, SD %s)", s.sST,
-      // s.sD.c_str());
     }
   }
 
@@ -312,7 +307,6 @@ void spgwu_profile::from_json(const nlohmann::json& data) {
         Logger::spgwu_app().warn(
             "Address conversion: Bad value %s", util::trim(address).c_str());
       }
-      // Logger::spgwu_app().debug("\tIPv4 Addr: %s", address.c_str());
       add_nf_ipv4_addresses(addr4);
     }
   }

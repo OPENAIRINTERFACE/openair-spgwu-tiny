@@ -25,7 +25,7 @@
 #include <vector>
 #include <nlohmann/json.hpp>
 
-// section 28.4, TS23.003
+// Section 28.4, TS23.003
 typedef struct s_nssai {
   uint8_t sST;
   std::string sD;
@@ -54,12 +54,10 @@ typedef struct dnn_upf_info_item_s {
   std::string dnn;
   // std::vector<std::string> dnai_list
   // std::vector<std::string> pdu_session_types
-
   dnn_upf_info_item_s& operator=(const dnn_upf_info_item_s& d) {
     dnn = d.dnn;
     return *this;
   }
-
 } dnn_upf_info_item_t;
 
 typedef struct snssai_upf_info_item_s {
