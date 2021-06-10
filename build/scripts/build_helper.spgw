@@ -36,6 +36,89 @@ source $THIS_SCRIPT_PATH/build_helper.fb_folly
 #-------------------------------------------------------------------------------
 #arg1 is force (0 or 1) (no interactive script)
 #arg2 is debug (0 or 1) (install debug libraries)
+install_boost_1_66() {
+  if [ $1 -eq 0 ]; then
+    read -p "Do you want to install Boost version 1.66.0 ? <y/N> " prompt
+    OPTION=""
+  else
+    prompt='y'
+    OPTION="-y"
+  fi
+  if [ $2 -eq 0 ]; then
+    debug=0
+  else
+    debug=1
+  fi
+
+  if [[ $prompt =~ [yY](es)* ]]
+  then
+    BOOST_URL=https://boostorg.jfrog.io/artifactory/main/release/1.66.0/source/boost_1_66_0.tar.bz2
+    echo "Install Boost from $BOOST_URL"
+    pushd $OPENAIRCN_DIR/build/ext
+    echo "Downloading Boost 1.66.0"
+    if [[ $OPTION =~ -[yY](es)* ]]
+    then
+      $SUDO rm -rf boost
+    fi
+
+    #git clone $GIT_URL
+    wget $BOOST_URL 
+    tar --bzip2 -xf boost_1_66_0.tar.bz2 
+    cp -fR boost_1_66_0/boost /usr/include
+    ret=$?;[[ $ret -ne 0 ]] && popd && return $ret
+    popd
+  fi
+  return 0
+}
+
+
+#-------------------------------------------------------------------------------
+#arg1 is force (0 or 1) (no interactive script)
+#arg2 is debug (0 or 1) (install debug libraries)
+install_cpprestsdk_from_git() {
+  if [ $1 -eq 0 ]; then
+    read -p "Do you want to install C++ REST SDK ? <y/N> " prompt
+    OPTION="-y"
+  else
+    prompt='y'
+    OPTION="-y"
+  fi
+  if [ $2 -eq 0 ]; then
+    debug=0
+  else
+    debug=1
+  fi
+
+
+  if [[ $prompt =~ [yY](es)* ]]
+  then
+    GIT_URL=https://github.com/Microsoft/cpprestsdk.git
+    echo "Install C++ REST SDK from $GIT_URL"
+    pushd $OPENAIRCN_DIR/build/ext
+    echo "Downloading C++ REST SDK"
+    if [[ $OPTION =~ -[yY](es)* ]]
+    then
+      $SUDO rm -rf cpprestsdk
+    fi
+
+    git clone $GIT_URL
+    cd cpprestsdk
+    git submodule update --init
+    ret=$?;[[ $ret -ne 0 ]] && popd && return $ret
+    mkdir _build && cd _build
+    $CMAKE -G Ninja .. -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTS=OFF -DBUILD_SAMPLES=OFF
+    ret=$?;[[ $ret -ne 0 ]] && popd && return $ret
+    $SUDO ninja install 
+    ret=$?;[[ $ret -ne 0 ]] && popd && return $ret
+    $SUDO ldconfig -v
+    popd
+  fi
+  return 0
+}
+
+#-------------------------------------------------------------------------------
+#arg1 is force (0 or 1) (no interactive script)
+#arg2 is debug (0 or 1) (install debug libraries)
 install_fmt() {
   if [ $1 -eq 0 ]; then
     read -p "Do you want to install open-source formatting library for C++ ? <y/N> " prompt
@@ -157,6 +240,8 @@ install_nlohmann_from_git() {
 #arg2 is debug (0 or 1) (install debug libraries)
 check_install_spgwu_deps() {
 
+  var_ubuntu_18_04=0
+  
   if [ $1 -gt 0 ]; then
     OPTION="-y"
   else
@@ -220,6 +305,9 @@ check_install_spgwu_deps() {
   if [[ $OS_DISTRO == "ubuntu" ]]; then
     case "$(get_distribution_release)" in
   "ubuntu18.04")
+      specific_packages="libconfig++-dev"
+      ;;
+      *)
       specific_packages="libconfig++-dev libasio-dev libboost-all-dev"
       ;;
     esac
@@ -289,6 +377,11 @@ check_install_spgwu_deps() {
   
   install_nlohmann_from_git $1 $2
   ret=$?;[[ $ret -ne 0 ]] && return $ret
+
+  if [ $var_ubuntu_18_04 -ne 0 ]; then 
+    install_boost_1_66 $1 $2
+    ret=$?;[[ $ret -ne 0 ]] && return $ret
+  fi
 
   return 0
 }
