@@ -580,7 +580,7 @@ int spgwu_config::load(const string& config_file) {
               "BAD IPv4 ADDRESS FORMAT FOR NRF !");
           upf_5g_features.nrf_addr.ipv4_addr   = nrf_ipv4_addr;
           upf_5g_features.nrf_addr.port        = nrf_port;
-          upf_5g_features.nrf_addr.api_version = "v2";  // TODO: get API version
+          upf_5g_features.nrf_addr.api_version = "v1";  // TODO: get API version
         }
       }
 
