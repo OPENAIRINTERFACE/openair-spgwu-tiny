@@ -62,7 +62,7 @@ install_boost_1_66() {
     fi
 
     #git clone $GIT_URL
-    wget $BOOST_URL 
+    wget --quiet --tries=3 --retry-connrefused $BOOST_URL 
     tar --bzip2 -xf boost_1_66_0.tar.bz2 
     cp -fR boost_1_66_0/boost /usr/include
     ret=$?;[[ $ret -ne 0 ]] && popd && return $ret
