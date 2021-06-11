@@ -118,7 +118,7 @@ spgwu_nrf::spgwu_nrf() {
 
 //-----------------------------------------------------------------------------------------------------
 void spgwu_nrf::send_register_nf_instance(const std::string& url) {
-  Logger::spgwu_app().debug("Send NF Instance Registration to NRF");
+  Logger::spgwu_app().info("Send NF Instance Registration to NRF");
 
   nlohmann::json json_data = {};
   upf_profile.to_json(json_data);
@@ -141,7 +141,7 @@ void spgwu_nrf::send_register_nf_instance(const std::string& url) {
     } catch (json::exception& e) {
       Logger::spgwu_app().warn("Could not parse JSON from the NRF response");
     }
-    Logger::spgwu_app().debug(
+    Logger::spgwu_app().info(
         "Response from NRF, JSON data: \n %s", response_data.dump().c_str());
 
     // Update NF profile
@@ -163,7 +163,7 @@ void spgwu_nrf::send_register_nf_instance(const std::string& url) {
 //-----------------------------------------------------------------------------------------------------
 void spgwu_nrf::send_update_nf_instance(
     const std::string& url, const nlohmann::json& data) {
-  Logger::spgwu_app().debug("Send NF Update to NRF");
+  Logger::spgwu_app().info("Send NF Update to NRF");
 
   std::string body = data.dump();
   Logger::spgwu_app().debug(
@@ -175,11 +175,9 @@ void spgwu_nrf::send_update_nf_instance(
   uint32_t http_code   = {0};
   send_curl(url, "PATCH", response, http_code, body);
 
-  Logger::spgwu_app().debug("Response from NRF, HTTP Code: %d", http_code);
-
   if ((http_code == HTTP_STATUS_CODE_200_OK) or
       (http_code == HTTP_STATUS_CODE_204_NO_CONTENT)) {
-    Logger::spgwu_app().debug("Got successful response from NRF");
+    Logger::spgwu_app().info("Got successful response from NRF");
   } else {
     Logger::spgwu_app().warn("Could not get response from NRF");
   }
@@ -187,7 +185,7 @@ void spgwu_nrf::send_update_nf_instance(
 
 //-----------------------------------------------------------------------------------------------------
 void spgwu_nrf::send_deregister_nf_instance(const std::string& url) {
-  Logger::spgwu_app().debug("Send NF De-register to NRF");
+  Logger::spgwu_app().info("Send NF De-register to NRF");
 
   Logger::spgwu_app().debug(
       "Send NF De-register to NRF (NRF URL %s)", url.c_str());
@@ -196,7 +194,7 @@ void spgwu_nrf::send_deregister_nf_instance(const std::string& url) {
   uint32_t http_code   = {0};
   send_curl(url, "DELETE", response, http_code);
 
-  Logger::spgwu_app().debug("Response from NRF, HTTP Code: %d", http_code);
+  // TODO:
 }
 
 //---------------------------------------------------------------------------------------------
@@ -284,8 +282,6 @@ void spgwu_nrf::timer_nrf_deregistration(
 void spgwu_nrf::send_curl(
     const std::string& url, const std::string& method, std::string& response,
     uint32_t& http_code, const std::string& body) {
-  Logger::spgwu_app().debug("Send NF Instance Registration to NRF");
-
   curl_global_init(CURL_GLOBAL_ALL);
   CURL* curl = curl = curl_easy_init();
 
@@ -304,7 +300,7 @@ void spgwu_nrf::send_curl(
                                         // to communicate with NRF
 
     // Response information
-    uint32_t code = {0};
+    long code = {0};
     std::unique_ptr<std::string> httpData(new std::string());
     curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, &callback);
     curl_easy_setopt(curl, CURLOPT_WRITEDATA, httpData.get());
@@ -314,10 +310,12 @@ void spgwu_nrf::send_curl(
     }
 
     res = curl_easy_perform(curl);
-    curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &code);
-    Logger::spgwu_app().debug("Response from NRF, HTTP Code: %u", code);
-    http_code = code;
-    if (code != HTTP_STATUS_CODE_204_NO_CONTENT) response = *httpData.get();
+    if (res == CURLE_OK) {
+      curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &code);
+      Logger::spgwu_app().info("Response from NRF, HTTP Code: %ld", code);
+      http_code = code;
+      if (code != HTTP_STATUS_CODE_204_NO_CONTENT) response = *httpData.get();
+    }
 
     curl_slist_free_all(headers);
     curl_easy_cleanup(curl);
