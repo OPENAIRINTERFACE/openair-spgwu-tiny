@@ -290,6 +290,7 @@ check_install_spgwu_deps() {
       libxml2-dev \
       openssl \
       python \
+      libcurl4 \
       wget \
       pkg-config"
   elif [[ "$OS_BASEDISTRO" == "fedora" ]]; then
@@ -317,6 +318,7 @@ check_install_spgwu_deps() {
       openssl \
       check \
       python2 \
+      libcurl-devel \
       pkgconfig"
   else
     echo_fatal "$OS_DISTRO is not a supported distribution."
