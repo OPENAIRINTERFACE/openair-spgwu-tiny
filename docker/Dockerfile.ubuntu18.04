@@ -77,8 +77,7 @@ RUN apt-get update && \
       libcurl4-gnutls-dev \
       libgoogle-glog0v5 \
       libdouble-conversion1 \
-      libconfig++9v5 \
-      libboost-system1.65.1 && \
+      libconfig++9v5 && \
     rm -rf /var/lib/apt/lists/*
 
 # Copying executable and generated libraries
