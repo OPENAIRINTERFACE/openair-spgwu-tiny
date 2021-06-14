@@ -64,10 +64,11 @@ install_fb_folly_from_source(){
         binutils-devel
       ret=$?;[[ $ret -ne 0 ]] && return $ret
     elif [[ $OS_DISTRO == "ubuntu" ]]; then
+      # We need Boost 1.66 or later
       $SUDO $INSTALLER install $OPTION \
         g++ \
         cmake \
-        libboost-all-dev \
+        libboost1.67-dev \
         libevent-dev \
         libdouble-conversion-dev \
         libgoogle-glog-dev \
