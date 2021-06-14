@@ -458,8 +458,6 @@ class HtmlReport():
 				folly_build = False
 				spdlog_build_start = False
 				spdlog_build = False
-				boost_build_start = False
-				boost_build = False
 				with open(cwd + '/archives/' + logFileName, 'r') as logfile:
 					for line in logfile:
 						result = re.search(section_start_pattern, line)
@@ -491,14 +489,6 @@ class HtmlReport():
 								if result is not None:
 									spdlog_build_start = False
 									spdlog_build = True
-							result = re.search('Install Boost from', line)
-							if result is not None:
-								boost_build_start = True
-							if boost_build_start:
-								result = re.search('SPGW-U deps installation successful', line)
-								if result is not None:
-									boost_build_start = False
-									boost_build = True
 					logfile.close()
 				if status:
 					cell_msg = '	  <td bgcolor="LimeGreen"><pre style="border:none; background-color:LimeGreen"><b>'
@@ -519,11 +509,6 @@ class HtmlReport():
 					cell_msg += '   ** spdlog Installation: OK\n'
 				else:
 					cell_msg += '   ** spdlog Installation: KO\n'
-				if variant == 'docker':
-					if boost_build:
-						cell_msg += '   ** boost 1.66 Installation: OK\n'
-					else:
-						cell_msg += '   ** boost 1.66 Installation: KO\n'
 				cell_msg += '</b></pre></td>\n'
 			else:
 				cell_msg = '	  <td bgcolor="Tomato"><pre style="border:none; background-color:Tomato"><b>'
