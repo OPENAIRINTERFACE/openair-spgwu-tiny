@@ -79,14 +79,14 @@ int my_check_redundant_process(char* exec_name) {
 
   // Retrieving only the executable name
   boost::split(words, exec_name, boost::is_any_of("/"));
-  memset(cmd, 1, 200);
+  memset(cmd, 0, 200);
   sprintf(
-      cmd, "ps aux | grep -v grep | grep -v nohup | grep -c %s",
+      cmd, "ps aux | grep -v grep | grep -v nohup | grep -c %s || true",
       words[words.size() - 1].c_str());
   fp = popen(cmd, "r");
 
   // clearing the buffer
-  memset(cmd, 1, 200);
+  memset(cmd, 0, 200);
   retSize = fread(cmd, 1, 200, fp);
   fclose(fp);
 
@@ -105,8 +105,9 @@ int main(int argc, char** argv) {
   // Checking if another instance of SPGW-U is running
   int nb_processes = my_check_redundant_process(argv[0]);
   if (nb_processes > 1) {
-    std::cout << "An instance of " << argv[0] << "is maybe already called!"
+    std::cout << "An instance of " << argv[0] << " is maybe already called!"
               << std::endl;
+    std::cout << "  " << nb_processes << " were detected" << std::endl;
     return -1;
   }
 
