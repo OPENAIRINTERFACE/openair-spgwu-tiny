@@ -39,12 +39,14 @@ RUN apt-get update && \
     DEBIAN_FRONTEND=noninteractive apt-get upgrade --yes && \
     DEBIAN_FRONTEND=noninteractive apt-get install --yes \
       psmisc \
+      software-properties-common \
+      gnupg \
       git
 
 # Some GIT configuration command quite useful
-RUN /bin/bash -c "if [[ -v EURECOM_PROXY ]]; then git config --global http.proxy $EURECOM_PROXY; fi"
-RUN git config --global https.postBuffer 123289600
-RUN git config --global http.sslverify false
+RUN /bin/bash -c "if [[ -v EURECOM_PROXY ]]; then git config --global http.proxy $EURECOM_PROXY; fi" && \
+    git config --global https.postBuffer 123289600 && \
+    git config --global http.sslverify false
 
 # Copy the workspace as is
 WORKDIR /openair-spgwu-tiny
@@ -72,16 +74,20 @@ RUN apt-get update && \
       ethtool \
       iptables \
       tshark \
+      libcurl4-gnutls-dev \
       libgoogle-glog0v5 \
       libdouble-conversion1 \
-      libconfig++9v5 \
-      libboost-system1.65.1 && \
+      libconfig++9v5 && \
     rm -rf /var/lib/apt/lists/*
 
 # Copying executable and generated libraries
 WORKDIR /openair-spgwu-tiny/bin
 COPY --from=oai-spgwu-tiny-builder /openair-spgwu-tiny/build/spgw_u/build/spgwu oai_spgwu
 COPY --from=oai-spgwu-tiny-builder /openair-spgwu-tiny/scripts/entrypoint.sh .
+
+WORKDIR /usr/local/lib
+COPY --from=oai-spgwu-tiny-builder /usr/lib/libboost_system.so.1.67.0 .
+RUN ldconfig
 
 # Copying template configuration files
 # The configuration folder will be flat
@@ -90,8 +96,9 @@ COPY --from=oai-spgwu-tiny-builder /openair-spgwu-tiny/etc/spgw_u.conf .
 
 WORKDIR /openair-spgwu-tiny
 
-# use this label for CI purpose
+# use these labels for CI purpose
 LABEL support-multi-sgwu-instances="true"
+LABEL support-nrf-fdqn="true"
 
 # expose ports
 EXPOSE 2152/udp 8805/udp
