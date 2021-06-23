@@ -209,7 +209,7 @@ void spgwu_nrf::generate_upf_profile() {
   upf_profile.set_nf_heartBeat_timer(50);
   upf_profile.set_nf_priority(1);
   upf_profile.set_nf_capacity(100);
-  upf_profile.add_nf_ipv4_addresses(spgwu_cfg.s1_up.addr4);  // N3's Addr
+  upf_profile.add_nf_ipv4_addresses(spgwu_cfg.sx.addr4);  // N4's Addr
   // Get NSSAI from conf file
   for (auto s : spgwu_cfg.upf_5g_features.upf_info.snssai_upf_info_list) {
     upf_profile.add_snssai(s.snssai);
