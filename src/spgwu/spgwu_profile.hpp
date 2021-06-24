@@ -47,6 +47,7 @@ class spgwu_profile : public std::enable_shared_from_this<spgwu_profile> {
       : nf_type("NF_TYPE_UNKNOWN"),
         heartBeat_timer(0),
         snssais(),
+        fqdn(),
         ipv4_addresses(),
         priority(0),
         capacity(0) {
@@ -58,6 +59,7 @@ class spgwu_profile : public std::enable_shared_from_this<spgwu_profile> {
       : nf_instance_id(id),
         heartBeat_timer(0),
         snssais(),
+        fqdn(),
         ipv4_addresses(),
         priority(0),
         capacity(0),
@@ -70,6 +72,7 @@ class spgwu_profile : public std::enable_shared_from_this<spgwu_profile> {
     nf_instance_id   = s.nf_instance_id;
     heartBeat_timer  = s.heartBeat_timer;
     snssais          = s.snssais;
+    fqdn             = s.fqdn;
     ipv4_addresses   = s.ipv4_addresses;
     priority         = s.priority;
     capacity         = s.capacity;
@@ -246,6 +249,20 @@ class spgwu_profile : public std::enable_shared_from_this<spgwu_profile> {
   void get_nf_snssais(std::vector<snssai_t>& s) const;
 
   /*
+   * Get NF fqdn
+   * @param
+   * @return [std::string] nf fqdn
+   */
+  std::string get_fqdn() const;
+
+  /*
+   * Set NF fqdn
+   * @param [const fqdn_t &] fqdn: nf fqdn
+   * @return void
+   */
+  void set_fqdn(const std::string& fqdn);
+
+  /*
    * Set NF instance ipv4_addresses
    * @param [std::vector<struct in_addr> &] a: ipv4_addresses
    * @return void
@@ -323,6 +340,7 @@ class spgwu_profile : public std::enable_shared_from_this<spgwu_profile> {
   std::string nf_status;
   int32_t heartBeat_timer;
   std::vector<snssai_t> snssais;
+  std::string fqdn;
   std::vector<struct in_addr> ipv4_addresses;
   uint16_t priority;
   uint16_t capacity;
