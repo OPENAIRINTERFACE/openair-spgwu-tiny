@@ -74,6 +74,7 @@ RUN apt-get update && \
       ethtool \
       iptables \
       tshark \
+      libconfig++-dev \
       libcurl4-gnutls-dev \
       libgoogle-glog0v5 \
       libdouble-conversion1 \
