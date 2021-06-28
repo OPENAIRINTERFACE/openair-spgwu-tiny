@@ -26,6 +26,12 @@ NSSAI_SST_0=${NSSAI_SST_0:-1}
 NSSAI_SD_0=${NSSAI_SD_0:-2}
 DNN_0=${DNN_0:-default}
 
+if [[ ${ENABLE_5G_FEATURES} == "no" ]];then
+    UP_FQDN=gw${GW_ID}.spgw.node.epc.mnc${MNC03}.mcc${MCC}.${REALM}
+else
+    UP_FQDN=${UP_FQDN}
+fi
+
 for c in ${CONFIG_DIR}/*.conf; do
     # grep variable names (format: ${VAR}) from template to be rendered
     VARS=$(grep -oP '@[a-zA-Z0-9_]+@' ${c} | sort | uniq | xargs)
