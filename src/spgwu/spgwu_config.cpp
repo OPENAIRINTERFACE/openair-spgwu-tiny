@@ -508,10 +508,13 @@ int spgwu_config::load(const string& config_file) {
     const Setting& support_features =
         spgwu_cfg[SPGWU_CONFIG_STRING_5G_FEATURES];
     string opt;
-
     support_features.lookupValue(SPGWU_CONFIG_STRING_ENABLE_5G_FEATURES, opt);
     if (boost::iequals(opt, "yes")) {
       upf_5g_features.enable_5g_features = true;
+      std::string upf_fqdn               = {};
+      support_features.lookupValue(
+          SPGWU_CONFIG_STRING_5G_FEATURES_UPF_FQDN, upf_fqdn);
+      fqdn = upf_fqdn;
     } else {
       upf_5g_features.enable_5g_features = false;
     }
