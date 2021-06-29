@@ -29,7 +29,7 @@ DNN_0=${DNN_0:-default}
 if [[ ${ENABLE_5G_FEATURES} == "no" ]];then
     UP_FQDN=gw${GW_ID}.spgw.node.epc.mnc${MNC03}.mcc${MCC}.${REALM}
 else
-    UP_FQDN=${UP_FQDN}
+    UP_FQDN=${UPF_FQDN_NEW}
 fi
 
 for c in ${CONFIG_DIR}/*.conf; do
