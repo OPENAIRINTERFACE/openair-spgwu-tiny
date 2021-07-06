@@ -149,6 +149,17 @@ void spgwu_profile::get_nf_snssais(std::vector<snssai_t>& s) const {
 void spgwu_profile::add_snssai(const snssai_t& s) {
   snssais.push_back(s);
 }
+
+//------------------------------------------------------------------------------
+void spgwu_profile::set_fqdn(const std::string& fqdN) {
+  fqdn = fqdN;
+}
+
+//------------------------------------------------------------------------------
+std::string spgwu_profile::get_fqdn() const {
+  return fqdn;
+}
+
 //------------------------------------------------------------------------------
 void spgwu_profile::set_nf_ipv4_addresses(
     const std::vector<struct in_addr>& a) {
@@ -186,6 +197,7 @@ void spgwu_profile::display() const {
   Logger::spgwu_app().debug("    Instance ID: %s", nf_instance_id.c_str());
   Logger::spgwu_app().debug("    Instance name: %s", nf_instance_name.c_str());
   Logger::spgwu_app().debug("    Instance type: %s", nf_type.c_str());
+  Logger::spgwu_app().debug("    Instance fqdn: %s", fqdn.c_str());
   Logger::spgwu_app().debug("    Status: %s", nf_status.c_str());
   Logger::spgwu_app().debug("    HeartBeat timer: %d", heartBeat_timer);
   Logger::spgwu_app().debug("    Priority: %d", priority);
@@ -234,6 +246,7 @@ void spgwu_profile::to_json(nlohmann::json& data) const {
     tmp["sd"]          = s.sD;
     data["sNssais"].push_back(tmp);
   }
+  data["fqdn"] = fqdn;
   // ipv4_addresses
   data["ipv4Addresses"] = nlohmann::json::array();
   for (auto address : ipv4_addresses) {
