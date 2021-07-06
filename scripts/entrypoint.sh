@@ -25,6 +25,7 @@ NRF_FQDN=${NRF_FQDN:-gw.openairinterface.org}
 NSSAI_SST_0=${NSSAI_SST_0:-1}
 NSSAI_SD_0=${NSSAI_SD_0:-2}
 DNN_0=${DNN_0:-default}
+UPF_FQDN_5G=${UPF_FQDN_5G:-oai-spgwu-tiny-svc}
 
 for c in ${CONFIG_DIR}/*.conf; do
     # grep variable names (format: ${VAR}) from template to be rendered
