@@ -1,5 +1,10 @@
 # RELEASE NOTES: #
 
+## v1.1.2 -- July 2021 ##
+
+* Adding 5G features
+  - NRF discovery and FQDN support
+
 ## v1.1.1 -- March 2021 ##
 
 * GTP-U extension headers for 5G support
