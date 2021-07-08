@@ -36,6 +36,7 @@
 #include "logger.hpp"
 #include "spgwu_config.hpp"
 #include "string.hpp"
+#include "fqdn.hpp"
 
 #include <boost/algorithm/string.hpp>
 #include <boost/algorithm/string/classification.hpp>
@@ -502,6 +503,141 @@ int spgwu_config::load(const string& config_file) {
             SPGWU_CONFIG_STRING_SPGWC_LIST, i, config_file.c_str());
       }
     }
+
+    // Support 5G features
+    const Setting& support_features =
+        spgwu_cfg[SPGWU_CONFIG_STRING_5G_FEATURES];
+    string opt;
+    support_features.lookupValue(SPGWU_CONFIG_STRING_ENABLE_5G_FEATURES, opt);
+    if (boost::iequals(opt, "yes")) {
+      upf_5g_features.enable_5g_features = true;
+      std::string upf_fqdn               = {};
+      support_features.lookupValue(
+          SPGWU_CONFIG_STRING_5G_FEATURES_UPF_FQDN, upf_fqdn);
+      fqdn = upf_fqdn;
+    } else {
+      upf_5g_features.enable_5g_features = false;
+    }
+
+    if (upf_5g_features.enable_5g_features) {
+      support_features.lookupValue(
+          SPGWU_CONFIG_STRING_5G_FEATURES_REGISTER_NRF, opt);
+      if (boost::iequals(opt, "yes")) {
+        upf_5g_features.register_nrf = true;
+      } else {
+        upf_5g_features.register_nrf = false;
+      }
+
+      support_features.lookupValue(
+          SPGWU_CONFIG_STRING_5G_FEATURES_USE_FQDN_NRF, opt);
+      if (boost::iequals(opt, "yes")) {
+        upf_5g_features.use_fqdn_nrf = true;
+      } else {
+        upf_5g_features.use_fqdn_nrf = false;
+      }
+
+      // NRF
+      const Setting& nrf_cfg =
+          support_features[SPGWU_CONFIG_STRING_5G_FEATURES_NRF];
+      struct in_addr nrf_ipv4_addr;
+      unsigned int nrf_port = 0;
+      std::string nrf_api_version;
+      string nrf_address = {};
+
+      if (!upf_5g_features.use_fqdn_nrf) {
+        nrf_cfg.lookupValue(
+            SPGWU_CONFIG_STRING_5G_FEATURES_NRF_IPV4_ADDRESS, nrf_address);
+        IPV4_STR_ADDR_TO_INADDR(
+            util::trim(nrf_address).c_str(), nrf_ipv4_addr,
+            "BAD IPv4 ADDRESS FORMAT FOR NRF !");
+        upf_5g_features.nrf_addr.ipv4_addr = nrf_ipv4_addr;
+        if (!(nrf_cfg.lookupValue(
+                SPGWU_CONFIG_STRING_5G_FEATURES_NRF_PORT, nrf_port))) {
+          Logger::spgwu_app().error(SPGWU_CONFIG_STRING_5G_FEATURES_NRF_PORT
+                                    "failed");
+          throw(SPGWU_CONFIG_STRING_5G_FEATURES_NRF_PORT "failed");
+        }
+        upf_5g_features.nrf_addr.port = nrf_port;
+
+        if (!(nrf_cfg.lookupValue(
+                SPGWU_CONFIG_STRING_5G_FEATURES_NRF_API_VERSION,
+                nrf_api_version))) {
+          Logger::spgwu_app().error(
+              SPGWU_CONFIG_STRING_5G_FEATURES_NRF_API_VERSION "failed");
+          throw(SPGWU_CONFIG_STRING_5G_FEATURES_NRF_API_VERSION "failed");
+        }
+        upf_5g_features.nrf_addr.api_version = nrf_api_version;
+      } else {
+        Logger::spgwu_app().info("USE FQDN");
+        std::string nrf_fqdn = {};
+        nrf_cfg.lookupValue(SPGWU_CONFIG_STRING_FQDN, nrf_fqdn);
+        upf_5g_features.nrf_addr.fqdn =
+            nrf_fqdn;  // TODO: Resolve FQDN at runtime
+        uint8_t addr_type = {};
+        fqdn::resolve(nrf_fqdn, nrf_address, nrf_port, addr_type);
+        if (addr_type != 0) {  // IPv6: TODO
+          throw("DO NOT SUPPORT IPV6 ADDR FOR NRF!");
+        } else {  // IPv4
+          IPV4_STR_ADDR_TO_INADDR(
+              util::trim(nrf_address).c_str(), nrf_ipv4_addr,
+              "BAD IPv4 ADDRESS FORMAT FOR NRF !");
+          upf_5g_features.nrf_addr.ipv4_addr   = nrf_ipv4_addr;
+          upf_5g_features.nrf_addr.port        = nrf_port;
+          upf_5g_features.nrf_addr.api_version = "v1";  // TODO: get API version
+        }
+      }
+
+      // UPF info
+      const Setting& upf_info_cfg =
+          support_features[SPGWU_CONFIG_STRING_5G_FEATURES_UPF_INFO];
+      count = upf_info_cfg.getLength();
+      for (int i = 0; i < count; i++) {
+        const Setting& upf_info_item_cfg = upf_info_cfg[i];
+        unsigned int nssai_sst           = 0;
+        string nssai_sd                  = {};
+
+        if (!(upf_info_item_cfg.lookupValue(
+                SPGWU_CONFIG_STRING_5G_FEATURES_NSSAI_SST, nssai_sst))) {
+          Logger::spgwu_app().error(SPGWU_CONFIG_STRING_5G_FEATURES_NSSAI_SST
+                                    "failed");
+          throw(SPGWU_CONFIG_STRING_5G_FEATURES_NSSAI_SST "failed");
+        }
+
+        if (!(upf_info_item_cfg.lookupValue(
+                SPGWU_CONFIG_STRING_5G_FEATURES_NSSAI_SD, nssai_sd))) {
+          Logger::spgwu_app().error(SPGWU_CONFIG_STRING_5G_FEATURES_NSSAI_SD
+                                    "failed");
+          throw(SPGWU_CONFIG_STRING_5G_FEATURES_NSSAI_SD "failed");
+        }
+
+        snssai_upf_info_item_t snssai_item = {};
+        snssai_t snssai                    = {};
+        snssai.sST                         = nssai_sst;
+        snssai.sD                          = nssai_sd;
+        snssai_item.snssai                 = snssai;
+
+        const Setting& dnn_cfg = upf_info_item_cfg
+            [SPGWU_CONFIG_STRING_5G_FEATURES_UPF_INFO_DNN_LIST];
+        uint8_t number_dnns = dnn_cfg.getLength();
+        for (int i = 0; i < number_dnns; i++) {
+          string dnn                  = {};
+          const Setting& dnn_item_cfg = dnn_cfg[i];
+          if (!(dnn_item_cfg.lookupValue(
+                  SPGWU_CONFIG_STRING_5G_FEATURES_DNN, dnn))) {
+            Logger::spgwu_app().error(SPGWU_CONFIG_STRING_5G_FEATURES_DNN
+                                      "failed");
+            throw(SPGWU_CONFIG_STRING_5G_FEATURES_DNN "failed");
+          }
+
+          dnn_upf_info_item_t dnn_item = {};
+          dnn_item.dnn                 = dnn;
+          snssai_item.dnn_upf_info_list.push_back(dnn_item);
+        }
+
+        upf_5g_features.upf_info.snssai_upf_info_list.push_back(snssai_item);
+      }
+    }
+
   } catch (const SettingNotFoundException& nfex) {
     Logger::spgwu_app().error("%s : %s", nfex.what(), nfex.getPath());
     return RETURNerror;
@@ -629,4 +765,45 @@ void spgwu_config::display() {
   Logger::spgwu_app().info(
       "    bypass_ul_pfcp_rules: %s",
       (nsf.bypass_ul_pfcp_rules) ? "yes" : "no");
+
+  Logger::spgwu_app().info("- SUPPORT_5G_FEATURES:");
+  Logger::spgwu_app().info(
+      "    enable_5g_features: %s",
+      (upf_5g_features.enable_5g_features) ? "yes" : "no");
+
+  if (upf_5g_features.enable_5g_features) {
+    Logger::spgwu_app().info(
+        "    register_nrf: %s", (upf_5g_features.register_nrf) ? "yes" : "no");
+    Logger::spgwu_app().info(
+        "    use_fqdn_nrf: %s", (upf_5g_features.use_fqdn_nrf) ? "yes" : "no");
+    if (upf_5g_features.register_nrf) {
+      Logger::spgwu_app().info("    NRF:");
+      Logger::spgwu_app().info(
+          "        IPv4 Addr .......: %s",
+          inet_ntoa(*((struct in_addr*) &upf_5g_features.nrf_addr.ipv4_addr)));
+      Logger::spgwu_app().info(
+          "        Port ............: %lu  ", upf_5g_features.nrf_addr.port);
+      Logger::spgwu_app().info(
+          "        API version .....: %s",
+          upf_5g_features.nrf_addr.api_version.c_str());
+      if (upf_5g_features.use_fqdn_nrf)
+        Logger::spgwu_app().info(
+            "        FQDN ............: %s",
+            upf_5g_features.nrf_addr.fqdn.c_str());
+
+      if (upf_5g_features.upf_info.snssai_upf_info_list.size() > 0) {
+        Logger::spgwu_app().debug("    UPF Info:");
+      }
+      for (auto s : upf_5g_features.upf_info.snssai_upf_info_list) {
+        // Logger::spgwu_app().debug("        Parameters supported by the
+        // UPF:");
+        Logger::spgwu_app().debug(
+            "        SNSSAI (SST %d, SD %s)", s.snssai.sST,
+            s.snssai.sD.c_str());
+        for (auto d : s.dnn_upf_info_list) {
+          Logger::spgwu_app().debug("            DNN %s", d.dnn.c_str());
+        }
+      }
+    }
+  }
 }

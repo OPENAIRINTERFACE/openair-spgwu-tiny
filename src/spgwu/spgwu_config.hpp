@@ -30,6 +30,7 @@
 #define FILE_SPGWU_CONFIG_HPP_SEEN
 
 #include "3gpp_29.244.h"
+#include "3gpp_29.510.h"
 #include "gtpv1u.hpp"
 #include "pfcp.hpp"
 #include "thread_sched.hpp"
@@ -74,6 +75,21 @@ namespace spgwu {
 #define SPGWU_CONFIG_STRING_NON_STANDART_FEATURES "NON_STANDART_FEATURES"
 #define SPGWU_CONFIG_STRING_BYPASS_UL_PFCP_RULES "BYPASS_UL_PFCP_RULES"
 #define SPGWU_CONFIG_STRING_GTP_EXT_HDR "GTP_EXT_HDR"
+
+#define SPGWU_CONFIG_STRING_5G_FEATURES "SUPPORT_5G_FEATURES"
+#define SPGWU_CONFIG_STRING_ENABLE_5G_FEATURES "ENABLE_5G_FEATURES"
+#define SPGWU_CONFIG_STRING_5G_FEATURES_REGISTER_NRF "REGISTER_NRF"
+#define SPGWU_CONFIG_STRING_5G_FEATURES_UPF_FQDN "UPF_FQDN_5G"
+#define SPGWU_CONFIG_STRING_5G_FEATURES_NRF "NRF"
+#define SPGWU_CONFIG_STRING_5G_FEATURES_NRF_IPV4_ADDRESS "IPV4_ADDRESS"
+#define SPGWU_CONFIG_STRING_5G_FEATURES_NRF_PORT "PORT"
+#define SPGWU_CONFIG_STRING_5G_FEATURES_NRF_API_VERSION "API_VERSION"
+#define SPGWU_CONFIG_STRING_5G_FEATURES_UPF_INFO "UPF_INFO"
+#define SPGWU_CONFIG_STRING_5G_FEATURES_NSSAI_SST "NSSAI_SST"
+#define SPGWU_CONFIG_STRING_5G_FEATURES_NSSAI_SD "NSSAI_SD"
+#define SPGWU_CONFIG_STRING_5G_FEATURES_DNN "DNN"
+#define SPGWU_CONFIG_STRING_5G_FEATURES_USE_FQDN_NRF "USE_FQDN_NRF"
+#define SPGWU_CONFIG_STRING_5G_FEATURES_UPF_INFO_DNN_LIST "DNN_LIST"
 
 #define SPGW_ABORT_ON_ERROR true
 #define SPGW_WARN_ON_ERROR false
@@ -139,6 +155,19 @@ class spgwu_config {
   std::vector<pdn_cfg_t> pdns;
   std::vector<pfcp::node_id_t> spgwcs;
 
+  struct {
+    bool enable_5g_features;
+    bool register_nrf;
+    upf_info_t upf_info;
+    bool use_fqdn_nrf;
+    struct {
+      struct in_addr ipv4_addr;
+      unsigned int port;
+      std::string api_version;
+      std::string fqdn;
+    } nrf_addr;
+  } upf_5g_features;
+
   spgwu_config()
       : m_rw_lock(),
         pid_dir(),
@@ -167,7 +196,17 @@ class spgwu_config {
 
     sx.thread_rd_sched_params.sched_priority = 95;
     sx.port                                  = pfcp::default_port;
+
+    upf_5g_features.enable_5g_features        = false;
+    upf_5g_features.register_nrf              = false;
+    upf_5g_features.upf_info                  = {};
+    upf_5g_features.use_fqdn_nrf              = false;
+    upf_5g_features.nrf_addr.ipv4_addr.s_addr = INADDR_ANY;
+    upf_5g_features.nrf_addr.port             = 80;
+    upf_5g_features.nrf_addr.api_version      = "v1";
+    upf_5g_features.nrf_addr.fqdn             = {};
   };
+
   void lock() { m_rw_lock.lock(); };
   void unlock() { m_rw_lock.unlock(); };
   int load(const std::string& config_file);

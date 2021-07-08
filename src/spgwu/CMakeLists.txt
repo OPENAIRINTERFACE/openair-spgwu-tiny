@@ -37,6 +37,8 @@ add_library (SPGWU STATIC
   spgwu_app.cpp
   spgwu_config.cpp
   spgwu_sx.cpp
+  spgwu_profile.cpp
+  spgwu_nrf.cpp
   )
 
   
