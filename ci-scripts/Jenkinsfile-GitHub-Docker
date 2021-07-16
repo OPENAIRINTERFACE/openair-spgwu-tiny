@@ -431,30 +431,62 @@ pipeline {
             }
           }
         }
-        stage ('Testing in 5G FED environment') {
-          steps {
-            script {
-              localStatus = build job: params.CN5G_FED_PipelineName,
-                parameters: [
-                  string(name: 'SPGWU_TAG', value: String.valueOf(spgwu_tag)),
-                  string(name: 'SPGWU_BRANCH', value: String.valueOf(spgwu_branch))
-                ], propagate: false
-              localResult = localStatus.getResult()
+        stage('Testing with 5g Core Network Functions') {
+          parallel {
+            stage ('Testing in 5G FED Docker environment') {
+              steps {
+                script {
+                  localStatus = build job: params.CN5G_FED_PipelineName,
+                    parameters: [
+                      string(name: 'SPGWU_TAG', value: String.valueOf(spgwu_tag)),
+                      string(name: 'SPGWU_BRANCH', value: String.valueOf(spgwu_branch))
+                    ], propagate: false
+                  localResult = localStatus.getResult()
 
-              if (localStatus.resultIsBetterOrEqualTo('SUCCESS')) {
-                echo "Federation Test Job is OK"
-              } else {
-                echo "Federation Test Job is KO"
-                sh "ci-scripts/fail.sh"
+                  if (localStatus.resultIsBetterOrEqualTo('SUCCESS')) {
+                    echo "Docker Federation Test Job is OK"
+                  } else {
+                    echo "Docker Federation Test Job is KO"
+                    sh "ci-scripts/fail.sh"
+                  }
+                }
+              }
+              post {
+                always {
+                  script {
+                    copyArtifacts(projectName: params.CN5G_FED_PipelineName,
+                                  filter: 'test_results_oai_cn5g.html',
+                                  selector: lastCompleted())
+                  }
+                }
               }
             }
-          }
-          post {
-            always {
-              script {
-                copyArtifacts(projectName: params.CN5G_FED_PipelineName,
-                              filter: 'test_results_oai_cn5g.html',
-                              selector: lastCompleted())
+            stage ('Testing in 5G FED OC environment') {
+              steps {
+                script {
+                  localStatus = build job: params.CN5G_FED_OC_PipelineName,
+                    parameters: [
+                      string(name: 'SPGWU_TAG', value: String.valueOf(spgwu_tag)),
+                      string(name: 'SPGWU_BRANCH', value: String.valueOf(spgwu_branch))
+                    ], propagate: false
+                  localResult = localStatus.getResult()
+
+                  if (localStatus.resultIsBetterOrEqualTo('SUCCESS')) {
+                    echo "OC Federation Test Job is OK"
+                  } else {
+                    echo "OC Federation Test Job is KO"
+                    sh "ci-scripts/fail.sh"
+                  }
+                }
+              }
+              post {
+                always {
+                  script {
+                    copyArtifacts(projectName: params.CN5G_FED_OC_PipelineName,
+                                  filter: 'test_results_oai_cn5g_oc.html',
+                                  selector: lastCompleted())
+                  }
+                }
               }
             }
           }
@@ -555,6 +587,10 @@ pipeline {
             sh "sed -i -e 's#TEMPLATE_PULL_REQUEST_LINK#${env.ghprbPullLink}#g' test_results_oai_cn5g.html"
             sh "sed -i -e 's#TEMPLATE_PULL_REQUEST_TEMPLATE#${env.ghprbPullTitle}#' test_results_oai_cn5g.html"
           }
+          if (fileExists('test_results_oai_cn5g_oc.html')) {
+            sh "sed -i -e 's#TEMPLATE_PULL_REQUEST_LINK#${env.ghprbPullLink}#g' test_results_oai_cn5g_oc.html"
+            sh "sed -i -e 's#TEMPLATE_PULL_REQUEST_TEMPLATE#${env.ghprbPullTitle}#' test_results_oai_cn5g_oc.html"
+          }
         } else {
           sh "python3 ci-scripts/generateHtmlReport.py --job_name=${JOB_NAME} --job_id=${BUILD_ID} --job_url=${BUILD_URL} --git_url=${GIT_URL} --git_src_branch=${GIT_BRANCH} --git_src_commit=${GIT_COMMIT}"
         }
@@ -573,6 +609,10 @@ pipeline {
         if (fileExists('test_results_oai_cn5g.html')) {
           sh "sed -i -e 's#TEMPLATE_TIME#${JOB_TIMESTAMP}#' test_results_oai_cn5g.html"
           archiveArtifacts artifacts: 'test_results_oai_cn5g.html'
+        }
+        if (fileExists('test_results_oai_cn5g_oc.html')) {
+          sh "sed -i -e 's#TEMPLATE_TIME#${JOB_TIMESTAMP}#' test_results_oai_cn5g_oc.html"
+          archiveArtifacts artifacts: 'test_results_oai_cn5g_oc.html'
         }
         // Sending an email to the last committer. Maybe not the Pull Request's author.
         if (params.sendToCommitterEmail != null) {
