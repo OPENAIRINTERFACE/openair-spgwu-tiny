@@ -62,6 +62,7 @@ openair-spgwu-tiny
 ├── ci-scripts :  Directory containing scripts for the CI process.
 ├── docker :      Directory containing dockerfiles to create images.
 ├── docs :        Directory containing documentation on the supported feature set.
+│   └── images :  Directory containing images for the documentation.
 ├── etc :         Directory containing the configuration files to be deployed for each network function.
 ├── openshift :   Directory containing YAML files for build within OpenShift context.
 ├── scripts :     Directory containing entrypoint script for container images.
