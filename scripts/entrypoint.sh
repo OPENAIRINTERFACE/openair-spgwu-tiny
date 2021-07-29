@@ -27,6 +27,11 @@ NSSAI_SD_0=${NSSAI_SD_0:-2}
 DNN_0=${DNN_0:-default}
 UPF_FQDN_5G=${UPF_FQDN_5G:-oai-spgwu-tiny-svc}
 
+# Default values
+if [[ ${ENABLE_5G_FEATURES} == "yes" ]];then
+    SPGWC0_IP_ADDRESS=${SPGWC0_IP_ADDRESS:-127.0.0.1}
+fi	
+
 for c in ${CONFIG_DIR}/*.conf; do
     # grep variable names (format: ${VAR}) from template to be rendered
     VARS=$(grep -oP '@[a-zA-Z0-9_]+@' ${c} | sort | uniq | xargs)
