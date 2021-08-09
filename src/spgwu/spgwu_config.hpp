@@ -74,7 +74,6 @@ namespace spgwu {
 #define SPGWU_CONFIG_STRING_ASYNC_CMD_SCHED_PARAMS "ASYNC_CMD_SCHED_PARAMS"
 #define SPGWU_CONFIG_STRING_NON_STANDART_FEATURES "NON_STANDART_FEATURES"
 #define SPGWU_CONFIG_STRING_BYPASS_UL_PFCP_RULES "BYPASS_UL_PFCP_RULES"
-#define SPGWU_CONFIG_STRING_GTP_EXT_HDR "GTP_EXT_HDR"
 
 #define SPGWU_CONFIG_STRING_5G_FEATURES "SUPPORT_5G_FEATURES"
 #define SPGWU_CONFIG_STRING_ENABLE_5G_FEATURES "ENABLE_5G_FEATURES"
@@ -151,7 +150,6 @@ class spgwu_config {
   uint32_t max_pfcp_sessions;
 
   bool snat;
-  bool gtp_ext_hdr;
   std::vector<pdn_cfg_t> pdns;
   std::vector<pfcp::node_id_t> spgwcs;
 
