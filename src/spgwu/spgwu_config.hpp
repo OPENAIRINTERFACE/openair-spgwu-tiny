@@ -82,6 +82,7 @@ namespace spgwu {
 #define SPGWU_CONFIG_STRING_5G_FEATURES_NRF "NRF"
 #define SPGWU_CONFIG_STRING_5G_FEATURES_NRF_IPV4_ADDRESS "IPV4_ADDRESS"
 #define SPGWU_CONFIG_STRING_5G_FEATURES_NRF_PORT "PORT"
+#define SPGWU_CONFIG_STRING_5G_FEATURES_NRF_HTTP_VERSION "HTTP_VERSION"
 #define SPGWU_CONFIG_STRING_5G_FEATURES_NRF_API_VERSION "API_VERSION"
 #define SPGWU_CONFIG_STRING_5G_FEATURES_UPF_INFO "UPF_INFO"
 #define SPGWU_CONFIG_STRING_5G_FEATURES_NSSAI_SST "NSSAI_SST"
@@ -161,6 +162,7 @@ class spgwu_config {
     struct {
       struct in_addr ipv4_addr;
       unsigned int port;
+      unsigned int http_version;
       std::string api_version;
       std::string fqdn;
     } nrf_addr;
