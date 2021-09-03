@@ -96,6 +96,10 @@ pipeline {
             }
           }
           echo "Git URL    is ${GIT_URL}"
+          if (params.DockerHubCredentials == null) {
+            echo '\u26D4 \u001B[31mNo Credentials to push to DockerHub!\u001B[0m'
+            error "Stopping pipeline!"
+          }
 
           removeGitHubInfo()
           if (env.ghprbPullId != null) {
@@ -147,6 +151,10 @@ pipeline {
               myShCmd('docker image prune --force', rem_u18_host_flag, rem_u18_host_user, rem_u18_host)
               myShCmd('docker build --no-cache --target oai-spgwu-tiny --tag oai-spgwu-tiny:' + spgwu_tag + ' --file docker/Dockerfile.ubuntu18.04 --build-arg EURECOM_PROXY="http://proxy.eurecom.fr:8080" . > archives/spgwu_docker_image_build.log 2>&1', rem_u18_host_flag, rem_u18_host_user, rem_u18_host)
               myShCmd('docker image ls >> archives/spgwu_docker_image_build.log', rem_u18_host_flag, rem_u18_host_user, rem_u18_host)
+              // We will keep also the TMP image in U18 case.
+              if (env.ghprbPullId != null) {
+                myShCmd('docker image tag oai-spgwu-tiny:' + spgwu_tag + ' oai-spgwu-tiny:' + rhel_spgwu_tag, rem_u18_host_flag, rem_u18_host_user, rem_u18_host)
+              }
             }
           }
           post {
@@ -484,6 +492,25 @@ pipeline {
                               filter: 'test_results_oai_cn5g_oc.html',
                               selector: lastCompleted())
               }
+            }
+          }
+        }
+      }
+    }
+    // For the moment it is Docker-Hub, but we might have a new one internally.
+    stage ('Pushing Image to Official Registry') {
+      steps {
+        script {
+          // Only in case of push to target branch!
+          if (env.ghprbPullId == null) {
+            withCredentials([
+              [$class: 'UsernamePasswordMultiBinding', credentialsId: "${params.DockerHubCredentials}", usernameVariable: 'DH_Username', passwordVariable: 'DH_Password']
+            ]) {
+              myShCmd("echo ${DH_Password} | docker login --username ${DH_Username} --password-stdin", rem_u18_host_flag, rem_u18_host_user, rem_u18_host)
+              myShCmd("docker image tag oai-spgwu-tiny:develop ${DH_Username}/oai-spgwu-tiny:develop", rem_u18_host_flag, rem_u18_host_user, rem_u18_host)
+              myShCmd("docker push ${DH_Username}/oai-spgwu-tiny:develop", rem_u18_host_flag, rem_u18_host_user, rem_u18_host)
+              myShCmd("docker rmi ${DH_Username}/oai-spgwu-tiny:develop", rem_u18_host_flag, rem_u18_host_user, rem_u18_host)
+              myShCmd("docker logout", rem_u18_host_flag, rem_u18_host_user, rem_u18_host)
             }
           }
         }
