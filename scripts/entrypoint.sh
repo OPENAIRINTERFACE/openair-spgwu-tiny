@@ -25,6 +25,7 @@ NSSAI_SST_0=${NSSAI_SST_0:-1}
 NSSAI_SD_0=${NSSAI_SD_0:-2}
 DNN_0=${DNN_0:-default}
 UPF_FQDN_5G=${UPF_FQDN_5G:-oai-spgwu-tiny-svc}
+HTTP_VERSION=${HTTP_VERSION:-1}
 
 # Default values
 if [[ ${ENABLE_5G_FEATURES} == "yes" ]];then

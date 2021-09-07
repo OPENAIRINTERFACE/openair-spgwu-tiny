@@ -533,9 +533,18 @@ int spgwu_config::load(const string& config_file) {
       const Setting& nrf_cfg =
           support_features[SPGWU_CONFIG_STRING_5G_FEATURES_NRF];
       struct in_addr nrf_ipv4_addr;
-      unsigned int nrf_port = 0;
+      unsigned int nrf_port    = 0;
+      unsigned int httpVersion = 0;
       std::string nrf_api_version;
       string nrf_address = {};
+
+      if (!(nrf_cfg.lookupValue(
+              SPGWU_CONFIG_STRING_5G_FEATURES_NRF_HTTP_VERSION, httpVersion))) {
+        Logger::spgwu_app().error(
+            SPGWU_CONFIG_STRING_5G_FEATURES_NRF_HTTP_VERSION "failed");
+        throw(SPGWU_CONFIG_STRING_5G_FEATURES_NRF_HTTP_VERSION "failed");
+      }
+      upf_5g_features.nrf_addr.http_version = httpVersion;
 
       if (!upf_5g_features.use_fqdn_nrf) {
         nrf_cfg.lookupValue(
