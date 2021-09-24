@@ -308,6 +308,13 @@ int spgwu_config::load(const string& config_file) {
   }
 
   try {
+    spgwu_cfg.lookupValue(SPGWU_CONFIG_STRING_REST_PORT, rest_port);
+  } catch (const SettingNotFoundException& nfex) {
+    Logger::spgwu_app().info(
+        "%s : %s, using defaults", nfex.what(), nfex.getPath());
+  }
+
+  try {
     spgwu_cfg.lookupValue(SPGWU_CONFIG_STRING_FQDN, fqdn);
     util::trim(fqdn);
   } catch (const SettingNotFoundException& nfex) {
@@ -654,6 +661,7 @@ void spgwu_config::display() {
   Logger::spgwu_app().info("Configuration:");
   Logger::spgwu_app().info("- FQDN ..................: %s", fqdn.c_str());
   Logger::spgwu_app().info("- Instance ..............: %d", instance);
+  Logger::spgwu_app().info("- REST port..............: %d", rest_port);
   Logger::spgwu_app().info("- PID dir ...............: %s", pid_dir.c_str());
   Logger::spgwu_app().info("- ITTI tasks:");
   Logger::spgwu_app().info("    ITTI Timer task:");

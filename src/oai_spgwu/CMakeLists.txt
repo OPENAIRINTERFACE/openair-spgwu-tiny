@@ -286,6 +286,7 @@ include_directories(${SRC_TOP_DIR}/../build/ext/spdlog/include)
 add_executable(spgwu
   ${SRC_TOP_DIR}/oai_spgwu/main.cpp
   ${SRC_TOP_DIR}/oai_spgwu/options.cpp
+  ${SRC_TOP_DIR}/oai_spgwu/rest_handler.cpp
   ${SRC_TOP_DIR}/itti/itti.cpp
   ${SRC_TOP_DIR}/itti/itti_msg.cpp
   )
@@ -300,5 +301,5 @@ ENDIF(STATIC_LINKING)
 
 # folly glog dl double-conversion for FB folly library
 target_link_libraries (spgwu ${ASAN}  -Wl,--start-group CN_UTILS SPGWU SPGW_SWITCH UDP GTPV1U PFCP 3GPP_COMMON_TYPES gflags glog dl double-conversion folly -Wl,--end-group
-pthread m rt config++  event boost_system curl)
+pthread m rt config++  event boost_system curl pistache)
 

@@ -58,8 +58,10 @@ RUN yum update -y \
     openssh-server \
     procps-ng \  
   && yum clean all -y \
-  && rm -rf /var/cache/yum
-
+  && rm -rf /var/cache/yum \
+  && echo "/usr/local/lib" > /etc/ld.so.conf.d/local-lib.conf \
+  && echo "/usr/local/lib64" >> /etc/ld.so.conf.d/local-lib.conf 
+  
 # Some GIT configuration command quite useful
 RUN /bin/bash -c "if [[ -v HTTP_PROXY ]]; then git config --global http.proxy $HTTP_PROXY; fi"
 RUN git config --global https.postBuffer 123289600
@@ -70,4 +72,9 @@ COPY ./ /openair-spgwu-tiny
 
 # Installing and Building SPGW-U
 WORKDIR /openair-spgwu-tiny/build/scripts
-RUN ./build_spgwu --install-deps --force
+RUN ./build_spgwu --install-deps --force && ldconfig
+
+# For docker-compose, waiting for other nodes to start
+WORKDIR /
+RUN git clone https://github.com/vishnubob/wait-for-it.git
+

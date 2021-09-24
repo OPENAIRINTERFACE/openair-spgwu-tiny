@@ -21,6 +21,7 @@
 #include "options.hpp"
 #include "pfcp_switch.hpp"
 #include "pid_file.hpp"
+#include "rest_handler.h"
 #include "spgwu_app.hpp"
 #include "spgwu_config.hpp"
 
@@ -44,6 +45,7 @@ itti_mw* itti_inst                    = nullptr;
 async_shell_cmd* async_shell_cmd_inst = nullptr;
 pfcp_switch* pfcp_switch_inst         = nullptr;
 spgwu_app* spgwu_app_inst             = nullptr;
+Pistache::Http::Endpoint* rest_endpoint  = nullptr;
 spgwu_config spgwu_cfg;
 boost::asio::io_service io_service;
 
@@ -158,6 +160,26 @@ int main(int argc, char** argv) {
   fprintf(fp, "STARTED\n");
   fflush(fp);
   fclose(fp);
+
+  try {
+    Pistache::Address addr(
+        Pistache::Ipv4::any(), Pistache::Port(spgwu_cfg.rest_port));
+    auto opts = Pistache::Http::Endpoint::options().threads(1).flags(
+        Pistache::Tcp::Options::ReuseAddr);
+
+    rest_endpoint = new Pistache::Http::Endpoint(addr);
+    rest_endpoint->init(opts);
+    rest_endpoint->setHandler(Pistache::Http::make_handler<RestHandler>());
+    rest_endpoint->serveThreaded();
+
+
+
+    Logger::system().startup(
+        "Started REST server on port [%i]", spgwu_cfg.rest_port);
+  } catch (std::runtime_error& e) {
+    std::cout << "Exception starting REST server - " << e.what() << std::endl;
+    return 1;
+  }
 
   // once all udp servers initialized
   io_service.run();
