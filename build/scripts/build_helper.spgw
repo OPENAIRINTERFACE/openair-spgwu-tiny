@@ -411,9 +411,12 @@ check_install_spgwu_min_deps() {
   # Networking
   if [[ $OS_DISTRO == "ubuntu" ]]; then
     case "$(get_distribution_release)" in
-  "ubuntu18.04")
-      specific_packages="iproute2"
-      ;;
+      "ubuntu18.04")
+        specific_packages="iproute2"
+        ;;
+      "ubuntu20.04")
+        specific_packages="iproute2"
+        ;;
     esac
     PACKAGE_LIST="\
       $specific_packages \

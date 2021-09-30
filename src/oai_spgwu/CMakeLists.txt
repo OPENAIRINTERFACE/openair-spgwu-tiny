@@ -301,5 +301,5 @@ ENDIF(STATIC_LINKING)
 
 # folly glog dl double-conversion for FB folly library
 target_link_libraries (spgwu ${ASAN}  -Wl,--start-group CN_UTILS SPGWU SPGW_SWITCH UDP GTPV1U PFCP 3GPP_COMMON_TYPES gflags glog dl double-conversion folly -Wl,--end-group
-pthread m rt config++  event boost_system curl pistache)
+pthread m rt config++  event boost_system curl pistache fmt)
 
