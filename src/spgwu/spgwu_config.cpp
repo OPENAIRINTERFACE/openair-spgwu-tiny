@@ -583,8 +583,17 @@ int spgwu_config::load(const string& config_file) {
           IPV4_STR_ADDR_TO_INADDR(
               util::trim(nrf_address).c_str(), nrf_ipv4_addr,
               "BAD IPv4 ADDRESS FORMAT FOR NRF !");
-          upf_5g_features.nrf_addr.ipv4_addr   = nrf_ipv4_addr;
-          upf_5g_features.nrf_addr.port        = nrf_port;
+          upf_5g_features.nrf_addr.ipv4_addr = nrf_ipv4_addr;
+
+          // We hardcode nrf port from config for the moment
+          if (!(nrf_cfg.lookupValue(
+                  SPGWU_CONFIG_STRING_5G_FEATURES_NRF_PORT, nrf_port))) {
+            Logger::spgwu_app().error(SPGWU_CONFIG_STRING_5G_FEATURES_NRF_PORT
+                                      "failed");
+            throw(SPGWU_CONFIG_STRING_5G_FEATURES_NRF_PORT "failed");
+          }
+          upf_5g_features.nrf_addr.port = nrf_port;
+
           upf_5g_features.nrf_addr.api_version = "v1";  // TODO: get API version
         }
       }
