@@ -1,5 +1,10 @@
 # RELEASE NOTES: #
 
+## v1.1.3 -- October 2021 ##
+
+* Adding 5G features
+  - HTTP2 support
+
 ## v1.1.2 -- July 2021 ##
 
 * Adding 5G features
