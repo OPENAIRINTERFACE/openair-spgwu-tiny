@@ -322,6 +322,17 @@ void pfcp_switch::setup_pdn_interfaces() {
           Logger::pfcp_switch().warn("%s returned %d", cmd.c_str(), rc);
         }
       }
+      if (spgwu_cfg.nsf.is_tcp_mss_clamping) {
+        cmd = fmt::format(
+            "iptables -t mangle -A POSTROUTING -p tcp --tcp-flags SYN,RST SYN "
+            "-o {} -j TCPMSS --set-mss {} ",
+            spgwu_cfg.sgi.if_name.c_str(),
+            spgwu_cfg.nsf.tcp_mss);
+        rc = system((const char*) cmd.c_str());
+        if (rc) {
+          Logger::pfcp_switch().warn("%s returned %d", cmd.c_str(), rc);
+        }
+      }
     }
     if (it.prefix_ipv6) {
       std::string cmd = fmt::format(

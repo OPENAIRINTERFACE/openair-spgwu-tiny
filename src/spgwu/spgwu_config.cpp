@@ -380,6 +380,13 @@ int spgwu_config::load(const string& config_file) {
           nsf.bypass_ul_pfcp_rules = true;
         }
       }
+      nsf.is_tcp_mss_clamping = false;
+      if (nsf_cfg.lookupValue(SPGWU_CONFIG_STRING_TCP_MSS_CLAMPING, astring)) {
+        if (boost::iequals(astring, "yes")) {
+          nsf.is_tcp_mss_clamping = true;
+          nsf_cfg.lookupValue(SPGWU_CONFIG_STRING_TCP_MSS, nsf.tcp_mss);
+        }
+      }
     } catch (const SettingNotFoundException& nfex) {
       Logger::spgwu_app().info(
           "%s : %s, using defaults", nfex.what(), nfex.getPath());
@@ -776,6 +783,13 @@ void spgwu_config::display() {
       "    bypass_ul_pfcp_rules: %s",
       (nsf.bypass_ul_pfcp_rules) ? "yes" : "no");
 
+  Logger::spgwu_app().info(
+      "    tcp_mss_clamping: %s",
+      (nsf.is_tcp_mss_clamping) ? "yes" : "no");
+  if (nsf.is_tcp_mss_clamping) {
+    Logger::spgwu_app().info(
+        "    tcp_mss: %d", nsf.tcp_mss);
+  }
   Logger::spgwu_app().info("- SUPPORT_5G_FEATURES:");
   Logger::spgwu_app().info(
       "    enable_5g_features: %s",

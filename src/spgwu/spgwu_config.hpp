@@ -65,6 +65,8 @@ namespace spgwu {
 #define SPGWU_CONFIG_STRING_NETWORK_IPV6 "NETWORK_IPV6"
 #define SPGWU_CONFIG_STRING_ADDRESS_PREFIX_DELIMITER "/"
 #define SPGWU_CONFIG_STRING_SNAT "SNAT"
+#define SPGWU_CONFIG_STRING_TCP_MSS_CLAMPING "TCP_MSS_CLAMPING"
+#define SPGWU_CONFIG_STRING_TCP_MSS "TCP_MSS"
 #define SPGWU_CONFIG_STRING_MAX_PFCP_SESSIONS "MAX_PFCP_SESSIONS"
 #define SPGWU_CONFIG_STRING_SPGWC_LIST "SPGW-C_LIST"
 #define SPGWU_CONFIG_STRING_ITTI_TASKS "ITTI_TASKS"
@@ -126,6 +128,8 @@ typedef struct itti_cfg_s {
 // Non standart features
 typedef struct nsf_cfg_s {
   bool bypass_ul_pfcp_rules;
+  bool is_tcp_mss_clamping;
+  unsigned int  tcp_mss;
 } nsf_cfg_t;
 class spgwu_config {
  private:
