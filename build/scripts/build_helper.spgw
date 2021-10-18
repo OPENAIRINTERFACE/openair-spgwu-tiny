@@ -136,8 +136,7 @@ install_nlohmann_from_git() {
     fi
 
     git clone $GIT_URL
-    git submodule update --init
-    cd json && git checkout master
+    cd json && git checkout -f v3.10.3
     ret=$?;[[ $ret -ne 0 ]] && popd && return $ret
     mkdir _build && cd _build
     if [[ "$OS_BASEDISTRO" == "fedora" ]]; then
