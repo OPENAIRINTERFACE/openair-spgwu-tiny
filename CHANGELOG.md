@@ -1,5 +1,10 @@
 # RELEASE NOTES: #
 
+## v1.1.4 -- October 2021 ##
+
+* Fix build issue
+* Fix GTPU DL encapsulation: 8 extraneous bytes
+
 ## v1.1.3 -- October 2021 ##
 
 * Adding 5G features
