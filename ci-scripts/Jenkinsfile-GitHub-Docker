@@ -146,7 +146,10 @@ pipeline {
               if (env.ghprbPullId == null) {
                 // Currently this pipeline only runs for pushes to `develop` branch
                 // First clean image registry
-                myShCmd('docker image rm oai-spgwu-tiny:develop', rem_u18_host_flag, rem_u18_host_user, rem_u18_host)
+                myShCmd('docker image rm oai-spgwu-tiny:develop || true', rem_u18_host_flag, rem_u18_host_user, rem_u18_host)
+              } else {
+                // In case we forgot during a previous run
+                myShCmd('docker image rm oai-spgwu-tiny:' + spgwu_tag + ' || true', rem_u18_host_flag, rem_u18_host_user, rem_u18_host)
               }
               myShCmd('docker image prune --force', rem_u18_host_flag, rem_u18_host_user, rem_u18_host)
               myShCmd('docker build --no-cache --target oai-spgwu-tiny --tag oai-spgwu-tiny:' + spgwu_tag + ' --file docker/Dockerfile.ubuntu18.04 --build-arg EURECOM_PROXY="http://proxy.eurecom.fr:8080" . > archives/spgwu_docker_image_build.log 2>&1', rem_u18_host_flag, rem_u18_host_user, rem_u18_host)
