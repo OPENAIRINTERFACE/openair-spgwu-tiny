@@ -243,11 +243,12 @@ spgwu_sx::spgwu_sx()
     Logger::spgwu_sx().error("Cannot create task TASK_SPGWU_SX");
     throw std::runtime_error("Cannot create task TASK_SPGWU_SX");
   }
-
-  for (std::vector<pfcp::node_id_t>::const_iterator it =
-           spgwu_cfg.spgwcs.begin();
-       it != spgwu_cfg.spgwcs.end(); ++it) {
-    start_association(*it);
+  if (!spgwu_cfg.upf_5g_features.register_nrf) {
+    for (std::vector<pfcp::node_id_t>::const_iterator it =
+             spgwu_cfg.spgwcs.begin();
+         it != spgwu_cfg.spgwcs.end(); ++it) {
+      start_association(*it);
+    }
   }
   Logger::spgwu_sx().startup("Started");
 }
