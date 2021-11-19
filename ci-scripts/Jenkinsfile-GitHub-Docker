@@ -608,6 +608,7 @@ pipeline {
             sh "sed -i -e 's#TEMPLATE_PULL_REQUEST_TEMPLATE#${env.ghprbPullTitle}#' ${htmlFile}"
           }
           sh "sed -i -e 's#TEMPLATE_TIME#${JOB_TIMESTAMP}#' ${htmlFile}"
+          archiveArtifacts artifacts: htmlFile
         }
 
         // Sending an email to the last committer. Maybe not the Pull Request's author.
