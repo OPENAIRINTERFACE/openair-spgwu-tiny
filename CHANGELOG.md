@@ -1,5 +1,9 @@
 # RELEASE NOTES: #
 
+## v1.1.5 -- December 2021 ##
+
+* Disable association request if NF registration is enabled
+
 ## v1.1.4 -- October 2021 ##
 
 * Fix build issue
