@@ -55,7 +55,9 @@ COPY . /openair-spgwu-tiny
 # Installing and Building SPGW-U-TINY
 WORKDIR /openair-spgwu-tiny/build/scripts
 RUN ./build_spgwu --install-deps --force
-RUN ./build_spgwu --clean --build-type Release --jobs --Verbose
+RUN ./build_spgwu --clean --build-type Release --jobs --Verbose && \
+    ldd /openair-spgwu-tiny/build/spgw_u/build/spgwu && \
+    mv /openair-spgwu-tiny/build/spgw_u/build/spgwu /openair-spgwu-tiny/build/spgw_u/build/oai_spgwu
 
 #---------------------------------------------------------------------
 # TARGET IMAGE
@@ -83,15 +85,20 @@ RUN apt-get update && \
 
 # Copying executable and generated libraries
 WORKDIR /openair-spgwu-tiny/bin
-COPY --from=oai-spgwu-tiny-builder /openair-spgwu-tiny/build/spgw_u/build/spgwu oai_spgwu
-COPY --from=oai-spgwu-tiny-builder /openair-spgwu-tiny/scripts/entrypoint.sh .
+COPY --from=oai-spgwu-tiny-builder \
+    /openair-spgwu-tiny/build/spgw_u/build/oai_spgwu \
+    /openair-spgwu-tiny/scripts/entrypoint.sh \
+    ./
 
 WORKDIR /usr/local/lib
-COPY --from=oai-spgwu-tiny-builder /usr/lib/libboost_system.so.1.67.0 .
-COPY --from=oai-spgwu-tiny-builder /usr/lib/x86_64-linux-gnu/libcurl-gnutls.so.4 .
-COPY --from=oai-spgwu-tiny-builder /usr/lib/x86_64-linux-gnu/librtmp.so.1 .
-COPY --from=oai-spgwu-tiny-builder /usr/lib/x86_64-linux-gnu/libpsl.so.5 .
-RUN ldconfig
+COPY --from=oai-spgwu-tiny-builder \
+    /usr/lib/libboost_system.so.1.67.0 \
+    /usr/lib/x86_64-linux-gnu/libcurl-gnutls.so.4 \
+    /usr/lib/x86_64-linux-gnu/librtmp.so.1 \
+    /usr/lib/x86_64-linux-gnu/libpsl.so.5 \
+    ./
+RUN ldconfig && \
+    ldd /openair-spgwu-tiny/bin/oai_spgwu
 
 # Copying template configuration files
 # The configuration folder will be flat

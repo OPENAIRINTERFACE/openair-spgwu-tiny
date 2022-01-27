@@ -59,7 +59,9 @@ COPY . /openair-spgwu-tiny
 # Installing and Building SPGW-U-TINY
 WORKDIR /openair-spgwu-tiny/build/scripts
 RUN ./build_spgwu --install-deps --force
-RUN ./build_spgwu --clean --build-type Release --jobs --Verbose
+RUN ./build_spgwu --clean --build-type Release --jobs --Verbose && \
+    ldd /openair-spgwu-tiny/build/spgw_u/build/spgwu && \
+    mv /openair-spgwu-tiny/build/spgw_u/build/spgwu /openair-spgwu-tiny/build/spgw_u/build/oai_spgwu
 
 #---------------------------------------------------------------------
 # TARGET IMAGE
@@ -70,7 +72,6 @@ ENV TZ=Europe/Paris
 RUN yum update -y && \
     yum -y install --enablerepo="ubi-8-codeready-builder" \
       tzdata \
-      tcpdump \
       procps-ng \
       psmisc \
       net-tools \
@@ -84,16 +85,21 @@ RUN yum update -y && \
 
 # Copying executable and generated libraries
 WORKDIR /openair-spgwu-tiny/bin
-COPY --from=oai-spgwu-tiny-builder /openair-spgwu-tiny/build/spgw_u/build/spgwu oai_spgwu
-COPY --from=oai-spgwu-tiny-builder /openair-spgwu-tiny/scripts/entrypoint.sh .
+COPY --from=oai-spgwu-tiny-builder \
+    /openair-spgwu-tiny/build/spgw_u/build/oai_spgwu \
+    /openair-spgwu-tiny/scripts/entrypoint.sh \
+    ./
 
 # Copying installed libraries from builder
-COPY --from=oai-spgwu-tiny-builder /lib64/libgflags.so.2.1 /lib64/
-COPY --from=oai-spgwu-tiny-builder /lib64/libglog.so.0 /lib64/
-COPY --from=oai-spgwu-tiny-builder /lib64/libdouble-conversion.so.1 /lib64/
-COPY --from=oai-spgwu-tiny-builder /lib64/libconfig++.so.9 /lib64/
-COPY --from=oai-spgwu-tiny-builder /lib64/libboost_system.so.1.66.0 /lib64/
-RUN ldconfig
+COPY --from=oai-spgwu-tiny-builder \
+    /lib64/libgflags.so.2.1 \
+    /lib64/libglog.so.0 \
+    /lib64/libdouble-conversion.so.1 \
+    /lib64/libconfig++.so.9 \
+    /lib64/libboost_system.so.1.66.0 \
+    /lib64/
+RUN ldconfig && \
+    ldd /openair-spgwu-tiny/bin/oai_spgwu
 
 # Copying template configuration files
 # The configuration folder will be flat
