@@ -499,6 +499,36 @@ pipeline {
             }
           }
         }
+        stage ('Testing the 5GCN tutorials') {
+          steps {
+            script {
+              gitlabCommitStatus(name: "Test 5GCN tutorials") {
+                localStatus = build job: 'OAI-CN5G-Tutorials-Check',
+                  parameters: [
+                    string(name: 'SPGWU_TAG', value: String.valueOf(spgwu_tag)),
+                    string(name: 'SPGWU_BRANCH', value: String.valueOf(spgwu_branch))
+                  ], propagate: false
+                localResult = localStatus.getResult()
+
+                if (localStatus.resultIsBetterOrEqualTo('SUCCESS')) {
+                  echo "Tutorials Test Job is OK"
+                } else {
+                  echo "Tutorials Test Job is KO"
+                  sh "ci-scripts/fail.sh"
+                }
+              }
+            }
+          }
+          post {
+            always {
+              script {
+                copyArtifacts(projectName: 'OAI-CN5G-Tutorials-Check',
+                              filter: '*_results_oai_cn5g*.html',
+                              selector: lastCompleted())
+              }
+            }
+          }
+        }
       }
     }
     // For the moment it is Docker-Hub, but we might have a new one internally.

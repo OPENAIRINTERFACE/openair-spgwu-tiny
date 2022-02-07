@@ -163,7 +163,9 @@ class HtmlReport():
 		self.file.write(buildSummary)
 
 		cwd = os.getcwd()
-		test_reports = ['test_results_oai_epc', 'test_results_magma_epc_rhel8', 'test_results_oai_cn5g', 'test_results_oai_cn5g_oc']
+		test_reports = ['test_results_oai_epc', 'test_results_magma_epc_rhel8', \
+                        'test_results_oai_cn5g_basic', 'test_results_oai_cn5g_mini', \
+                        'test_results_oai_cn5g_oc', 'test_results_oai_cn5g_tutorials']
 		for test in test_reports:
 			if os.path.isfile(cwd + '/' + test + '.html'):
 				newEpcReport = open(cwd + '/' + test + '_new.html', 'w')
