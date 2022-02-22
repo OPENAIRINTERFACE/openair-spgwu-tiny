@@ -1,5 +1,11 @@
 # RELEASE NOTES: #
 
+## v1.2.0 -- February 2022 ##
+
+* Obsolescence of Legacy OAI-MME
+* Build fixes
+* Docker image layer optimization
+
 ## v1.1.5 -- December 2021 ##
 
 * Disable association request if NF registration is enabled
