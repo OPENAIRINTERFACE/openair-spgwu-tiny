@@ -408,7 +408,7 @@ pipeline {
             always {
               script {
                 copyArtifacts(projectName: params.CN_EPC_FED_PipelineName,
-                              filter: 'test_results_oai_epc.html',
+                              filter: 'test_results*.html',
                               selector: lastCompleted())
               }
             }
@@ -437,7 +437,7 @@ pipeline {
             always {
               script {
                 copyArtifacts(projectName: params.RHEL8_SanityCheck_PipelineName,
-                              filter: 'test_results_magma_epc_rhel8.html',
+                              filter: 'test_results*.html',
                               selector: lastCompleted())
               }
             }
@@ -641,7 +641,6 @@ pipeline {
           sh "sed -i -e 's#TEMPLATE_TIME#${JOB_TIMESTAMP}#' ${htmlFile}"
           archiveArtifacts artifacts: htmlFile
         }
-
         // Sending an email to the last committer. Maybe not the Pull Request's author.
         if (params.sendToCommitterEmail != null) {
           if (params.sendToCommitterEmail) {
