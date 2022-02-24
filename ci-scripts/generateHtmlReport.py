@@ -164,7 +164,7 @@ class HtmlReport():
 		self.file.write(buildSummary)
 
 		cwd = os.getcwd()
-		for reportFile in glob.glob('./*results_*.html'):
+		for reportFile in glob.glob('./test_results_*.html'):
 			if reportFile == './test_results_oai_spgwu.html':
 				continue
 			newEpcReport = open(cwd + '/' + str(reportFile) + '.new', 'w')
