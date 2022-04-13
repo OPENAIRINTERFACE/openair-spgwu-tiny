@@ -81,7 +81,7 @@ RUN yum update -y && \
       initscripts \
       libevent && \
     yum clean all -y && \
-    rm -rf /var/cache/yum
+    rm -rf /var/cache/yum /var/cache/dnf
 
 # Copying executable and generated libraries
 WORKDIR /openair-spgwu-tiny/bin

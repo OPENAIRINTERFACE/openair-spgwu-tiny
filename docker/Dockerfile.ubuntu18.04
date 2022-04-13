@@ -75,8 +75,8 @@ RUN apt-get update && \
       iproute2 \
       ethtool \
       iptables \
-      tshark \
       perl \
+      libgssapi-krb5-2 \
       libldap-2.4-2 \
       libgoogle-glog0v5 \
       libdouble-conversion1 \
@@ -93,6 +93,7 @@ COPY --from=oai-spgwu-tiny-builder \
 WORKDIR /usr/local/lib
 COPY --from=oai-spgwu-tiny-builder \
     /usr/lib/libboost_system.so.1.67.0 \
+    /usr/lib/x86_64-linux-gnu/libnghttp2.so.14 \
     /usr/lib/x86_64-linux-gnu/libcurl-gnutls.so.4 \
     /usr/lib/x86_64-linux-gnu/librtmp.so.1 \
     /usr/lib/x86_64-linux-gnu/libpsl.so.5 \
