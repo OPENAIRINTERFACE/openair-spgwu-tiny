@@ -116,6 +116,9 @@ void spgwu_s1u::handle_receive(
     char* recv_buffer, const std::size_t bytes_transferred,
     const endpoint& r_endpoint) {
 #define GTPU_MESSAGE_FLAGS_POS_IN_UDP_PAYLOAD 0
+#define GTPU_MESSAGE_EXT_HEADER_FLAG 0x34
+#define GTPU_MESSAGE_SEQN_FLAG 0x36
+#define GTPU_MESSAGE_PRIME_FLAG 0x07
   // auto start = std::chrono::high_resolution_clock::now();
   struct gtpuhdr* gtpuh = (struct gtpuhdr*) &recv_buffer[0];
 
@@ -124,9 +127,11 @@ void spgwu_s1u::handle_receive(
     if (gtpuh->message_type == GTPU_G_PDU) {
       uint8_t gtp_flags = recv_buffer[GTPU_MESSAGE_FLAGS_POS_IN_UDP_PAYLOAD];
       std::size_t gtp_payload_offset = GTPV1U_MSG_HEADER_MIN_SIZE;
-      if (gtp_flags == 0x34 || gtp_flags == 0x36) gtp_payload_offset += 4;
+      if (gtp_flags == GTPU_MESSAGE_EXT_HEADER_FLAG ||
+          gtp_flags == GTPU_MESSAGE_SEQN_FLAG)
+        gtp_payload_offset += 4;
       std::size_t gtp_payload_length = be16toh(gtpuh->message_length);
-      if (gtp_flags & 0x07) {
+      if (gtp_flags & GTPU_MESSAGE_PRIME_FLAG) {
         gtp_payload_offset += 4;
         gtp_payload_length -= 4;
       }
