@@ -74,7 +74,7 @@ void pfcp_switch::pdn_worker(
     if (iov->msg_iov.iov_base) {
       pfcp_session_look_up_pack_in_core(
           (const char*) iov->msg_iov.iov_base, iov->msg_iov.iov_len);
-      free_pool_->write(iov);
+      free_pool_->blockingWrite(iov);
     } else {
       free(iov);
       std::cout << "exit DL w" << id << " " << count << std::endl;
@@ -89,12 +89,14 @@ void pfcp_switch::pdn_worker(
 }
 //------------------------------------------------------------------------------
 void pfcp_switch::pdn_read_loop(
-    int sock_r, const util::thread_sched_params& sched_params) {
+    int sock_r, util::thread_sched_params sched_params) {
   uint64_t count      = 0;
   uint64_t errors     = 0;
   iovec_q_item_t* iov = nullptr;
   // struct sockaddr_in   sin = {};
 
+  // Producer should not interfere with consumer for not de-sequence IP packets
+  sched_params.sched_priority -=1;
   sched_params.apply(TASK_NONE, Logger::pfcp_switch());
 
   while (1) {
@@ -123,7 +125,7 @@ void pfcp_switch::pdn_read_loop(
       ++count;
       // std::cout << "pdn" << count << " " << nread << " bytes" << std::endl;
       iov->msg_iov.iov_len = nread;
-      work_pool_->write(iov);
+      work_pool_->blockingWrite(iov);
       iov = nullptr;
     } else {
       ++errors;
@@ -386,7 +388,7 @@ pfcp_switch::pfcp_switch()
       threads_(16),
       socks_r(16),
       sock_w(0) {
-  num_threads_   = 8;
+  num_threads_   = spgwu_cfg.sgi.thread_rd_sched_params.thread_pool_size;
   int num_blocks = num_threads_ * 16;
   free_pool_     = new folly::MPMCQueue<iovec_q_item_t*>(num_blocks);
   work_pool_     = new folly::MPMCQueue<iovec_q_item_t*>(num_blocks);
