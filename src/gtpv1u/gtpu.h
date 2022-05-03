@@ -31,6 +31,12 @@
 #include <endian.h>
 #include <stdint.h>
 
+#define GTPU_MESSAGE_PN_MASK 0x1
+#define GTPU_MESSAGE_SN_MASK 0x2
+#define GTPU_MESSAGE_EXT_HEADER_MASK 0x4
+#define GTPU_MESSAGE_PT_MASK 0x10
+#define GTPU_MESSAGE_VERSION_MASK 0xE
+
 struct gtpuhdr {
 #if __BYTE_ORDER == __LITTLE_ENDIAN
   unsigned int pn : 1;
