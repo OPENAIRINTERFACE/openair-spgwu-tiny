@@ -124,7 +124,12 @@ void spgwu_s1u::handle_receive(
     if (gtpuh->message_type == GTPU_G_PDU) {
       uint8_t gtp_flags = recv_buffer[GTPU_MESSAGE_FLAGS_POS_IN_UDP_PAYLOAD];
       std::size_t gtp_payload_offset = GTPV1U_MSG_HEADER_MIN_SIZE;
-      if (gtp_flags == 0x34) gtp_payload_offset += 4;
+      if ((((gtp_flags & GTPU_MESSAGE_VERSION_MASK)) &&
+           (gtp_flags & GTPU_MESSAGE_PT_MASK)) &&
+          ((gtp_flags & GTPU_MESSAGE_EXT_HEADER_MASK) ||
+           (gtp_flags & GTPU_MESSAGE_SN_MASK) ||
+           (gtp_flags & GTPU_MESSAGE_PN_MASK)))
+        gtp_payload_offset += 4;
       std::size_t gtp_payload_length = be16toh(gtpuh->message_length);
       if (gtp_flags & 0x07) {
         gtp_payload_offset += 4;
