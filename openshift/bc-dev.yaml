@@ -1,0 +1,60 @@
+--- 
+apiVersion: build.openshift.io/v1
+kind: BuildConfig
+metadata: 
+  name: oai-spgwu-tiny-dev
+spec: 
+  output: 
+    to: 
+      kind: ImageStreamTag
+      name: "oai-spgwu-tiny-dev:oai-oc"
+  runPolicy: Serial
+  strategy:
+    type: Docker
+  source: 
+    secrets: 
+      - destinationDir: etc-pki-entitlement
+        secret: 
+          name: etc-pki-entitlement
+    configMaps: 
+      - configMap: 
+          name: rhsm-conf
+        destinationDir: rhsm-conf
+      - configMap: 
+          name: rhsm-ca
+        destinationDir: rhsm-ca
+    dockerfile: |
+        ################################################################
+        # Builder Image (can also be used as developer's image)
+        ################################################################
+        FROM image-registry.openshift-image-registry.svc:5000/oai4g/oai-spgwu-tiny-base-builder:oai-oc as oai-spgwu-tiny-builder
+        ENV TZ=Europe/Paris
+          
+        WORKDIR /
+        RUN git clone -b develop https://github.com/lionelgo/openair-spgwu-tiny.git
+        
+        WORKDIR /openair-spgwu-tiny/build/ext
+        RUN ln -s /spdlog /openair-spgwu-tiny/build/ext/spdlog \
+            && ln -s /json /openair-spgwu-tiny/build/ext/json
+        WORKDIR /openair-spgwu-tiny/build/scripts
+        RUN ./build_spgwu --clean --build-type Release --jobs --Verbose \
+            && ldd /openair-spgwu-tiny/build/spgw_u/build/spgwu \
+            && mv /openair-spgwu-tiny/build/spgw_u/build/spgwu \
+                  /openair-spgwu-tiny/build/spgw_u/build/oai_spgwu \
+            && mkdir /openair-spgwu-tiny/bin \
+            && cp /openair-spgwu-tiny/build/spgw_u/build/oai_spgwu \
+                  /openair-spgwu-tiny/scripts/entrypoint.sh \
+                  /openair-spgwu-tiny/bin 
+
+
+        RUN ldconfig && \
+          ldd /openair-spgwu-tiny/bin/oai_spgwu
+      
+        WORKDIR /openair-spgwu-tiny
+      
+        # expose ports
+        EXPOSE 2152/udp 8805/udp
+      
+        CMD ["/openair-spgwu-tiny/bin/oai_spgwu", "-c", "/openair-spgwu-tiny/etc/spgw_u.conf", "-o"]
+        ENTRYPOINT ["/openair-spgwu-tiny/bin/entrypoint.sh"]
+      
