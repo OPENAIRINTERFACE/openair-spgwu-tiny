@@ -49,6 +49,7 @@ RUN rm /etc/rhsm-host && \
        # diff, cmp and file are not in the ubi???
        diffutils \
        file \
+       cmake3 \
        psmisc \
        git
 
