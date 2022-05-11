@@ -46,7 +46,6 @@ RUN rm /etc/rhsm-host && \
     subscription-manager repos --enable codeready-builder-for-rhel-8-x86_64-rpms && \
     yum update -y && \
     yum -y install --enablerepo="codeready-builder-for-rhel-8-x86_64-rpms" \
-       # diff, cmp and file are not in the ubi???
        diffutils \
        file \
        psmisc \

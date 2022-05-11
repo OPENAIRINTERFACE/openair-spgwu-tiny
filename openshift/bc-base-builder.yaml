@@ -1,0 +1,146 @@
+--- 
+apiVersion: build.openshift.io/v1
+kind: BuildConfig
+metadata: 
+  name: oai-spgwu-tiny-base-builder
+spec: 
+  output: 
+    to: 
+      kind: ImageStreamTag
+      name: "oai-spgwu-tiny-base-builder:oai-oc"
+  runPolicy: Serial
+  strategy:
+    type: Docker
+  source: 
+    secrets: 
+      - destinationDir: etc-pki-entitlement
+        secret: 
+          name: etc-pki-entitlement
+    configMaps: 
+      - configMap: 
+          name: rhsm-conf
+        destinationDir: rhsm-conf
+      - configMap: 
+          name: rhsm-ca
+        destinationDir: rhsm-ca
+    dockerfile: |
+        ################################################################
+        # Builder Image (can also be used as developer's image)
+        ################################################################
+        FROM registry.access.redhat.com/ubi8/ubi:latest as oai-spgwu-tiny-builder
+
+        ARG FEATURES=mme_oai
+        ENV MAGMA_ROOT=/magma
+        ENV BUILD_TYPE=Debug
+        ENV C_BUILD=/build/c
+        ENV TZ=Europe/Paris
+
+        # Entitlements and RHSM configurations are Open-Shift Secret and ConfigMaps
+        # It is pre-requisite
+        # Copy the entitlements
+        COPY ./etc-pki-entitlement /etc/pki/entitlement
+
+        # Copy the subscription manager configurations
+        COPY ./rhsm-conf /etc/rhsm
+        COPY ./rhsm-ca /etc/rhsm/ca
+
+        RUN rm /etc/rhsm-host && \
+            yum repolist --disablerepo=* && \
+            subscription-manager repos --enable codeready-builder-for-rhel-8-x86_64-rpms \
+          && yum update -y \
+          && yum install -y https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm \
+          && yum install dnf-plugins-core -y \
+          && yum install -y --enablerepo="codeready-builder-for-rhel-8-x86_64-rpms" \
+              # diff, cmp and file are not in the ubi???
+               autoconf \
+               automake \
+               binutils-devel \
+               bison \
+               boost-devel \
+               check \
+               cmake \
+               cppcheck \
+               diffutils \
+               double-conversion-devel \
+               ethtool \
+               file \
+               flex \
+               gcc-c++ \
+               gdb \
+               gflags-devel \
+               git \
+               glog-devel \
+               gmp-devel \
+               guile-devel \
+               initscripts \
+               iproute \
+               iptables \
+               libconfig-devel \
+               libcurl-devel \
+               libevent \
+               libevent-devel \
+               libgcrypt-devel \
+               libidn-devel \
+               libtool \
+               libxml2 \
+               libxml2-devel \
+               lksctp-tools \
+               lksctp-tools-devel \
+               lz4-devel \
+               make \
+               net-tools \
+               openssl \
+               openssl-devel \
+               pkgconfig \
+               procps-ng \
+               psmisc \
+               python2 \
+               tzdata \
+               wget \
+               zlib-devel
+
+        WORKDIR /
+        
+        RUN wget --quiet --tries=3 --retry-connrefused https://github.com/google/googletest/archive/release-1.8.0.tar.gz \
+            && tar zxf release-1.8.0.tar.gz \
+            && rm -f release-1.8.0.tar.gz \
+            && cd googletest-release-1.8.0 \
+            && cmake . \
+            && make \
+            && make install
+            
+        RUN git clone https://github.com/facebook/folly.git \
+            && cd folly \
+            && git checkout -f v2019.06.17.00 \
+            && echo 'diff --git a/build/fbcode_builder/CMake/FindGflags.cmake b/build/fbcode_builder/CMake/FindGflags.cmake' > patch.diff \
+            && echo 'index 246ceac..3b96716 100644' >> patch.diff \
+            && echo '--- a/build/fbcode_builder/CMake/FindGflags.cmake' >> patch.diff \
+            && echo '+++ b/build/fbcode_builder/CMake/FindGflags.cmake' >> patch.diff \
+            && echo '@@ -34,6 +34,9 @@ IF (LIBGFLAGS_INCLUDE_DIR)' >> patch.diff \
+            && echo ' ENDIF ()' >> patch.diff \
+            && echo '' >> patch.diff \
+            && echo ' find_package(gflags CONFIG QUIET)' >> patch.diff \
+            && echo '+get_filename_component (_LIB_PATH "${gflags_CONFIG}/../../../" ABSOLUTE)' >> patch.diff \
+            && echo '+unset(gflags_LIBRARIES)' >> patch.diff \
+            && echo '+find_library(gflags_LIBRARIES gflags PATHS ${_LIB_PATH})' >> patch.diff \
+            && echo ' if (gflags_FOUND)' >> patch.diff \
+            && echo '   if (NOT Gflags_FIND_QUIETLY)' >> patch.diff \
+            && echo '     message(STATUS "Found gflags from package config ${gflags_CONFIG}")' >> patch.diff \
+            && git apply patch.diff \
+            && mkdir _build && cd _build \
+            && cmake3  .. \
+            && make -j $(nproc) \
+            && make install
+            
+        RUN git clone https://github.com/gabime/spdlog.git \
+            && cd spdlog && git checkout master \
+            && sed -i "/#define SPDLOG_ENABLE_SYSLOG/s/^\/\///g" include/spdlog/tweakme.h
+             
+        RUN git clone https://github.com/nlohmann/json.git \
+            && cd json && git checkout -f v3.10.3 \
+            && mkdir _build && cd _build \
+            && cmake -G "Unix Makefiles" -DCMAKE_BUILD_TYPE=Release -DJSON_BuildTests=OFF .. \
+            && make \
+            && make install
+
+         

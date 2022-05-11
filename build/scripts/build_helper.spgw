@@ -55,7 +55,7 @@ install_fmt() {
     git clone https://github.com/fmtlib/fmt.git
     ret=$?;[[ $ret -ne 0 ]] && return $ret
     cd fmt
-    cmake .
+    $CMAKE .
     ret=$?;[[ $ret -ne 0 ]] && return $ret
     make -j `nproc`
     ret=$?;[[ $ret -ne 0 ]] && return $ret
@@ -139,11 +139,7 @@ install_nlohmann_from_git() {
     cd json && git checkout -f v3.10.3
     ret=$?;[[ $ret -ne 0 ]] && popd && return $ret
     mkdir _build && cd _build
-    if [[ "$OS_BASEDISTRO" == "fedora" ]]; then
-      cmake3  -G "Unix Makefiles" -DCMAKE_BUILD_TYPE=Release -DJSON_BuildTests=OFF ..
-    else
-      cmake -G "Unix Makefiles" -DCMAKE_BUILD_TYPE=Release -DJSON_BuildTests=OFF ..
-    fi  
+    $CMAKE  -G "Unix Makefiles" -DCMAKE_BUILD_TYPE=Release -DJSON_BuildTests=OFF ..
     ret=$?;[[ $ret -ne 0 ]] && popd && return $ret
     make
     ret=$?;[[ $ret -ne 0 ]] && popd && return $ret
@@ -195,7 +191,7 @@ check_install_spgwu_deps() {
       automake \
       bison \
       build-essential \
-      cmake \
+      $CMAKE \
       doxygen \
       flex \
       gdb \
