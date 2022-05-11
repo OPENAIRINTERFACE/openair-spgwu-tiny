@@ -18,38 +18,14 @@
 # * For more information about the OpenAirInterface (OAI) Software Alliance:
 # *      contact@openairinterface.org
 # */
-#---------------------------------------------------------------------
 #
-kind: BuildConfig
-apiVersion: build.openshift.io/v1
+apiVersion: image.openshift.io/v1
+kind: ImageStream
 metadata:
-  name: "spgwu-tiny-debug-centos8"
+    name: oai-spgwu-tiny-base-builder
+    namespace: oai4g
+status:
+    tag: oai-oc
 spec:
-    runPolicy: "Serial"
-    source:
-        git:
-            uri: "https://github.com/lionelgo/openair-spgwu-tiny.git"
-            ref: "multi-spgwu"
-            httpProxy: http://proxy.eurecom.fr:8080
-            httpsProxy: https://proxy.eurecom.fr:8080
-        secrets:
-          - secret:
-              name: etc-pki-entitlement
-            destinationDir: etc-pki-entitlement
-        configMaps:
-          - configMap:
-              name: rhsm-conf
-            destinationDir: rhsm-conf
-          - configMap:
-              name: rhsm-ca
-            destinationDir: rhsm-ca
-    strategy:
-        dockerStrategy:
-            dockerfilePath: "docker/Dockerfile.debug.centos8"
-            from:
-                kind: "ImageStreamTag"
-                name: "oai-spgwu-tiny:debug-centos8-3rd-party"
-    output:
-        to:
-            kind: "ImageStreamTag"
-            name: "oai-spgwu-tiny:multi-spgwu"
+    lookupPolicy:
+        local: true
