@@ -139,11 +139,7 @@ install_nlohmann_from_git() {
     cd json && git checkout -f v3.10.3
     ret=$?;[[ $ret -ne 0 ]] && popd && return $ret
     mkdir _build && cd _build
-    if [[ "$OS_BASEDISTRO" == "fedora" ]]; then
-      $CMAKE  -G "Unix Makefiles" -DCMAKE_BUILD_TYPE=Release -DJSON_BuildTests=OFF ..
-    else
-      $CMAKE -G "Unix Makefiles" -DCMAKE_BUILD_TYPE=Release -DJSON_BuildTests=OFF ..
-    fi  
+    $CMAKE  -G "Unix Makefiles" -DCMAKE_BUILD_TYPE=Release -DJSON_BuildTests=OFF ..
     ret=$?;[[ $ret -ne 0 ]] && popd && return $ret
     make
     ret=$?;[[ $ret -ne 0 ]] && popd && return $ret
