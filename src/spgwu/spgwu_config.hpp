@@ -94,6 +94,8 @@ namespace spgwu {
 #define SPGW_ABORT_ON_ERROR true
 #define SPGW_WARN_ON_ERROR false
 
+const uint8_t SST_MAX_STANDARDIZED_VALUE = 127;
+
 typedef struct interface_cfg_s {
   std::string if_name;
   struct in_addr addr4;
