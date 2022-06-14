@@ -803,16 +803,16 @@ void spgwu_config::display() {
             upf_5g_features.nrf_addr.fqdn.c_str());
 
       if (upf_5g_features.upf_info.snssai_upf_info_list.size() > 0) {
-        Logger::spgwu_app().debug("    UPF Info:");
+        Logger::spgwu_app().info("    UPF Info:");
       }
       for (auto s : upf_5g_features.upf_info.snssai_upf_info_list) {
         // Logger::spgwu_app().debug("        Parameters supported by the
         // UPF:");
-        Logger::spgwu_app().debug(
+        Logger::spgwu_app().info(
             "        SNSSAI (SST %d, SD %s)", s.snssai.sST,
             s.snssai.sD.c_str());
         for (auto d : s.dnn_upf_info_list) {
-          Logger::spgwu_app().debug("            DNN %s", d.dnn.c_str());
+          Logger::spgwu_app().info("            DNN %s", d.dnn.c_str());
         }
       }
     }
