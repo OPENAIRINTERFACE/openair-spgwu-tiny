@@ -31,6 +31,7 @@
 
 #include "3gpp_29.244.h"
 #include "3gpp_29.510.h"
+#include "3gpp_23.003.h"
 #include "gtpv1u.hpp"
 #include "pfcp.hpp"
 #include "thread_sched.hpp"
@@ -93,8 +94,6 @@ namespace spgwu {
 
 #define SPGW_ABORT_ON_ERROR true
 #define SPGW_WARN_ON_ERROR false
-
-const uint8_t SST_MAX_STANDARDIZED_VALUE = 127;
 
 typedef struct interface_cfg_s {
   std::string if_name;

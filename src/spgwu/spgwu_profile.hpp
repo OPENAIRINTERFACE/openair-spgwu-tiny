@@ -38,7 +38,7 @@
 
 #include "logger.hpp"
 #include "3gpp_29.510.h"
-#include "spgwu_config.hpp"
+#include "3gpp_23.003.h"
 
 namespace spgwu {
 
