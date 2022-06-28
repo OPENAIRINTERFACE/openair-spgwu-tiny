@@ -207,7 +207,8 @@ void spgwu_profile::display() const {
     Logger::spgwu_app().debug("    SNSSAI:");
   }
   for (auto s : snssais) {
-    if (s.sST > SST_MAX_STANDARDIZED_VALUE)
+    if (s.sST > SST_MAX_STANDARDIZED_VALUE &&
+        s.sD.compare(std::to_string(SD_NO_VALUE)))
       Logger::spgwu_app().debug("        SST, SD: %d, %s", s.sST, s.sD.c_str());
     else
       Logger::spgwu_app().debug("        SST: %d, %s", s.sST);
@@ -226,7 +227,8 @@ void spgwu_profile::display() const {
     Logger::spgwu_app().debug("    UPF Info:");
   }
   for (auto s : upf_info.snssai_upf_info_list) {
-    if (s.snssai.sST > SST_MAX_STANDARDIZED_VALUE)
+    if (s.snssai.sST > SST_MAX_STANDARDIZED_VALUE &&
+        s.snssai.sD.compare(std::to_string(SD_NO_VALUE)))
       Logger::spgwu_app().debug(
           "        SNSSAI (SST %d, SD %s)", s.snssai.sST, s.snssai.sD.c_str());
     else
@@ -249,7 +251,9 @@ void spgwu_profile::to_json(nlohmann::json& data) const {
   for (auto s : snssais) {
     nlohmann::json tmp = {};
     tmp["sst"]         = s.sST;
-    if (s.sST > SST_MAX_STANDARDIZED_VALUE) tmp["sd"] = s.sD;
+    if (s.sST > SST_MAX_STANDARDIZED_VALUE &&
+        s.sD.compare(std::to_string(SD_NO_VALUE)))
+      tmp["sd"] = s.sD;
     data["sNssais"].push_back(tmp);
   }
   data["fqdn"] = fqdn;
@@ -269,7 +273,8 @@ void spgwu_profile::to_json(nlohmann::json& data) const {
   for (auto s : upf_info.snssai_upf_info_list) {
     nlohmann::json tmp   = {};
     tmp["sNssai"]["sst"] = s.snssai.sST;
-    if (s.snssai.sST > SST_MAX_STANDARDIZED_VALUE)
+    if (s.snssai.sST > SST_MAX_STANDARDIZED_VALUE &&
+        s.snssai.sD.compare(std::to_string(SD_NO_VALUE)))
       tmp["sNssai"]["sd"] = s.snssai.sD;
     tmp["dnnUpfInfoList"] = nlohmann::json::array();
     for (auto d : s.dnn_upf_info_list) {
@@ -309,7 +314,8 @@ void spgwu_profile::from_json(const nlohmann::json& data) {
     for (auto it : data["sNssais"]) {
       snssai_t s = {};
       s.sST      = it["sst"].get<int>();
-      if (s.sST > SST_MAX_STANDARDIZED_VALUE)
+      if (s.sST > SST_MAX_STANDARDIZED_VALUE &&
+          s.sD.compare(std::to_string(SD_NO_VALUE)))
         s.sD = it["sd"].get<std::string>();
       snssais.push_back(s);
     }
@@ -356,7 +362,8 @@ void spgwu_profile::from_json(const nlohmann::json& data) {
           if (it["sNssai"].find("sst") != it["sNssai"].end())
             upf_info_item.snssai.sST = it["sNssai"]["sst"].get<int>();
           if (it["sNssai"].find("sd") != it["sNssai"].end() &&
-              (upf_info_item.snssai.sST >= SST_MAX_STANDARDIZED_VALUE))
+              (upf_info_item.snssai.sST >= SST_MAX_STANDARDIZED_VALUE) &&
+              upf_info_item.snssai.sD.compare(std::to_string(SD_NO_VALUE)))
             upf_info_item.snssai.sD = it["sNssai"]["sd"].get<std::string>();
         }
         if (it.find("dnnUpfInfoList") != it.end()) {
