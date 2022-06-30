@@ -624,9 +624,8 @@ int spgwu_config::load(const string& config_file) {
         snssai_upf_info_item_t snssai_item = {};
         snssai_t snssai                    = {};
         snssai.sST                         = nssai_sst;
-        snssai.sD                          = std::to_string(SD_NO_VALUE);
-        if (snssai.sST > SST_MAX_STANDARDIZED_VALUE) snssai.sD = nssai_sd;
-        snssai_item.snssai = snssai;
+        snssai.sD                          = nssai_sd;
+        snssai_item.snssai                 = snssai;
 
         const Setting& dnn_cfg = upf_info_item_cfg
             [SPGWU_CONFIG_STRING_5G_FEATURES_UPF_INFO_DNN_LIST];
@@ -808,8 +807,7 @@ void spgwu_config::display() {
 
         for (auto s : upf_5g_features.upf_info.snssai_upf_info_list) {
           // Logger::spgwu_app().debug(" Parameters supported by the UPF:");
-          if (s.snssai.sST > SST_MAX_STANDARDIZED_VALUE &&
-              s.snssai.sD.compare(std::to_string(SD_NO_VALUE)))
+          if (s.snssai.sD.compare(std::to_string(SD_NO_VALUE)))
             Logger::spgwu_app().info(
                 "        SNSSAI (SST %d, SD %s)", s.snssai.sST,
                 s.snssai.sD.c_str());
