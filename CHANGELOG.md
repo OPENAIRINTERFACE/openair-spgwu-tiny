@@ -1,5 +1,16 @@
 # RELEASE NOTES: #
 
+## v1.4.0 -- July 2022 ##
+
+* Fix for handling S-NSSAI 
+* Add support for multiple slices via config file
+* Allowed reusing GTPv1-U socket
+* Fix GTPU offset sequence number
+* Fix configurable number of DL threads for data path
+* Official images produced by CI are pushed to `oaisoftwarealliance` Docker-Hub Team account
+* Reduce image size
+* Skipping release tag v1.3.0 to be in sync with OAI CN 5G network functions
+
 ## v1.2.0 -- February 2022 ##
 
 * Obsolescence of Legacy OAI-MME
