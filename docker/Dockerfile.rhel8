@@ -46,7 +46,6 @@ RUN rm /etc/rhsm-host && \
     subscription-manager repos --enable codeready-builder-for-rhel-8-x86_64-rpms && \
     yum update -y && \
     yum -y install --enablerepo="codeready-builder-for-rhel-8-x86_64-rpms" \
-       # diff, cmp and file are not in the ubi???
        diffutils \
        file \
        psmisc \
@@ -81,7 +80,7 @@ RUN yum update -y && \
       initscripts \
       libevent && \
     yum clean all -y && \
-    rm -rf /var/cache/yum
+    rm -rf /var/cache/yum /var/cache/dnf
 
 # Copying executable and generated libraries
 WORKDIR /openair-spgwu-tiny/bin

@@ -31,6 +31,7 @@
 
 #include "3gpp_29.244.h"
 #include "3gpp_29.510.h"
+#include "3gpp_23.003.h"
 #include "gtpv1u.hpp"
 #include "pfcp.hpp"
 #include "thread_sched.hpp"

@@ -803,16 +803,19 @@ void spgwu_config::display() {
             upf_5g_features.nrf_addr.fqdn.c_str());
 
       if (upf_5g_features.upf_info.snssai_upf_info_list.size() > 0) {
-        Logger::spgwu_app().debug("    UPF Info:");
-      }
-      for (auto s : upf_5g_features.upf_info.snssai_upf_info_list) {
-        // Logger::spgwu_app().debug("        Parameters supported by the
-        // UPF:");
-        Logger::spgwu_app().debug(
-            "        SNSSAI (SST %d, SD %s)", s.snssai.sST,
-            s.snssai.sD.c_str());
-        for (auto d : s.dnn_upf_info_list) {
-          Logger::spgwu_app().debug("            DNN %s", d.dnn.c_str());
+        Logger::spgwu_app().info("    UPF Info:");
+
+        for (auto s : upf_5g_features.upf_info.snssai_upf_info_list) {
+          // Logger::spgwu_app().debug(" Parameters supported by the UPF:");
+          if (s.snssai.sD.compare(std::to_string(SD_NO_VALUE)))
+            Logger::spgwu_app().info(
+                "        SNSSAI (SST %d, SD %s)", s.snssai.sST,
+                s.snssai.sD.c_str());
+          else
+            Logger::spgwu_app().info("        SNSSAI (SST %d)", s.snssai.sST);
+          for (auto d : s.dnn_upf_info_list) {
+            Logger::spgwu_app().info("            DNN %s", d.dnn.c_str());
+          }
         }
       }
     }

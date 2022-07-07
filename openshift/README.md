@@ -1,4 +1,4 @@
-# Build and deploying OAI-SPGW-C in OpenShift cluster #
+# Build and deploying OAI-SPGW-U in OpenShift cluster #
 
 ## Pre-requisite ##
 

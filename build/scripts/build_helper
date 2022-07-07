@@ -24,7 +24,7 @@
 # author Laurent Thomas, Lionel GAUTHIER
 #
 #######################################
-SUPPORTED_DISTRO="Ubuntu 18.04, CentOS 8, RHEL 8"
+SUPPORTED_DISTRO="Ubuntu 18.04, RHEL 8, UBI8-8.6"
 if [ ! -f /etc/os-release ]; then
   echo_fatal "No /etc/os-release file found. You're likely on an unsupported distro."
 fi
@@ -33,7 +33,6 @@ OS_RELEASE=$(grep "^VERSION_ID=" /etc/os-release | sed "s/VERSION_ID=//" | sed "
 case "$OS_DISTRO" in
   fedora) OS_BASEDISTRO="fedora"; INSTALLER="dnf"; CMAKE="cmake" ;;
   rhel)   OS_BASEDISTRO="fedora"; INSTALLER="yum"; CMAKE="cmake3" ;;
-  centos) OS_BASEDISTRO="fedora"; INSTALLER="yum"; CMAKE="cmake3" ;;
   debian) OS_BASEDISTRO="debian"; INSTALLER="apt-get"; CMAKE="cmake" ;;
   ubuntu) OS_BASEDISTRO="debian"; INSTALLER="apt-get"; CMAKE="cmake" ;;
 esac
@@ -132,7 +131,8 @@ check_supported_distribution() {
         "rhel8.3")     return 0 ;;
         "rhel8.4")     return 0 ;;
         "rhel8.5")     return 0 ;;
-        "centos8")     return 0 ;;
+        "rhel8.6")     return 0 ;;
+
     esac
     return 1
 }
@@ -284,7 +284,7 @@ update_package_db() {
 check_enable_epel_repos() {
   # on Enterprise Linuxes, ensure EPEL repos are installed
   # (provides: libidn2-devel, vconfig, iperf, phpMyAdmin, dkms, ...)
-  if [[ "$OS_DISTRO" == "rhel" ]] || [[ "$OS_DISTRO" == "centos" ]]; then
+  if [[ "$OS_DISTRO" == "rhel" ]] ; then
     if rpm -q epel-release > /dev/null; then
       echo "EPEL repos already present. Good."
     else
