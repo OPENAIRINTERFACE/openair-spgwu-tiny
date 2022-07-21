@@ -709,6 +709,7 @@ void spgwu_config::display() {
       "    ipv4.mask ........: %s", inet_ntoa(s1_up.network4));
   Logger::spgwu_app().info("    mtu ..............: %d", s1_up.mtu);
   Logger::spgwu_app().info("    port .............: %d", s1_up.port);
+  Logger::spgwu_app().info("    rp_filter ........: %s", (s1_up.disable_reverse_path_filter) ? "no" : "yes");
   Logger::spgwu_app().info("    Reader thread:");
   Logger::spgwu_app().info(
       "      CPU ID .........: %d", s1_up.thread_rd_sched_params.cpu_id);
@@ -727,6 +728,7 @@ void spgwu_config::display() {
       "    ipv4.mask ........: %s", inet_ntoa(sx.network4));
   Logger::spgwu_app().info("    mtu ..............: %d", sx.mtu);
   Logger::spgwu_app().info("    port .............: %u", sx.port);
+  Logger::spgwu_app().info("    rp_filter ........: %s", (sx.disable_reverse_path_filter) ? "no" : "yes");
   Logger::spgwu_app().info("    Reader thread:");
   Logger::spgwu_app().info(
       "      CPU ID .........: %d (TODO)", sx.thread_rd_sched_params.cpu_id);
@@ -746,6 +748,7 @@ void spgwu_config::display() {
       "    ipv4.mask ........: %s", inet_ntoa(sgi.network4));
   Logger::spgwu_app().info("    mtu ..............: %d", sgi.mtu);
   Logger::spgwu_app().info("    gateway ..........: %s", gateway.c_str());
+  Logger::spgwu_app().info("    rp_filter ........: %s", (sgi.disable_reverse_path_filter) ? "no" : "yes");
   Logger::spgwu_app().info("    Reader thread:");
   Logger::spgwu_app().info(
       "      CPU ID .........: %d", sgi.thread_rd_sched_params.cpu_id);

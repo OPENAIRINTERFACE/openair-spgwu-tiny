@@ -335,6 +335,11 @@ void pfcp_switch::setup_pdn_interfaces() {
         spgwu_cfg.sgi.if_name.c_str());
     rc = system((const char*) cmd.c_str());
 
+    // For performances
+    cmd = fmt::format(
+            "/sbin/sysctl -w net.ipv4.conf.all.accept_local=1");
+    rc = system((const char*) cmd.c_str());
+
     // Otherwise redirect incoming ingress UE IP to default gw
     // cmd = fmt::format("/sbin/sysctl -w net.ipv4.conf.tun{}.send_redirects=0",
     // index); rc = system ((const char*)cmd.c_str()); cmd =

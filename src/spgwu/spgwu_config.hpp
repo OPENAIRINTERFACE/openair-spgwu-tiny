@@ -49,6 +49,7 @@ namespace spgwu {
 #define SPGWU_CONFIG_STRING_FQDN "FQDN"
 #define SPGWU_CONFIG_STRING_INTERFACES "INTERFACES"
 #define SPGWU_CONFIG_STRING_INTERFACE_NAME "INTERFACE_NAME"
+#define SPGWU_CONFIG_STRING_DISABLE_REVERSE_PATH_FILTER "DISABLE_REVERSE_PATH_FILTER"
 #define SPGWU_CONFIG_STRING_IPV4_ADDRESS "IPV4_ADDRESS"
 #define SPGWU_CONFIG_STRING_PORT "PORT"
 #define SPGWU_CONFIG_STRING_SCHED_PARAMS "SCHED_PARAMS"
@@ -102,6 +103,7 @@ typedef struct interface_cfg_s {
   unsigned int mtu;
   unsigned int port;
   util::thread_sched_params thread_rd_sched_params;
+  bool disable_reverse_path_filter;
 } interface_cfg_t;
 
 typedef struct pdn_cfg_s {
