@@ -201,7 +201,7 @@ class HtmlReport():
 					self.file.write('    <strong>All files in repository follow OAI rules. <span class="glyphicon glyphicon-ok-circle"></span> -> (' + nb_total.strip() + ' were checked)</strong>\n')
 				self.file.write('  </div>\n')
 			else:
-				self.file.write('  <div class="alert alert-warning">\n')
+				self.file.write('  <div class="alert alert-danger">\n')
 				if self.git_pull_request:
 					self.file.write('    <strong>' + nb_fail.strip() + ' modified files in Pull-Request DO NOT follow OAI rules. <span class="glyphicon glyphicon-warning-sign"></span> -> (' + nb_total.strip() + ' were checked)</strong>\n')
 				else:

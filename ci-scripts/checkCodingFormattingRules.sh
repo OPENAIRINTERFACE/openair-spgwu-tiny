@@ -205,4 +205,4 @@ echo "Nb Files that do NOT follow OAI rules: $NB_TO_FORMAT over $NB_TOTAL checke
 echo "NB_FILES_FAILING_CHECK=$NB_TO_FORMAT" > ./oai_rules_result.txt
 echo "NB_FILES_CHECKED=$NB_TOTAL" >> ./oai_rules_result.txt
 
-exit 0
+if [ $NB_TO_FORMAT -ne 0 ]; then exit -1; else exit 0; fi
