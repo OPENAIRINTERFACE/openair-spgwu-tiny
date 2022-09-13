@@ -459,6 +459,8 @@ class HtmlReport():
 				folly_build = False
 				spdlog_build_start = False
 				spdlog_build = False
+				json_build_start = False
+				json_build = False
 				with open(cwd + '/archives/' + logFileName, 'r') as logfile:
 					for line in logfile:
 						result = re.search(section_start_pattern, line)
@@ -490,6 +492,14 @@ class HtmlReport():
 								if result is not None:
 									spdlog_build_start = False
 									spdlog_build = True
+							result = re.search('Starting to install Nlohmann Json', line)
+							if result is not None:
+								json_build_start = True
+							if json_build_start:
+								result = re.search('Nlohmann Json installation complete', line)
+								if result is not None:
+									json_build_start = False
+									json_build = True
 					logfile.close()
 				if status:
 					cell_msg = '	  <td bgcolor="LimeGreen"><pre style="border:none; background-color:LimeGreen"><b>'
@@ -510,6 +520,10 @@ class HtmlReport():
 					cell_msg += '   ** spdlog Installation: OK\n'
 				else:
 					cell_msg += '   ** spdlog Installation: KO\n'
+				if json_build:
+					cell_msg += '   ** Nlohmann Json Installation: OK\n'
+				else:
+					cell_msg += '   ** Nlohmann Json Installation: KO\n'
 				cell_msg += '</b></pre></td>\n'
 			else:
 				cell_msg = '	  <td bgcolor="Tomato"><pre style="border:none; background-color:Tomato"><b>'
@@ -540,7 +554,7 @@ class HtmlReport():
 			if os.path.isfile(cwd + '/archives/' + logFileName):
 				status = False
 				section_start_pattern = 'build_spgwu --clean --build-type Release --jobs --Verbose'
-				section_end_pattern = 'git log -n1 > version.txt'
+				section_end_pattern = 'FROM .* as oai-spgwu-tiny$'
 				section_status = False
 				with open(cwd + '/archives/' + logFileName, 'r') as logfile:
 					for line in logfile:
@@ -583,7 +597,7 @@ class HtmlReport():
 			nb_warnings = 0
 			if os.path.isfile(cwd + '/archives/' + logFileName):
 				section_start_pattern = 'build_spgwu --clean --build-type Release --jobs --Verbose'
-				section_end_pattern = 'git log -n1 > version.txt'
+				section_end_pattern = 'FROM .* as oai-spgwu-tiny$'
 				section_status = False
 				with open(cwd + '/archives/' + logFileName, 'r') as logfile:
 					for line in logfile:
@@ -634,7 +648,7 @@ class HtmlReport():
 		for variant in variants:
 			logFileName = 'spgwu_' + variant + '_image_build.log'
 			if os.path.isfile(cwd + '/archives/' + logFileName):
-				section_start_pattern = 'FROM ubuntu:bionic as oai-spgwu-tiny$'
+				section_start_pattern = 'FROM .* as oai-spgwu-tiny$'
 				section_end_pattern = 'WORKDIR /openair-spgwu-tiny/etc'
 				section_status = False
 				status = False
@@ -748,7 +762,7 @@ class HtmlReport():
 							else:
 								result = re.search('oai-spgwu-tiny *develop', line)
 							if result is not None and not status:
-								result = re.search('ago *([0-9 A-Z]+)', line)
+								result = re.search('ago *([0-9\. A-Z]+)', line)
 								if result is not None:
 									size = result.group(1)
 									status = True

@@ -131,7 +131,7 @@ EXPOSE 2152/udp 8805/udp
 HEALTHCHECK --interval=10s \
             --timeout=15s \
             --retries=6 \
-    CMD /openair-smf/bin/healthcheck.sh
+    CMD /openair-spgwu-tiny/bin/healthcheck.sh
 
 CMD ["/openair-spgwu-tiny/bin/oai_spgwu", "-c", "/openair-spgwu-tiny/etc/spgw_u.conf", "-o"]
 ENTRYPOINT ["/openair-spgwu-tiny/bin/entrypoint.sh"]
