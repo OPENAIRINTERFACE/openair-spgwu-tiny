@@ -48,6 +48,7 @@ RUN rm /etc/rhsm-host && \
     yum -y install --enablerepo="codeready-builder-for-rhel-8-x86_64-rpms" \
        diffutils \
        file \
+       wget \
        psmisc \
        git
 
