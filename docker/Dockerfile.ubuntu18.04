@@ -83,11 +83,10 @@ RUN apt-get update && \
       netbase \
       libgssapi-krb5-2 \
 # Ubuntu 18/20 --> libldap-2.4-2
-# Ubuntu 22 --> libldap-2.5-0
-      libldap-2.?-? \
+      libldap-2.4-2 \
       libgoogle-glog0v5 \
 # Ubuntu 18 --> libdouble-conversion1
-# Ubuntu 20/22 --> libdouble-conversion3
+# Ubuntu 20 --> libdouble-conversion3
       libdouble-conversion? \
       libconfig++9v5 \
       librtmp1 \
@@ -96,7 +95,6 @@ RUN apt-get update && \
       libcurl?-gnutls \
 # Ubuntu 18 --> boost62/65 -> will remove both
 # Ubuntu 20 --> boost67/71 -> will remove 67
-# Ubuntu 22 --> boost74
       libboost-thread1.??.0 \
   && rm -rf /var/lib/apt/lists/* \
        /lib/x86_64-linux-gnu/libboost_system.so.1.6*.0 \

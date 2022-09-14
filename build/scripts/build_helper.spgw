@@ -201,6 +201,7 @@ check_install_spgwu_deps() {
     # removed libspdlog-dev
     PACKAGE_LIST="\
       $specific_packages \
+      libcurl4 \
       libcurl4-gnutls-dev \
       libevent-dev \
       libgmp-dev \
@@ -209,11 +210,8 @@ check_install_spgwu_deps() {
       libidn11-dev \
       libssl-dev \
       libtool \
-      libxml2 \
-      libxml2-dev \
       openssl \
       nettle-dev \
-      libcurl4 \
       net-tools \
       pkg-config \
       ninja-build"
@@ -226,8 +224,6 @@ check_install_spgwu_deps() {
       libidn-devel \
       openssl-devel \
       libtool \
-      libxml2 \
-      libxml2-devel \
       openssl \
       check \
       nettle-devel \
