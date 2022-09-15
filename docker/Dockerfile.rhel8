@@ -21,7 +21,7 @@
 #---------------------------------------------------------------------
 #
 # Dockerfile for the Open-Air-Interface SPGW-U-TINY service
-#   Valid for RHEL8
+#   Valid for UBI 8.6 | RHEL 8.6
 #
 #---------------------------------------------------------------------
 
@@ -48,6 +48,7 @@ RUN rm /etc/rhsm-host && \
     yum -y install --enablerepo="codeready-builder-for-rhel-8-x86_64-rpms" \
        diffutils \
        file \
+       wget \
        psmisc \
        git
 
@@ -57,7 +58,10 @@ COPY . /openair-spgwu-tiny
 
 # Installing and Building SPGW-U-TINY
 WORKDIR /openair-spgwu-tiny/build/scripts
-RUN ./build_spgwu --install-deps --force
+RUN ./build_spgwu --install-deps --force && \
+    # Remove entitlements and Subscription Manager configs
+    rm -rf /etc/pki/entitlement && \
+    rm -rf /etc/rhsm
 RUN ./build_spgwu --clean --build-type Release --jobs --Verbose && \
     ldd /openair-spgwu-tiny/build/spgw_u/build/spgwu && \
     mv /openair-spgwu-tiny/build/spgw_u/build/spgwu /openair-spgwu-tiny/build/spgw_u/build/oai_spgwu
@@ -65,11 +69,19 @@ RUN ./build_spgwu --clean --build-type Release --jobs --Verbose && \
 #---------------------------------------------------------------------
 # TARGET IMAGE
 #---------------------------------------------------------------------
-FROM registry.access.redhat.com/ubi8/ubi:latest as oai-spgwu-tiny
+FROM registry.access.redhat.com/ubi8/ubi-minimal:latest as oai-spgwu-tiny
 ENV TZ=Europe/Paris
+
+# Copy the entitlements
+COPY ./etc-pki-entitlement /etc/pki/entitlement
+# Copy the subscription manager configurations
+COPY ./rhsm-conf /etc/rhsm
+COPY ./rhsm-ca /etc/rhsm/ca
+
 # We install some debug tools for the moment in addition of mandatory libraries
-RUN yum update -y && \
-    yum -y install --enablerepo="ubi-8-codeready-builder" \
+RUN rm -f /etc/rhsm-host && \
+    microdnf update -y && \
+    microdnf install -y \
       tzdata \
       procps-ng \
       psmisc \
@@ -78,24 +90,31 @@ RUN yum update -y && \
       iproute \
       iptables \
       initscripts \
-      libevent && \
-    yum clean all -y && \
-    rm -rf /var/cache/yum /var/cache/dnf
+      libicu \
+      boost \
+      libevent \
+      findutils \
+      libconfig && \
+    microdnf clean all -y && \
+    rm -rf /var/cache/yum /var/cache/dnf && \
+    # Remove entitlements and Subscription Manager configs
+    rm -rf /etc/pki/entitlement && \
+    rm -rf /etc/rhsm
 
 # Copying executable and generated libraries
 WORKDIR /openair-spgwu-tiny/bin
 COPY --from=oai-spgwu-tiny-builder \
     /openair-spgwu-tiny/build/spgw_u/build/oai_spgwu \
     /openair-spgwu-tiny/scripts/entrypoint.sh \
+    /openair-spgwu-tiny/scripts/healthcheck.sh \
     ./
 
 # Copying installed libraries from builder
 COPY --from=oai-spgwu-tiny-builder \
+# Currently we keep these folly dependencies from the builder
     /lib64/libgflags.so.2.1 \
     /lib64/libglog.so.0 \
     /lib64/libdouble-conversion.so.1 \
-    /lib64/libconfig++.so.9 \
-    /lib64/libboost_system.so.1.66.0 \
     /lib64/
 RUN ldconfig && \
     ldd /openair-spgwu-tiny/bin/oai_spgwu
@@ -109,6 +128,11 @@ WORKDIR /openair-spgwu-tiny
 
 # expose ports
 EXPOSE 2152/udp 8805/udp
+# healthcheck
+HEALTHCHECK --interval=10s \
+            --timeout=15s \
+            --retries=6 \
+    CMD /openair-spgwu-tiny/bin/healthcheck.sh
 
 CMD ["/openair-spgwu-tiny/bin/oai_spgwu", "-c", "/openair-spgwu-tiny/etc/spgw_u.conf", "-o"]
 ENTRYPOINT ["/openair-spgwu-tiny/bin/entrypoint.sh"]
