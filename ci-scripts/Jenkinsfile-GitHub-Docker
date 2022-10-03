@@ -148,6 +148,7 @@ pipeline {
               if (env.ghprbPullId == null) {
                 // Currently this pipeline only runs for pushes to `develop` branch
                 // First clean image registry
+                myShCmd('docker image tag oai-spgwu-tiny:develop oai-spgwu-tiny:develop-previous || true', rem_u18_host_flag, rem_u18_host_user, rem_u18_host)
                 myShCmd('docker image rm oai-spgwu-tiny:develop || true', rem_u18_host_flag, rem_u18_host_user, rem_u18_host)
               } else {
                 // In case we forgot during a previous run
@@ -172,9 +173,12 @@ pipeline {
               }
             }
             success {
+              myShCmd('docker image rm oai-spgwu-tiny:develop-previous || true', rem_u18_host_flag, rem_u18_host_user, rem_u18_host)
               sh "echo 'OAI-SPGW-U DOCKER IMAGE BUILD: OK' >> archives/spgwu_docker_image_build.log"
             }
             unsuccessful {
+              myShCmd('docker image tag oai-spgwu-tiny:develop-previous oai-spgwu-tiny:develop || true', rem_u18_host_flag, rem_u18_host_user, rem_u18_host)
+              myShCmd('docker image rm oai-spgwu-tiny:develop-previous || true', rem_u18_host_flag, rem_u18_host_user, rem_u18_host)
               sh "echo 'OAI-SPGW-U DOCKER IMAGE BUILD: KO' >> archives/spgwu_docker_image_build.log"
             }
           }
@@ -187,6 +191,7 @@ pipeline {
                 if (env.ghprbPullId == null) {
                   // Currently this pipeline only runs for pushes to `develop` branch
                   // First clean image registry
+                  myShCmd('sudo podman image tag oai-spgwu-tiny:develop oai-spgwu-tiny:develop-previous || true', rem_rhel_host_flag, rem_rhel_host_user, rem_rhel_host)
                   myShCmd('sudo podman image rm oai-spgwu-tiny:develop || true', rem_rhel_host_flag, rem_rhel_host_user, rem_rhel_host)
                 } else {
                   // In case we forgot during a previous run
@@ -216,9 +221,12 @@ pipeline {
               }
             }
             success {
+              myShCmd('sudo podman image rm oai-spgwu-tiny:develop-previous || true', rem_rhel_host_flag, rem_rhel_host_user, rem_rhel_host)
               sh "echo 'OAI-SPGW-U PODMAN RHEL8 IMAGE BUILD: OK' >> archives/spgwu_podman_image_build.log"
             }
             unsuccessful {
+              myShCmd('sudo podman image tag oai-spgwu-tiny:develop-previous oai-spgwu-tiny:develop || true', rem_rhel_host_flag, rem_rhel_host_user, rem_rhel_host)
+              myShCmd('sudo podman image rm oai-spgwu-tiny:develop-previous || true', rem_rhel_host_flag, rem_rhel_host_user, rem_rhel_host)
               sh "echo 'OAI-SPGW-U PODMAN RHEL8 IMAGE BUILD: KO' >> archives/spgwu_podman_image_build.log"
             }
           }

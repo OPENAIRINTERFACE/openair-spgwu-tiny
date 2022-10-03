@@ -96,7 +96,7 @@ void pfcp_switch::pdn_read_loop(
   // struct sockaddr_in   sin = {};
 
   // Producer should not interfere with consumer for not de-sequence IP packets
-  sched_params.sched_priority -=1;
+  sched_params.sched_priority -= 1;
   sched_params.apply(TASK_NONE, Logger::pfcp_switch());
 
   while (1) {
