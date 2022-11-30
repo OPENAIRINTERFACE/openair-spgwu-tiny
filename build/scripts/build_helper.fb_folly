@@ -48,7 +48,7 @@ install_fb_folly_from_source(){
 
   if [[ $prompt =~ [yY](es)* ]]
   then
- 
+
     if [[ "$OS_BASEDISTRO" == "fedora" ]]; then
       $SUDO $INSTALLER install $OPTION \
         gcc-c++ \
@@ -95,7 +95,7 @@ install_fb_folly_from_source(){
         libelf-dev \
         libdwarf-dev
       ret=$?;[[ $ret -ne 0 ]] && return $ret
-      
+
       wget --quiet --tries=3 --retry-connrefused https://github.com/google/googletest/archive/release-1.8.0.tar.gz && \
       tar zxf release-1.8.0.tar.gz && \
       rm -f release-1.8.0.tar.gz && \
@@ -107,7 +107,7 @@ install_fb_folly_from_source(){
       cd ..
     fi
 
-    
+
     $SUDO rm -rf /tmp/folly
     git clone https://github.com/facebook/folly.git
     ret=$?;[[ $ret -ne 0 ]] && popd && return $ret
@@ -132,6 +132,10 @@ install_fb_folly_from_source(){
     else
         git checkout -f v2019.11.11.00
     fi
+
+    sed -i -e "s@#include <algorithm>@#include <algorithm>\n#include <limits>@" folly/TimeoutQueue.cpp
+    sed -i -e "s@folly::constexpr_max@@" -e "s@SIGSTKSZ, @@" ./folly/fibers/FiberManager.cpp
+
     mkdir _build && cd _build
     if [[ "$OS_BASEDISTRO" == "fedora" ]]; then
       cmake3  ..
@@ -149,4 +153,3 @@ install_fb_folly_from_source(){
   echo_success "End of folly installation"
   return 0
 }
-

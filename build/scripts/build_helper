@@ -24,7 +24,7 @@
 # author Laurent Thomas, Lionel GAUTHIER
 #
 #######################################
-SUPPORTED_DISTRO="Ubuntu 18.04,20.04, RHEL 8, UBI8-8.6"
+SUPPORTED_DISTRO="Ubuntu 18.04,20.04,22.04, RHEL 8, UBI8-8.6"
 if [ ! -f /etc/os-release ]; then
   echo_fatal "No /etc/os-release file found. You're likely on an unsupported distro."
 fi
@@ -83,7 +83,7 @@ echo_info()    { cecho "$*" $blue         ;}
 
 #-------------------------------------------------------------------------------
 # From https://stackoverflow.com/questions/4023830/how-to-compare-two-strings-in-dot-separated-version-format-in-bash
-# arg1 is a dotted (or not) version number (ex 4.10.6.56-ubunutu) 
+# arg1 is a dotted (or not) version number (ex 4.10.6.56-ubunutu)
 # arg2 is a dotted (or not) version number (ex 4.10.6.56-ubunutu)
 # return 0 if $1 lower or equal $2, else 1
 version_le() {
@@ -129,6 +129,7 @@ check_supported_distribution() {
     case "$distribution" in
         "ubuntu18.04") return 0 ;;
         "ubuntu20.04") return 0 ;;
+        "ubuntu22.04") return 0 ;;
         "rhel8")       return 0 ;;
         "rhel8.2")     return 0 ;;
         "rhel8.3")     return 0 ;;
@@ -178,8 +179,8 @@ disable_ipv6() {
 # arg1 = version
 # arg2 = req_version
 #
-function version_gt() { 
-  test "$(printf '%s\n' "$@" | sort -V | head -n 1)" != "$1"; 
+function version_gt() {
+  test "$(printf '%s\n' "$@" | sort -V | head -n 1)" != "$1";
 }
 
 
@@ -319,5 +320,3 @@ set_openair_env(){
   openair_path=${openair_path%/src/s6a/*}
   export OPENAIRCN_DIR=$openair_path
 }
-
-
