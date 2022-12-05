@@ -127,7 +127,7 @@ pipeline {
             // Making a hard copy of the SHA-ONE
             getCommitSha()
             // Prevention when developing a new version of this pipeline
-            if (env.GIT_BRANCH != 'develop') {
+            if ((env.GIT_BRANCH != 'develop') || (env.GIT_BRANCH != 'origin/develop')) {
               error "Stopping pipeline because not the develop branch"
             }
           }
