@@ -601,7 +601,7 @@ pipeline {
         // Removing temporary / intermediate images
         try {
           if (env.ghprbPullId != null) {
-            myShCmd('docker image rm --force oai-spgwu-tiny:ci-temp', rem_u18_host_flag, rem_u18_host_user, rem_u18_host)
+            myShCmd('docker image rm --force oai-spgwu-tiny:' + spgwu_tag, rem_u18_host_flag, rem_u18_host_user, rem_u18_host)
           }
         } catch (Exception e) {
           echo "We failed to delete the OAI-SPGWU temp image"
