@@ -121,11 +121,15 @@ pipeline {
             echo "======= THIS IS A PUSH EVENT ======"
             echo "Git Branch is ${GIT_BRANCH}"
             echo "Git Commit is ${GIT_COMMIT}"
-            shortenShaOne = sh returnStdout: true, script: 'git log -1 --pretty=format:"%h" ' + env.ghprbActualCommit
+            shortenShaOne = sh returnStdout: true, script: 'git log -1 --pretty=format:"%h" ' + env.GIT_COMMIT
             shortenShaOne = shortenShaOne.trim()
             spgwu_tag = 'develop-' + shortenShaOne
             // Making a hard copy of the SHA-ONE
             getCommitSha()
+            // Prevention when developing a new version of this pipeline
+            if (env.GIT_BRANCH != 'develop') {
+              error "Stopping pipeline because not the develop branch"
+            }
           }
         }
       }
