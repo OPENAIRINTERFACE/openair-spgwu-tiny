@@ -557,7 +557,7 @@ pipeline {
               [$class: 'UsernamePasswordMultiBinding', credentialsId: "${params.DockerHubCredentials}", usernameVariable: 'DH_Username', passwordVariable: 'DH_Password']
             ]) {
               myShCmd("echo ${DH_Password} | docker login --username ${DH_Username} --password-stdin", rem_u18_host_flag, rem_u18_host_user, rem_u18_host)
-              myShCmd("docker image tag oai-spgwu-tiny:develop ${DH_Account}/oai-spgwu-tiny:develop", rem_u18_host_flag, rem_u18_host_user, rem_u18_host)
+              myShCmd("docker image tag oai-spgwu-tiny:" + spgwu_tag + " ${DH_Account}/oai-spgwu-tiny:develop", rem_u18_host_flag, rem_u18_host_user, rem_u18_host)
               myShCmd("docker push ${DH_Account}/oai-spgwu-tiny:develop", rem_u18_host_flag, rem_u18_host_user, rem_u18_host)
               myShCmd("docker rmi ${DH_Account}/oai-spgwu-tiny:develop", rem_u18_host_flag, rem_u18_host_user, rem_u18_host)
               myShCmd("docker logout", rem_u18_host_flag, rem_u18_host_user, rem_u18_host)
