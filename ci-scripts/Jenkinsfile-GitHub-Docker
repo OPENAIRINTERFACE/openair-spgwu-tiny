@@ -613,6 +613,7 @@ pipeline {
           if (env.ghprbPullId != null) {
             myShCmd('docker image rm --force oai-spgwu-tiny:' + spgwu_tag, rem_u18_host_flag, rem_u18_host_user, rem_u18_host)
           } else {
+            // TODO: to be removed later!
             myShCmd('docker image tag oai-spgwu-tiny:' + spgwu_tag + ' oai-spgwu-tiny:develop', rem_u18_host_flag, rem_u18_host_user, rem_u18_host)
           }
         } catch (Exception e) {
