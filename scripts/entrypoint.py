@@ -20,10 +20,10 @@
 #      contact@openairinterface.org
 ################################################################################
 
+from jinja2 import Environment, FileSystemLoader
 import socket
 import os
 import sys
-from jinja2 import Environment, FileSystemLoader
 
 CONFIG_FILE = str(os.getenv('CONFIG_FILE','/openair-spgwu-tiny/etc/spgw_u.conf'))
 MOUNT_CONFIG = str(os.getenv('MOUNT_CONFIG','no')).lower()
@@ -51,6 +51,9 @@ if MOUNT_CONFIG != "yes":
     with open(CONFIG_FILE, "w") as fh:
         fh.write(output)
     print(f"Configuration file {CONFIG_FILE} is ready")
-    #os.execvp(sys.argv[1], sys.argv[1:])
+    # Hack for running when baremetal, developing conf file
+    if len(sys.argv) == 1:
+        sys.exit(0)
+    os.execvp(sys.argv[1], sys.argv[1:])     #important for running the network function it works like exec $@
 else:
     print("Configuration file is mounted to the network function")
