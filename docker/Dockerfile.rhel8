@@ -138,4 +138,4 @@ HEALTHCHECK --interval=10s \
     CMD /openair-spgwu-tiny/bin/healthcheck.sh
 
 CMD ["/openair-spgwu-tiny/bin/oai_spgwu", "-c", "/openair-spgwu-tiny/etc/spgw_u.conf", "-o"]
-ENTRYPOINT ["/openair-spgwu-tiny/bin/entrypoint.py"]
+ENTRYPOINT ["python3", "/openair-spgwu-tiny/bin/entrypoint.py"]

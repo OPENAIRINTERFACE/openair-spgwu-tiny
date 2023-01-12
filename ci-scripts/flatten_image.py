@@ -81,7 +81,7 @@ def perform_flattening(tag):
     cmd += ' --change "LABEL support-nrf-fdqn=\\"true\\"" '
     cmd += ' --change "HEALTHCHECK --interval=10s --timeout=15s --retries=6 CMD /openair-spgwu-tiny/bin/healthcheck.sh" '
     cmd += ' --change "CMD [\\"/openair-spgwu-tiny/bin/oai_spgwu\\", \\"-c\\", \\"/openair-spgwu-tiny/etc/spgw_u.conf\\", \\"-o\\"]" '
-    cmd += ' --change "ENTRYPOINT [\\"/bin/bash\\", \\"/openair-spgwu-tiny/bin/entrypoint.py\\"]" '
+    cmd += ' --change "ENTRYPOINT [\\"python3\\", \\"/openair-spgwu-tiny/bin/entrypoint.py\\"]" '
     cmd += ' - ' + image_prefix + tag
     print (cmd)
     subprocess.check_output(cmd, shell=True, universal_newlines=True)
