@@ -82,6 +82,8 @@ COPY ./rhsm-ca /etc/rhsm/ca
 RUN rm -f /etc/rhsm-host && \
     microdnf update -y && \
     microdnf install -y \
+      python3 \
+      python3-pip \
       tzdata \
       procps-ng \
       psmisc \
@@ -95,6 +97,7 @@ RUN rm -f /etc/rhsm-host && \
       libevent \
       findutils \
       libconfig && \
+    pip3 install jinja2 && \
     microdnf clean all -y && \
     rm -rf /var/cache/yum /var/cache/dnf && \
     # Remove entitlements and Subscription Manager configs
@@ -105,7 +108,7 @@ RUN rm -f /etc/rhsm-host && \
 WORKDIR /openair-spgwu-tiny/bin
 COPY --from=oai-spgwu-tiny-builder \
     /openair-spgwu-tiny/build/spgw_u/build/oai_spgwu \
-    /openair-spgwu-tiny/scripts/entrypoint.sh \
+    /openair-spgwu-tiny/scripts/entrypoint.py \
     /openair-spgwu-tiny/scripts/healthcheck.sh \
     ./
 
@@ -135,4 +138,4 @@ HEALTHCHECK --interval=10s \
     CMD /openair-spgwu-tiny/bin/healthcheck.sh
 
 CMD ["/openair-spgwu-tiny/bin/oai_spgwu", "-c", "/openair-spgwu-tiny/etc/spgw_u.conf", "-o"]
-ENTRYPOINT ["/openair-spgwu-tiny/bin/entrypoint.sh"]
+ENTRYPOINT ["/openair-spgwu-tiny/bin/entrypoint.py"]
