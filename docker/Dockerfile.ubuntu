@@ -74,6 +74,8 @@ ENV TZ=Europe/Paris
 RUN apt-get update && \
     DEBIAN_FRONTEND=noninteractive apt-get upgrade --yes && \
     DEBIAN_FRONTEND=noninteractive apt-get install --yes \
+      python3 \
+      python3-jinja2 \
       tzdata \
       psmisc \
       net-tools \
@@ -104,7 +106,7 @@ RUN apt-get update && \
 WORKDIR /openair-spgwu-tiny/bin
 COPY --from=oai-spgwu-tiny-builder \
     /openair-spgwu-tiny/build/spgw_u/build/oai_spgwu \
-    /openair-spgwu-tiny/scripts/entrypoint.sh \
+    /openair-spgwu-tiny/scripts/entrypoint.py \
     /openair-spgwu-tiny/scripts/healthcheck.sh \
     ./
 
@@ -140,4 +142,4 @@ HEALTHCHECK --interval=10s \
     CMD /openair-spgwu-tiny/bin/healthcheck.sh
 
 CMD ["/openair-spgwu-tiny/bin/oai_spgwu", "-c", "/openair-spgwu-tiny/etc/spgw_u.conf", "-o"]
-ENTRYPOINT ["/openair-spgwu-tiny/bin/entrypoint.sh"]
+ENTRYPOINT ["python3", "/openair-spgwu-tiny/bin/entrypoint.py"]
