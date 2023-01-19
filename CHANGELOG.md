@@ -1,5 +1,12 @@
 # RELEASE NOTES: #
 
+## v1.5.0 -- January 2023 ##
+
+* feat(fqdn): giving some time for FQDN resolution
+* Docker image improvements
+* Fixed docker exit by catching SIGTERM
+* Ubuntu22 full support
+
 ## v1.4.0 -- July 2022 ##
 
 * Fix for handling S-NSSAI 

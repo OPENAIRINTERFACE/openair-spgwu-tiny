@@ -24,7 +24,7 @@
 # author Laurent Thomas, Lionel GAUTHIER
 #
 #######################################
-SUPPORTED_DISTRO="Ubuntu 18.04, RHEL 8, UBI8-8.6"
+SUPPORTED_DISTRO="Ubuntu 18.04,20.04,22.04, RHEL 8, UBI8-8.6"
 if [ ! -f /etc/os-release ]; then
   echo_fatal "No /etc/os-release file found. You're likely on an unsupported distro."
 fi
@@ -32,18 +32,20 @@ OS_DISTRO=$(grep "^ID=" /etc/os-release | sed "s/ID=//" | sed "s/\"//g")
 OS_RELEASE=$(grep "^VERSION_ID=" /etc/os-release | sed "s/VERSION_ID=//" | sed "s/\"//g")
 case "$OS_DISTRO" in
   fedora) OS_BASEDISTRO="fedora"; INSTALLER="dnf"; CMAKE="cmake" ;;
-  rhel)   OS_BASEDISTRO="fedora"; INSTALLER="yum"; CMAKE="cmake3" ;;
+  rhel)   OS_BASEDISTRO="fedora"; INSTALLER="yum"; CMAKE="cmake" ;;
   debian) OS_BASEDISTRO="debian"; INSTALLER="apt-get"; CMAKE="cmake" ;;
   ubuntu) OS_BASEDISTRO="debian"; INSTALLER="apt-get"; CMAKE="cmake" ;;
 esac
 
-IS_CONTAINER=`egrep -c "docker|podman|kubepods|libpod|buildah" /proc/self/cgroup || true`
+IS_CONTAINER=`egrep -c "docker|kubepods|podman|buildah|libpod" /proc/self/cgroup || true`
+IS_DOCKERBUILD=${IS_DOCKERFILE:-0}
 
-if [ $IS_CONTAINER -eq 0 ]
+if [ $IS_CONTAINER -eq 0 ] && [ $IS_DOCKERBUILD -eq 0 ]
 then
   SUDO='sudo -S -E'
 else
   SUDO=''
+  IS_CONTAINER=1
 fi
 
 ###############################
@@ -81,7 +83,7 @@ echo_info()    { cecho "$*" $blue         ;}
 
 #-------------------------------------------------------------------------------
 # From https://stackoverflow.com/questions/4023830/how-to-compare-two-strings-in-dot-separated-version-format-in-bash
-# arg1 is a dotted (or not) version number (ex 4.10.6.56-ubunutu) 
+# arg1 is a dotted (or not) version number (ex 4.10.6.56-ubunutu)
 # arg2 is a dotted (or not) version number (ex 4.10.6.56-ubunutu)
 # return 0 if $1 lower or equal $2, else 1
 version_le() {
@@ -126,12 +128,16 @@ check_supported_distribution() {
     local distribution=$(get_distribution_release)
     case "$distribution" in
         "ubuntu18.04") return 0 ;;
+        "ubuntu20.04") return 0 ;;
+        "ubuntu22.04") return 0 ;;
         "rhel8")       return 0 ;;
         "rhel8.2")     return 0 ;;
         "rhel8.3")     return 0 ;;
         "rhel8.4")     return 0 ;;
         "rhel8.5")     return 0 ;;
         "rhel8.6")     return 0 ;;
+        "rhel8.7")     return 0 ;;
+        "rhel8.8")     return 0 ;;
 
     esac
     return 1
@@ -161,7 +167,10 @@ clean_kernel() {
 
 #-------------------------------------------------------------------------------
 disable_ipv6() {
-  $SUDO sysctl -w net.ipv6.conf.all.disable_ipv6=1
+  if [ $IS_CONTAINER -eq 0 ]
+  then
+      $SUDO sysctl -w net.ipv6.conf.all.disable_ipv6=1
+  fi
 }
 
 
@@ -170,8 +179,8 @@ disable_ipv6() {
 # arg1 = version
 # arg2 = req_version
 #
-function version_gt() { 
-  test "$(printf '%s\n' "$@" | sort -V | head -n 1)" != "$1"; 
+function version_gt() {
+  test "$(printf '%s\n' "$@" | sort -V | head -n 1)" != "$1";
 }
 
 
@@ -289,7 +298,10 @@ check_enable_epel_repos() {
       echo "EPEL repos already present. Good."
     else
       echo "EPEL repos not present. Installing them."
-      $SUDO $INSTALLER install $OPTION https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm
+      wget --tries=4 --retry-connrefused --wait=8 \
+        https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm
+      $SUDO $INSTALLER install $OPTION epel-release-latest-7.noarch.rpm
+      rm -f epel-release-latest-7.noarch.rpm
     fi
   fi
 }
@@ -308,5 +320,3 @@ set_openair_env(){
   openair_path=${openair_path%/src/s6a/*}
   export OPENAIRCN_DIR=$openair_path
 }
-
-

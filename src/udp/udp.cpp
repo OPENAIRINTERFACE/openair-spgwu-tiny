@@ -138,10 +138,11 @@ int udp_server::create_socket(
   int on = 1;
   if (setsockopt(sd, SOL_SOCKET, SO_REUSEPORT, &on, sizeof(on)) < 0) {
     /*
-	 * Reuse port has failed...
-	 */
-	Logger::udp().error("Socket option reuse port failed (%s)\n", strerror(errno));
-	return errno;
+     * Reuse port has failed...
+     */
+    Logger::udp().error(
+        "Socket option reuse port failed (%s)\n", strerror(errno));
+    return errno;
   }
 
   addr.sin_family      = AF_INET;

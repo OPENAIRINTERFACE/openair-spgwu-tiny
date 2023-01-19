@@ -22,39 +22,44 @@
 #
 # Dockerfile for the Open-Air-Interface SPGW-U-TINY service
 #   Valid for Ubuntu-18.04 (bionic)
+#             Ubuntu-20.04 (focal)
 #
 #---------------------------------------------------------------------
 
 #---------------------------------------------------------------------
-# BUILDER IMAGE
+# BASE IMAGE
 #---------------------------------------------------------------------
-FROM ubuntu:bionic as oai-spgwu-tiny-builder
-
-ARG EURECOM_PROXY
+ARG BASE_IMAGE=ubuntu:bionic
+FROM $BASE_IMAGE as oai-spgwu-tiny-base
 
 ENV DEBIAN_FRONTEND=noninteractive
 ENV TZ=Europe/Paris
-RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
+ENV IS_DOCKERFILE=1
 RUN apt-get update && \
     DEBIAN_FRONTEND=noninteractive apt-get upgrade --yes && \
     DEBIAN_FRONTEND=noninteractive apt-get install --yes \
       psmisc \
-      software-properties-common \
-      gnupg \
-      git
+      git \
+  && rm -rf /var/lib/apt/lists/*
 
-# Some GIT configuration command quite useful
-RUN /bin/bash -c "if [[ -v EURECOM_PROXY ]]; then git config --global http.proxy $EURECOM_PROXY; fi" && \
-    git config --global https.postBuffer 123289600 && \
+# Some GIT configuration commands quite useful
+RUN git config --global https.postBuffer 123289600 && \
     git config --global http.sslverify false
 
 # Copy the workspace as is
 WORKDIR /openair-spgwu-tiny
 COPY . /openair-spgwu-tiny
 
-# Installing and Building SPGW-U-TINY
+# Installing all the needed libraries/packages to build and run SPGWU-TINY
 WORKDIR /openair-spgwu-tiny/build/scripts
 RUN ./build_spgwu --install-deps --force
+
+#---------------------------------------------------------------------
+# BUILDER IMAGE
+#---------------------------------------------------------------------
+FROM oai-spgwu-tiny-base as oai-spgwu-tiny-builder
+# Building SPGW-U-TINY
+WORKDIR /openair-spgwu-tiny/build/scripts
 RUN ./build_spgwu --clean --build-type Release --jobs --Verbose && \
     ldd /openair-spgwu-tiny/build/spgw_u/build/spgwu && \
     mv /openair-spgwu-tiny/build/spgw_u/build/spgwu /openair-spgwu-tiny/build/spgw_u/build/oai_spgwu
@@ -62,42 +67,58 @@ RUN ./build_spgwu --clean --build-type Release --jobs --Verbose && \
 #---------------------------------------------------------------------
 # TARGET IMAGE
 #---------------------------------------------------------------------
-FROM ubuntu:bionic as oai-spgwu-tiny
+FROM $BASE_IMAGE as oai-spgwu-tiny
 ENV DEBIAN_FRONTEND=noninteractive
 ENV TZ=Europe/Paris
 # We install some debug tools for the moment in addition of mandatory libraries
 RUN apt-get update && \
     DEBIAN_FRONTEND=noninteractive apt-get upgrade --yes && \
     DEBIAN_FRONTEND=noninteractive apt-get install --yes \
+      python3 \
+      python3-jinja2 \
       tzdata \
       psmisc \
       net-tools \
       iproute2 \
       ethtool \
       iptables \
-      perl \
+      netbase \
       libgssapi-krb5-2 \
+# Ubuntu 18/20 --> libldap-2.4-2
       libldap-2.4-2 \
       libgoogle-glog0v5 \
-      libdouble-conversion1 \
-      libconfig++9v5 && \
-    rm -rf /var/lib/apt/lists/*
+# Ubuntu 18 --> libdouble-conversion1
+# Ubuntu 20 --> libdouble-conversion3
+      libdouble-conversion? \
+      libconfig++9v5 \
+      librtmp1 \
+      libpsl5 \
+      libnghttp2-14 \
+      libcurl?-gnutls \
+# Ubuntu 18 --> boost62/65 -> will remove both
+# Ubuntu 20 --> boost67/71 -> will remove 67
+      libboost-thread1.??.0 \
+  && rm -rf /var/lib/apt/lists/* \
+       /lib/x86_64-linux-gnu/libboost_system.so.1.6*.0 \
+       /lib/x86_64-linux-gnu/libboost_thread.so.1.6*.0
 
 # Copying executable and generated libraries
 WORKDIR /openair-spgwu-tiny/bin
 COPY --from=oai-spgwu-tiny-builder \
     /openair-spgwu-tiny/build/spgw_u/build/oai_spgwu \
-    /openair-spgwu-tiny/scripts/entrypoint.sh \
+    /openair-spgwu-tiny/scripts/entrypoint.py \
+    /openair-spgwu-tiny/scripts/healthcheck.sh \
     ./
 
 WORKDIR /usr/local/lib
 COPY --from=oai-spgwu-tiny-builder \
-    /usr/lib/libboost_system.so.1.67.0 \
-    /usr/lib/x86_64-linux-gnu/libnghttp2.so.14 \
-    /usr/lib/x86_64-linux-gnu/libcurl-gnutls.so.4 \
-    /usr/lib/x86_64-linux-gnu/librtmp.so.1 \
+# I need a dummy even if I already installed it.
+# Once Ubuntu18 support is dropped, we can remove whole copy section
     /usr/lib/x86_64-linux-gnu/libpsl.so.5 \
+# Ubuntu 18 --> boost 67 will be copied
+    /usr/lib/libboost_system.so.1.6*.0 \
     ./
+
 RUN ldconfig && \
     ldd /openair-spgwu-tiny/bin/oai_spgwu
 
@@ -114,6 +135,11 @@ LABEL support-nrf-fdqn="true"
 
 # expose ports
 EXPOSE 2152/udp 8805/udp
+# healthcheck
+HEALTHCHECK --interval=10s \
+            --timeout=15s \
+            --retries=6 \
+    CMD /openair-spgwu-tiny/bin/healthcheck.sh
 
 CMD ["/openair-spgwu-tiny/bin/oai_spgwu", "-c", "/openair-spgwu-tiny/etc/spgw_u.conf", "-o"]
-ENTRYPOINT ["/openair-spgwu-tiny/bin/entrypoint.sh"]
+ENTRYPOINT ["python3", "/openair-spgwu-tiny/bin/entrypoint.py"]

@@ -64,7 +64,7 @@ class deploySanityCheckTest():
         # First check if soon-to-be-deployed SPGW-U supports multi-SPGWU and requires FDQN
         res = ''
         try:
-            res = subprocess.check_output('grep --color=never LABEL docker/Dockerfile.ubuntu18.04', shell=True, universal_newlines=True)
+            res = subprocess.check_output('grep --color=never LABEL docker/Dockerfile.ubuntu', shell=True, universal_newlines=True)
         except:
             sys.exit(-1)
         branch = 'develop'

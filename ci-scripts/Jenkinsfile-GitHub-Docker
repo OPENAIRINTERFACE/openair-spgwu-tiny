@@ -114,16 +114,22 @@ pipeline {
             shortenShaOne = shortenShaOne.trim()
             sh "./ci-scripts/doGitHubPullRequestTempMerge.sh --src-branch ${env.ghprbSourceBranch} --src-commit ${env.ghprbActualCommit} --target-branch ${env.ghprbTargetBranch} --target-commit ${GIT_COMMIT}"
             sh "sleep 10"
-            spgwu_tag = 'ci-temp'
-            rhel_spgwu_tag = 'ci-temp-pr-' + env.ghprbPullId + '-' + shortenShaOne
+            spgwu_tag = 'ci-temp-pr-' + env.ghprbPullId + '-' + shortenShaOne
             spgwu_branch = env.ghprbSourceBranch
-            echo "PR TAG     is ${rhel_spgwu_tag}"
+            echo "PR TAG     is ${spgwu_tag}"
           } else {
             echo "======= THIS IS A PUSH EVENT ======"
             echo "Git Branch is ${GIT_BRANCH}"
             echo "Git Commit is ${GIT_COMMIT}"
+            shortenShaOne = sh returnStdout: true, script: 'git log -1 --pretty=format:"%h" ' + env.GIT_COMMIT
+            shortenShaOne = shortenShaOne.trim()
+            spgwu_tag = 'develop-' + shortenShaOne
             // Making a hard copy of the SHA-ONE
             getCommitSha()
+            // Prevention when developing a new version of this pipeline
+            if ((env.GIT_BRANCH != 'develop') && (env.GIT_BRANCH != 'origin/develop')) {
+              error "Stopping pipeline because not the develop branch"
+            }
           }
         }
       }
@@ -145,24 +151,22 @@ pipeline {
         stage ('Build U18 SPGW-U Image') {
           steps {
             script {
-              if (env.ghprbPullId == null) {
-                // Currently this pipeline only runs for pushes to `develop` branch
-                // First clean image registry
-                myShCmd('docker image rm oai-spgwu-tiny:develop || true', rem_u18_host_flag, rem_u18_host_user, rem_u18_host)
-              } else {
-                // In case we forgot during a previous run
-                myShCmd('docker image rm oai-spgwu-tiny:' + spgwu_tag + ' || true', rem_u18_host_flag, rem_u18_host_user, rem_u18_host)
-              }
+              // In case we forgot during a previous run
+              myShCmd('docker image rm oai-spgwu-tiny:' + spgwu_tag + ' || true', rem_u18_host_flag, rem_u18_host_user, rem_u18_host)
               myShCmd('docker image prune --force', rem_u18_host_flag, rem_u18_host_user, rem_u18_host)
-              myShCmd('docker build --no-cache --target oai-spgwu-tiny --tag oai-spgwu-tiny:' + spgwu_tag + ' --file docker/Dockerfile.ubuntu18.04 . > archives/spgwu_docker_image_build.log 2>&1', rem_u18_host_flag, rem_u18_host_user, rem_u18_host)
+              myShCmd('docker build --no-cache --target oai-spgwu-tiny --tag oai-spgwu-tiny:' + spgwu_tag + ' --file docker/Dockerfile.ubuntu . > archives/spgwu_docker_image_build.log 2>&1', rem_u18_host_flag, rem_u18_host_user, rem_u18_host)
               // Putting a place holder to try out on the flattening of image.
               // If not satisfactory, we can remove it.
               myShCmd('python3 ./ci-scripts/flatten_image.py --tag oai-spgwu-tiny:' + spgwu_tag, rem_u18_host_flag, rem_u18_host_user, rem_u18_host)
+              myShCmd('docker image prune --force', rem_u18_host_flag, rem_u18_host_user, rem_u18_host)
               myShCmd('docker image ls >> archives/spgwu_docker_image_build.log', rem_u18_host_flag, rem_u18_host_user, rem_u18_host)
-              // We will keep also the TMP image in U18 case.
-              if (env.ghprbPullId != null) {
-                myShCmd('docker image tag oai-spgwu-tiny:' + spgwu_tag + ' oai-spgwu-tiny:' + rhel_spgwu_tag, rem_u18_host_flag, rem_u18_host_user, rem_u18_host)
-              }
+              // Pushing to local private registry for testing purpose
+              myShCmd('docker login -u oaicicd -p oaicicd selfix.sboai.cs.eurecom.fr', rem_u18_host_flag, rem_u18_host_user, rem_u18_host)
+              myShCmd('docker image tag oai-spgwu-tiny:' + spgwu_tag + ' selfix.sboai.cs.eurecom.fr/oai-spgwu-tiny:' + spgwu_tag, rem_u18_host_flag, rem_u18_host_user, rem_u18_host)
+              myShCmd('docker push selfix.sboai.cs.eurecom.fr/oai-spgwu-tiny:' + spgwu_tag, rem_u18_host_flag, rem_u18_host_user, rem_u18_host)
+              myShCmd('docker rmi selfix.sboai.cs.eurecom.fr/oai-spgwu-tiny:' + spgwu_tag, rem_u18_host_flag, rem_u18_host_user, rem_u18_host)
+              // TODO: Normally once all test-pipelines are using the pushed image; we can also remove oai-spgwu-tiny:spgwu_tag
+              myShCmd('docker logout selfix.sboai.cs.eurecom.fr', rem_u18_host_flag, rem_u18_host_user, rem_u18_host)
             }
           }
           post {
@@ -187,7 +191,8 @@ pipeline {
                 if (env.ghprbPullId == null) {
                   // Currently this pipeline only runs for pushes to `develop` branch
                   // First clean image registry
-                  myShCmd('sudo podman image rm oai-spgwu-tiny:develop || true', rem_rhel_host_flag, rem_rhel_host_user, rem_rhel_host)
+                  myShCmd('sudo podman image tag oai-spgwu-tiny:develop oai-spgwu-tiny:develop-previous || true', rem_rhel_host_flag, rem_rhel_host_user, rem_rhel_host)
+                  myShCmd('sudo podman image rm oai-spgwu-tiny:develop oai-spgwu-tiny:' + spgwu_tag + ' || true', rem_rhel_host_flag, rem_rhel_host_user, rem_rhel_host)
                 } else {
                   // In case we forgot during a previous run
                   myShCmd('sudo podman image rm oai-spgwu-tiny:' + spgwu_tag + ' || true', rem_rhel_host_flag, rem_rhel_host_user, rem_rhel_host)
@@ -198,14 +203,8 @@ pipeline {
                 myShCmd('cp /etc/pki/entitlement/*pem ./etc-pki-entitlement', rem_rhel_host_flag, rem_rhel_host_user, rem_rhel_host)
                 myShCmd('sudo cp /etc/rhsm/rhsm.conf ./rhsm-conf', rem_rhel_host_flag, rem_rhel_host_user, rem_rhel_host)
                 myShCmd('sudo cp /etc/rhsm/ca/*pem ./rhsm-ca', rem_rhel_host_flag, rem_rhel_host_user, rem_rhel_host)
-                myShCmd('sudo podman build --no-cache --target oai-spgwu-tiny --tag oai-spgwu-tiny:' + spgwu_tag + ' --file docker/Dockerfile.rhel8 . > archives/spgwu_podman_image_build.log 2>&1', rem_rhel_host_flag, rem_rhel_host_user, rem_rhel_host)
-                // Putting a place holder to try out on the flattening of image.
-                // If not satisfactory, we can remove it.
-                myShCmd('python3 ./ci-scripts/flatten_image.py --tag oai-spgwu-tiny:' + spgwu_tag, rem_rhel_host_flag, rem_rhel_host_user, rem_rhel_host)
+                myShCmd('sudo podman build --no-cache --squash --target oai-spgwu-tiny --tag oai-spgwu-tiny:' + spgwu_tag + ' --file docker/Dockerfile.rhel8 --format docker . > archives/spgwu_podman_image_build.log 2>&1', rem_rhel_host_flag, rem_rhel_host_user, rem_rhel_host)
                 myShCmd('sudo podman image ls >> archives/spgwu_podman_image_build.log', rem_rhel_host_flag, rem_rhel_host_user, rem_rhel_host)
-                if (env.ghprbPullId != null) {
-                  myShCmd('sudo podman image tag oai-spgwu-tiny:' + spgwu_tag + ' oai-spgwu-tiny:' + rhel_spgwu_tag, rem_rhel_host_flag, rem_rhel_host_user, rem_rhel_host)
-                }
               }
             }
           }
@@ -216,9 +215,18 @@ pipeline {
               }
             }
             success {
-              sh "echo 'OAI-SPGW-U PODMAN RHEL8 IMAGE BUILD: OK' >> archives/spgwu_podman_image_build.log"
+              script {
+                myShCmd('sudo podman image rm oai-spgwu-tiny:develop-previous || true', rem_rhel_host_flag, rem_rhel_host_user, rem_rhel_host)
+                // Let's keep a `develop` tag until all push/pull operations are done on the test pipelines.
+                if (env.ghprbPullId == null) {
+                  myShCmd('sudo podman image tag oai-spgwu-tiny:' + spgwu_tag + ' oai-spgwu-tiny:develop || true', rem_rhel_host_flag, rem_rhel_host_user, rem_rhel_host)
+                }
+                sh "echo 'OAI-SPGW-U PODMAN RHEL8 IMAGE BUILD: OK' >> archives/spgwu_podman_image_build.log"
+              }
             }
             unsuccessful {
+              myShCmd('sudo podman image tag oai-spgwu-tiny:develop-previous oai-spgwu-tiny:develop || true', rem_rhel_host_flag, rem_rhel_host_user, rem_rhel_host)
+              myShCmd('sudo podman image rm oai-spgwu-tiny:develop-previous || true', rem_rhel_host_flag, rem_rhel_host_user, rem_rhel_host)
               sh "echo 'OAI-SPGW-U PODMAN RHEL8 IMAGE BUILD: KO' >> archives/spgwu_podman_image_build.log"
             }
           }
@@ -549,7 +557,7 @@ pipeline {
               [$class: 'UsernamePasswordMultiBinding', credentialsId: "${params.DockerHubCredentials}", usernameVariable: 'DH_Username', passwordVariable: 'DH_Password']
             ]) {
               myShCmd("echo ${DH_Password} | docker login --username ${DH_Username} --password-stdin", rem_u18_host_flag, rem_u18_host_user, rem_u18_host)
-              myShCmd("docker image tag oai-spgwu-tiny:develop ${DH_Account}/oai-spgwu-tiny:develop", rem_u18_host_flag, rem_u18_host_user, rem_u18_host)
+              myShCmd("docker image tag oai-spgwu-tiny:" + spgwu_tag + " ${DH_Account}/oai-spgwu-tiny:develop", rem_u18_host_flag, rem_u18_host_user, rem_u18_host)
               myShCmd("docker push ${DH_Account}/oai-spgwu-tiny:develop", rem_u18_host_flag, rem_u18_host_user, rem_u18_host)
               myShCmd("docker rmi ${DH_Account}/oai-spgwu-tiny:develop", rem_u18_host_flag, rem_u18_host_user, rem_u18_host)
               myShCmd("docker logout", rem_u18_host_flag, rem_u18_host_user, rem_u18_host)
@@ -603,7 +611,10 @@ pipeline {
         // Removing temporary / intermediate images
         try {
           if (env.ghprbPullId != null) {
-            myShCmd('docker image rm --force oai-spgwu-tiny:ci-temp', rem_u18_host_flag, rem_u18_host_user, rem_u18_host)
+            myShCmd('docker image rm --force oai-spgwu-tiny:' + spgwu_tag, rem_u18_host_flag, rem_u18_host_user, rem_u18_host)
+          } else {
+            // TODO: to be removed later!
+            myShCmd('docker image tag oai-spgwu-tiny:' + spgwu_tag + ' oai-spgwu-tiny:develop', rem_u18_host_flag, rem_u18_host_user, rem_u18_host)
           }
         } catch (Exception e) {
           echo "We failed to delete the OAI-SPGWU temp image"

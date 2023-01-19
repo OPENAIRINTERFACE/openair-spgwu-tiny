@@ -49,6 +49,9 @@ def perform_flattening(tag):
     if re.search('podman', podman_check.strip()):
         cli = 'sudo podman'
         image_prefix = 'localhost/'
+        # since HEALTHCHECK is not supported by podman import
+        # we don't flatten
+        return 0
     if cli == '':
         cmd = 'which docker || true'
         docker_check = subprocess.check_output(cmd, shell=True, universal_newlines=True)
@@ -76,8 +79,9 @@ def perform_flattening(tag):
     cmd += ' --change "EXPOSE 8805/udp" '
     cmd += ' --change "LABEL support-multi-sgwu-instances=\\"true\\"" '
     cmd += ' --change "LABEL support-nrf-fdqn=\\"true\\"" '
+    cmd += ' --change "HEALTHCHECK --interval=10s --timeout=15s --retries=6 CMD /openair-spgwu-tiny/bin/healthcheck.sh" '
     cmd += ' --change "CMD [\\"/openair-spgwu-tiny/bin/oai_spgwu\\", \\"-c\\", \\"/openair-spgwu-tiny/etc/spgw_u.conf\\", \\"-o\\"]" '
-    cmd += ' --change "ENTRYPOINT [\\"/bin/bash\\", \\"/openair-spgwu-tiny/bin/entrypoint.sh\\"]" '
+    cmd += ' --change "ENTRYPOINT [\\"python3\\", \\"/openair-spgwu-tiny/bin/entrypoint.py\\"]" '
     cmd += ' - ' + image_prefix + tag
     print (cmd)
     subprocess.check_output(cmd, shell=True, universal_newlines=True)
