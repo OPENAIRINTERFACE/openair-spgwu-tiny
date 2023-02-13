@@ -106,10 +106,32 @@ void pfcp_far::apply_forwarding_rules(
 
 //------------------------------------------------------------------------------
 bool pfcp_far::update(const pfcp::update_far& update, uint8_t& cause_value) {
-  update.get(apply_action);
+  //  update.get(apply_action);
+  apply_action.drop = 0;
+  apply_action.forw = 1;
+
   if (update.update_forwarding_parameters.first) {
-    forwarding_parameters.second.update(
-        update.update_forwarding_parameters.second);
+    //    forwarding_parameters.second.update(
+    //        update.update_forwarding_parameters.second);
+
+    forwarding_parameters.first = true;
+
+    forwarding_parameters.second.destination_interface.first = true;
+    forwarding_parameters.second.destination_interface.second.interface_value =
+        pfcp::INTERFACE_VALUE_ACCESS;
+
+    forwarding_parameters.second.outer_header_creation.first = true;
+    forwarding_parameters.second.outer_header_creation.second
+        .outer_header_creation_description =
+        pfcp::OUTER_HEADER_CREATION_GTPU_UDP_IPV4;
+
+    forwarding_parameters.second.outer_header_creation.second.teid =
+        update.update_forwarding_parameters.second.outer_header_creation.second
+            .teid;
+    forwarding_parameters.second.outer_header_creation.second.ipv4_address =
+        update.update_forwarding_parameters.second.outer_header_creation.second
+            .ipv4_address;
+
     if (update.update_forwarding_parameters.second.pfcpsmreq_flags.first) {
       // TODO
     }
