@@ -106,8 +106,9 @@ void pfcp_far::apply_forwarding_rules(
 
 //------------------------------------------------------------------------------
 bool pfcp_far::update(const pfcp::update_far& update, uint8_t& cause_value) {
-  update.get(apply_action);
+  set(update.apply_action.second);
   if (update.update_forwarding_parameters.first) {
+    forwarding_parameters.first = true;
     forwarding_parameters.second.update(
         update.update_forwarding_parameters.second);
     if (update.update_forwarding_parameters.second.pfcpsmreq_flags.first) {
