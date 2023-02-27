@@ -511,7 +511,7 @@ class pfcp_msg : public pfcp_msg_header {
     // std::cout << std::dec<< " check_msg_length  = " << check_msg_length <<
     // std::endl;
     do {
-      ie = pfcp_ie::new_pfcp_ie_from_stream(is);
+      if (check_msg_length) ie = pfcp_ie::new_pfcp_ie_from_stream(is);
       if (ie) {
         ies_length += (pfcp_tlv::tlv_ie_length + ie->tlv.get_length());
         ies.push_back(std::shared_ptr<pfcp_ie>(ie));
