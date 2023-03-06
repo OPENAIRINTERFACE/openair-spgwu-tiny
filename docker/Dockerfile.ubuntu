@@ -46,9 +46,11 @@ RUN apt-get update && \
 RUN git config --global https.postBuffer 123289600 && \
     git config --global http.sslverify false
 
-# Copy the workspace as is
+# Copy installation scripts
 WORKDIR /openair-spgwu-tiny
-COPY . /openair-spgwu-tiny
+COPY ./build/scripts /openair-spgwu-tiny/build/scripts/
+COPY ./build/spgw_u/CMakeLists.txt /openair-spgwu-tiny/build/spgw_u/CMakeLists.txt
+COPY ./build/cmake_modules /openair-spgwu-tiny/cmake_modules/
 
 # Installing all the needed libraries/packages to build and run SPGWU-TINY
 WORKDIR /openair-spgwu-tiny/build/scripts
@@ -58,6 +60,8 @@ RUN ./build_spgwu --install-deps --force
 # BUILDER IMAGE
 #---------------------------------------------------------------------
 FROM oai-spgwu-tiny-base as oai-spgwu-tiny-builder
+# Copy the rest of source code
+COPY . /openair-spgwu-tiny
 # Building SPGW-U-TINY
 WORKDIR /openair-spgwu-tiny/build/scripts
 RUN ./build_spgwu --clean --build-type Release --jobs --Verbose && \

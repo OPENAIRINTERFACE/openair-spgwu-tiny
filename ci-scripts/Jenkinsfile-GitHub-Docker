@@ -32,40 +32,42 @@ def sendSocialMediaMessage(pipeChannel, pipeColor, pipeMessage) {
 }
 
 // Location of the CN executor node
-def cn_ci_host = params.Host_CN_CI_Server
+// Its main purpose is the Ubuntu Build
+ubuntuNode = params.UbuntuBuildNode
+ubuntuBuildResource = params.UbuntuBuildResource
 
-// for lock
-def cn_ci_resource = params.DockerContainers
+// Location of the RHEL CN executor
+rhelNode = params.RhelBuildNode
+rhelResource = params.RhelBuildResource
 
-// Location of the Remote Ubuntu18 CN executor
-def rem_u18_host_flag = false
-def rem_u18_host = ""
-def rem_u18_host_user = ""
+// Location of the CPPCHECK executor
+cppcheckNode = params.CppCheckNode
+cppcheckResource = params.CppCheckResource
 
-// Location of the Remote RHEL CN executor
-def rem_rhel_host_flag = false
-def rem_rhel_host = ""
-def rem_rhel_host_user = ""
-def rem_rhel8_resource = params.PodmanContainers
+// Location of the CLANG-FORMAT-CHECK executor
+formatCheckNode = params.FormatCheckNode
+formatCheckResource = params.FormatCheckResource
 
-// Variables to pass to the FED Test job
+// Variables to pass to the test jobs
 def spgwu_tag = 'develop'
 def spgwu_branch = 'develop'
 
 // Docker Hub account to push to
-def DH_Account = "oaisoftwarealliance"
+DH_Account = "oaisoftwarealliance"
+
+// Private Local Registry URL
+PrivateRegistryURL = 'selfix.sboai.cs.eurecom.fr'
 
 //-------------------------------------------------------------------------------
 // Pipeline start
 pipeline {
   agent {
-    label cn_ci_host
+    label ubuntuNode
   }
   options {
     disableConcurrentBuilds()
     timestamps()
     ansiColor('xterm')
-    lock(cn_ci_resource)
   }
 
   stages {
@@ -77,59 +79,9 @@ pipeline {
           JOB_TIMESTAMP = sh returnStdout: true, script: 'date --utc --rfc-3339=seconds | sed -e "s#+00:00##"'
           JOB_TIMESTAMP = JOB_TIMESTAMP.trim()
 
-          if (params.Host_CN_CI_2nd_Server_Flag != null) {
-            rem_u18_host_flag = params.Host_CN_CI_2nd_Server_Flag
-            if (rem_u18_host_flag) {
-              rem_u18_host = params.Host_CN_CI_2nd_Server
-              rem_u18_host_user = params.Host_CN_CI_2nd_Server_Login
-              echo "1st Node   is ${NODE_NAME}"
-              echo "2nd Node   is ${rem_u18_host}"
-            } else {
-              echo "U18 Node   is ${NODE_NAME}"
-            }
-          } else {
-            echo "Node       is ${NODE_NAME}"
-          }
-          if (params.Remote_RHEL_Server_Flag != null) {
-            rem_rhel_host_flag = params.Remote_RHEL_Server_Flag
-            if (rem_rhel_host_flag) {
-              rem_rhel_host = params.Remote_RHEL_Server_Name
-              rem_rhel_host_user = params.Remote_RHEL_Server_Login
-              echo "RHEL Node  is ${rem_rhel_host}"
-            }
-          }
-          echo "Git URL    is ${GIT_URL}"
           if (params.DockerHubCredentials == null) {
             echo '\u26D4 \u001B[31mNo Credentials to push to DockerHub!\u001B[0m'
             error "Stopping pipeline!"
-          }
-
-          removeGitHubInfo()
-          if (env.ghprbPullId != null) {
-            echo "======= THIS IS A PULL REQUEST ======"
-            echo "PR ID      is ${env.ghprbPullId}"
-            echo "PR LINK    is ${env.ghprbPullLink}"
-            echo "PR TITLE   is ${env.ghprbPullTitle}"
-            shortenShaOne = sh returnStdout: true, script: 'git log -1 --pretty=format:"%h" --abbrev=8 ' + env.ghprbActualCommit
-            shortenShaOne = shortenShaOne.trim()
-            sh "./ci-scripts/doGitHubPullRequestTempMerge.sh --src-branch ${env.ghprbSourceBranch} --src-commit ${env.ghprbActualCommit} --target-branch ${env.ghprbTargetBranch} --target-commit ${GIT_COMMIT}"
-            sh "sleep 10"
-            spgwu_tag = 'ci-temp-pr-' + env.ghprbPullId + '-' + shortenShaOne
-            spgwu_branch = env.ghprbSourceBranch
-            echo "PR TAG     is ${spgwu_tag}"
-          } else {
-            echo "======= THIS IS A PUSH EVENT ======"
-            echo "Git Branch is ${GIT_BRANCH}"
-            echo "Git Commit is ${GIT_COMMIT}"
-            shortenShaOne = sh returnStdout: true, script: 'git log -1 --pretty=format:"%h" --abbrev=8 ' + env.GIT_COMMIT
-            shortenShaOne = shortenShaOne.trim()
-            spgwu_tag = 'develop-' + shortenShaOne
-            // Making a hard copy of the SHA-ONE
-            getCommitSha()
-            // Prevention when developing a new version of this pipeline
-            if ((env.GIT_BRANCH != 'develop') && (env.GIT_BRANCH != 'origin/develop')) {
-              error "Stopping pipeline because not the develop branch"
-            }
           }
         }
       }
@@ -137,44 +89,68 @@ pipeline {
     stage ('Prepare Source Code') {
       steps {
         script {
-          sh "git clean -x -d -f > /dev/null 2>&1"
-          sh "tar -cjhf /tmp/openair-spgwu.tar.bz2 ."
-          sh "mv /tmp/openair-spgwu.tar.bz2 ."
-          copyTo2ndServer('openair-spgwu.tar.bz2', rem_u18_host_flag, rem_u18_host_user, rem_u18_host)
-          copyTo2ndServer('openair-spgwu.tar.bz2', rem_rhel_host_flag, rem_rhel_host_user, rem_rhel_host)
-          sh "mkdir -p archives/oai-spgwu-cfg"
+          removeGitHubInfo()
+          if (env.ghprbPullId != null) {
+            shortenShaOne = sh returnStdout: true, script: 'git log -1 --pretty=format:"%h" --abbrev=8 ' + env.ghprbActualCommit
+            shortenShaOne = shortenShaOne.trim()
+            spgwu_tag = 'ci-temp-pr-' + env.ghprbPullId + '-' + shortenShaOne
+            spgwu_branch = env.ghprbSourceBranch
+
+            echo "======= THIS IS A PULL REQUEST ======"
+            echo "PR ID      is ${env.ghprbPullId}"
+            echo "PR LINK    is ${env.ghprbPullLink}"
+            echo "PR TITLE   is ${env.ghprbPullTitle}"
+            echo "PR TAG     is ${spgwu_tag}"
+          } else {
+            shortenShaOne = sh returnStdout: true, script: 'git log -1 --pretty=format:"%h" --abbrev=8 ' + env.GIT_COMMIT
+            shortenShaOne = shortenShaOne.trim()
+            spgwu_tag = 'develop-' + shortenShaOne
+
+            echo "======= THIS IS A PUSH EVENT ======"
+            echo "Git Branch      is ${GIT_BRANCH}"
+            echo "Git Commit      is ${GIT_COMMIT}"
+            echo "CI Develop TAG  is ${spgwu_tag}"
+
+            // Prevention when developing a new version of this pipeline
+            if ((env.GIT_BRANCH != 'develop') && (env.GIT_BRANCH != 'origin/develop')) {
+              error "Stopping pipeline because not the develop branch"
+            }
+          }
+          prepareWorkspaceMergeCase()
         }
       }
     }
     stage('Build Core Network Function') {
       parallel {
-        stage ('Build U18 SPGW-U Image') {
+        stage ('Build Ubuntu SPGW-U Image') {
           steps {
-            script {
-              // In case we forgot during a previous run
-              myShCmd('docker image rm oai-spgwu-tiny:' + spgwu_tag + ' || true', rem_u18_host_flag, rem_u18_host_user, rem_u18_host)
-              myShCmd('docker image prune --force', rem_u18_host_flag, rem_u18_host_user, rem_u18_host)
-              myShCmd('docker build --no-cache --target oai-spgwu-tiny --tag oai-spgwu-tiny:' + spgwu_tag + ' --file docker/Dockerfile.ubuntu . > archives/spgwu_docker_image_build.log 2>&1', rem_u18_host_flag, rem_u18_host_user, rem_u18_host)
-              // Putting a place holder to try out on the flattening of image.
-              // If not satisfactory, we can remove it.
-              myShCmd('python3 ./ci-scripts/flatten_image.py --tag oai-spgwu-tiny:' + spgwu_tag, rem_u18_host_flag, rem_u18_host_user, rem_u18_host)
-              myShCmd('docker image prune --force', rem_u18_host_flag, rem_u18_host_user, rem_u18_host)
-              myShCmd('docker image ls >> archives/spgwu_docker_image_build.log', rem_u18_host_flag, rem_u18_host_user, rem_u18_host)
-              // Pushing to local private registry for testing purpose
-              myShCmd('docker login -u oaicicd -p oaicicd selfix.sboai.cs.eurecom.fr', rem_u18_host_flag, rem_u18_host_user, rem_u18_host)
-              myShCmd('docker image tag oai-spgwu-tiny:' + spgwu_tag + ' selfix.sboai.cs.eurecom.fr/oai-spgwu-tiny:' + spgwu_tag, rem_u18_host_flag, rem_u18_host_user, rem_u18_host)
-              myShCmd('docker push selfix.sboai.cs.eurecom.fr/oai-spgwu-tiny:' + spgwu_tag, rem_u18_host_flag, rem_u18_host_user, rem_u18_host)
-              myShCmd('docker rmi selfix.sboai.cs.eurecom.fr/oai-spgwu-tiny:' + spgwu_tag, rem_u18_host_flag, rem_u18_host_user, rem_u18_host)
-              // TODO: Normally once all test-pipelines are using the pushed image; we can also remove oai-spgwu-tiny:spgwu_tag
-              myShCmd('docker logout selfix.sboai.cs.eurecom.fr', rem_u18_host_flag, rem_u18_host_user, rem_u18_host)
+            // Now it is only locked during this build stage and not for the whole pipeline
+            lock(ubuntuBuildResource) {
+              script {
+                sh "docker image rm oai-spgwu-tiny:${spgwu_tag} || true"
+                sh "docker image prune --force"
+                if (env.ghprbPullId != null) {
+                  dockerBuildOptions = ''
+                } else {
+                  dockerBuildOptions = '--no-cache '
+                }
+                sh "docker buildx build ${dockerBuildOptions} --target oai-spgwu-tiny --tag oai-spgwu-tiny:${spgwu_tag} --file docker/Dockerfile.ubuntu . > archives/spgwu_docker_image_build.log 2>&1"
+                // Putting a place holder to try out on the flattening of image.
+                // If not satisfactory, we can remove it.
+                sh "python3 ./ci-scripts/flatten_image.py --tag oai-spgwu-tiny:${spgwu_tag}"
+                sh "docker image prune --force"
+                sh "docker image ls | egrep --color=never 'spgwu-tiny|REPOSITORY' >> archives/spgwu_docker_image_build.log"
+                // Pushing to local private registry for testing purpose
+                sh "docker login -u oaicicd -p oaicicd ${PrivateRegistryURL}"
+                sh "docker image tag oai-spgwu-tiny:${spgwu_tag} ${PrivateRegistryURL}/oai-spgwu-tiny:${spgwu_tag}"
+                sh "docker push ${PrivateRegistryURL}/oai-spgwu-tiny:${spgwu_tag}"
+                // Remove all images locally
+                sh "docker rmi oai-spgwu-tiny:${spgwu_tag} ${PrivateRegistryURL}/oai-spgwu-tiny:${spgwu_tag}"
+                sh "docker logout ${PrivateRegistryURL}"
+              }
             }
           }
           post {
-            always {
-              script {
-                copyFrom2ndServer('archives/spgwu_docker_image_build.log', 'archives', rem_u18_host_flag, rem_u18_host_user, rem_u18_host)
-              }
-            }
             success {
               sh "echo 'OAI-SPGW-U DOCKER IMAGE BUILD: OK' >> archives/spgwu_docker_image_build.log"
             }
@@ -184,225 +160,126 @@ pipeline {
           }
         }
         stage ('Build RHEL8 SPGW-U Image') {
-          when { expression {rem_rhel_host_flag} }
+          agent { label rhelNode }
           steps {
-            lock (rem_rhel8_resource) {
+            lock (rhelResource) {
               script {
-                if (env.ghprbPullId == null) {
-                  // Currently this pipeline only runs for pushes to `develop` branch
-                  // First clean image registry
-                  myShCmd('sudo podman image tag oai-spgwu-tiny:develop oai-spgwu-tiny:develop-previous || true', rem_rhel_host_flag, rem_rhel_host_user, rem_rhel_host)
-                  myShCmd('sudo podman image rm oai-spgwu-tiny:develop oai-spgwu-tiny:' + spgwu_tag + ' || true', rem_rhel_host_flag, rem_rhel_host_user, rem_rhel_host)
-                } else {
-                  // In case we forgot during a previous run
-                  myShCmd('sudo podman image rm oai-spgwu-tiny:' + spgwu_tag + ' || true', rem_rhel_host_flag, rem_rhel_host_user, rem_rhel_host)
-                }
-                myShCmd('sudo podman image prune --force', rem_rhel_host_flag, rem_rhel_host_user, rem_rhel_host)
+                // It's a different agent from main one.
+                prepareWorkspaceMergeCase()
+                sh "sudo podman image rm oai-spgwu-tiny:${spgwu_tag} || true"
+                sh "sudo podman image prune --force"
                 // Copy the RHEL Host certificates for building
-                myShCmd('mkdir -p ./etc-pki-entitlement ./rhsm-conf ./rhsm-ca', rem_rhel_host_flag, rem_rhel_host_user, rem_rhel_host)
-                myShCmd('cp /etc/pki/entitlement/*pem ./etc-pki-entitlement', rem_rhel_host_flag, rem_rhel_host_user, rem_rhel_host)
-                myShCmd('sudo cp /etc/rhsm/rhsm.conf ./rhsm-conf', rem_rhel_host_flag, rem_rhel_host_user, rem_rhel_host)
-                myShCmd('sudo cp /etc/rhsm/ca/*pem ./rhsm-ca', rem_rhel_host_flag, rem_rhel_host_user, rem_rhel_host)
-                myShCmd('sudo podman build --no-cache --squash --target oai-spgwu-tiny --tag oai-spgwu-tiny:' + spgwu_tag + ' --file docker/Dockerfile.rhel8 --format docker . > archives/spgwu_podman_image_build.log 2>&1', rem_rhel_host_flag, rem_rhel_host_user, rem_rhel_host)
-                myShCmd('sudo podman image ls >> archives/spgwu_podman_image_build.log', rem_rhel_host_flag, rem_rhel_host_user, rem_rhel_host)
+                sh "mkdir -p ./etc-pki-entitlement ./rhsm-conf ./rhsm-ca"
+                sh "cp /etc/pki/entitlement/*pem ./etc-pki-entitlement"
+                sh "sudo cp /etc/rhsm/rhsm.conf ./rhsm-conf"
+                sh "sudo cp /etc/rhsm/ca/*pem ./rhsm-ca"
+                // Building
+                sh "sudo podman build --no-cache --squash --target oai-spgwu-tiny --tag oai-spgwu-tiny:${spgwu_tag} --file docker/Dockerfile.rhel8 --format docker . > archives/spgwu_podman_image_build.log 2>&1"
+                sh "sudo podman image prune --force"
+                sh "sudo podman image ls | egrep --color=never 'spgwu-tiny|REPOSITORY' >> archives/spgwu_podman_image_build.log"
               }
             }
           }
           post {
-            always {
-              script {
-                copyFrom2ndServer('archives/spgwu_podman_image_build.log', 'archives', rem_rhel_host_flag, rem_rhel_host_user, rem_rhel_host)
-              }
-            }
             success {
               script {
-                myShCmd('sudo podman image rm oai-spgwu-tiny:develop-previous || true', rem_rhel_host_flag, rem_rhel_host_user, rem_rhel_host)
-                // Let's keep a `develop` tag until all push/pull operations are done on the test pipelines.
-                if (env.ghprbPullId == null) {
-                  myShCmd('sudo podman image tag oai-spgwu-tiny:' + spgwu_tag + ' oai-spgwu-tiny:develop || true', rem_rhel_host_flag, rem_rhel_host_user, rem_rhel_host)
-                }
                 sh "echo 'OAI-SPGW-U PODMAN RHEL8 IMAGE BUILD: OK' >> archives/spgwu_podman_image_build.log"
               }
             }
             unsuccessful {
-              myShCmd('sudo podman image tag oai-spgwu-tiny:develop-previous oai-spgwu-tiny:develop || true', rem_rhel_host_flag, rem_rhel_host_user, rem_rhel_host)
-              myShCmd('sudo podman image rm oai-spgwu-tiny:develop-previous || true', rem_rhel_host_flag, rem_rhel_host_user, rem_rhel_host)
               sh "echo 'OAI-SPGW-U PODMAN RHEL8 IMAGE BUILD: KO' >> archives/spgwu_podman_image_build.log"
+            }
+            cleanup {
+              script {
+                sh "sudo podman image prune --force"
+                sh "rm -Rf ./etc-pki-entitlement ./rhsm-conf ./rhsm-ca"
+                stash includes: 'archives/spgwu_podman_image_build.log', name: 'podmanBuildLog'
+              }
             }
           }
         }
         // Running CPPCHECK in parallel to gain time
         stage ('Static Code Analysis') {
+          agent { label cppcheckNode }
           steps {
-            script {
-              // Running on xenial to have 1.72 version of cppcheck
-              myShCmd('docker run --name ci-cn-cppcheck -d ubuntu:xenial /bin/bash -c "sleep infinity"', rem_u18_host_flag, rem_u18_host_user, rem_u18_host)
-              myShCmd('docker exec ci-cn-cppcheck /bin/bash -c "apt-get update && apt-get upgrade --yes" > archives/cppcheck_install.log', rem_u18_host_flag, rem_u18_host_user, rem_u18_host)
-              myShCmd('docker exec ci-cn-cppcheck /bin/bash -c "apt-get install --yes cppcheck bzip2" >> archives/cppcheck_install.log', rem_u18_host_flag, rem_u18_host_user, rem_u18_host)
-
-              myShCmd('docker cp ./openair-spgwu.tar.bz2 ci-cn-cppcheck:/home', rem_u18_host_flag, rem_u18_host_user, rem_u18_host)
-              myShCmd('docker exec ci-cn-cppcheck /bin/bash -c "cd /home && tar -xjf openair-spgwu.tar.bz2"', rem_u18_host_flag, rem_u18_host_user, rem_u18_host)
-              myShCmd('docker exec ci-cn-cppcheck /bin/bash -c "rm -f /home/openair-spgwu.tar.bz2"', rem_u18_host_flag, rem_u18_host_user, rem_u18_host)
-
-              myShCmd('docker exec ci-cn-cppcheck /bin/bash -c "cd /home && cppcheck --enable=warning --force --xml --xml-version=2 src 2> cppcheck.xml 1> cppcheck_build.log"', rem_u18_host_flag, rem_u18_host_user, rem_u18_host)
+            lock (cppcheckResource) {
+              script {
+                // It's a different agent from main one.
+                prepareWorkspaceMergeCase()
+                // Moving to focal and cppcheck 1.90 and a dockerfile approach
+                sh 'docker build --target spgwu-cppcheck --tag spgwu-cppcheck:test --file ci-scripts/docker/Dockerfile.ci.cppcheck . > archives/cppcheck_install.log 2>&1'
+                sh 'docker run --name spgwu-ci-cppcheck --entrypoint /bin/true spgwu-cppcheck:test'
+                sh 'docker cp spgwu-ci-cppcheck:/home/cppcheck.xml archives'
+                sh 'docker cp spgwu-ci-cppcheck:/home/cppcheck_build.log archives'
+                sh 'docker rm -f spgwu-ci-cppcheck'
+                sh 'docker rmi spgwu-cppcheck:test'
+              }
             }
           }
           post {
-            always {
-              script {
-                myShCmd('docker cp ci-cn-cppcheck:/home/cppcheck.xml archives', rem_u18_host_flag, rem_u18_host_user, rem_u18_host)
-                myShCmd('docker cp ci-cn-cppcheck:/home/cppcheck_build.log archives', rem_u18_host_flag, rem_u18_host_user, rem_u18_host)
-                copyFrom2ndServer('archives/cppcheck*.*', 'archives', rem_u18_host_flag, rem_u18_host_user, rem_u18_host)
-                // no need to keep the cppcheck container
-                myShCmd('docker rm -f ci-cn-cppcheck', rem_u18_host_flag, rem_u18_host_user, rem_u18_host)
-              }
-            }
             success {
               sh "echo 'CPPCHECK: OK' >> archives/cppcheck_install.log"
             }
             unsuccessful {
               sh "echo 'CPPCHECK: KO' >> archives/cppcheck_install.log"
             }
+            cleanup {
+              script {
+                stash includes: 'archives/cppcheck*.*', name: 'cppcheckLogs'
+                // no need to keep the cppcheck container
+                sh 'docker rm -f spgwu-ci-cppcheck || true'
+                sh 'docker rmi spgwu-cppcheck:test || true'
+              }
+            }
           }
         }
         // Running CLANG-FORMATTING check in parallel to gain time
         stage ('Code Formatting Checker') {
+          agent { label formatCheckNode }
           steps {
-            script {
-              myShCmd('docker run --name ci-cn-clang-formatter -d ubuntu:bionic /bin/bash -c "sleep infinity"', rem_u18_host_flag, rem_u18_host_user, rem_u18_host)
-              myShCmd('docker exec ci-cn-clang-formatter /bin/bash -c "apt-get update && apt-get upgrade --yes" > archives/clang_format_install.log', rem_u18_host_flag, rem_u18_host_user, rem_u18_host)
-              myShCmd('docker exec ci-cn-clang-formatter /bin/bash -c "apt-get install --yes git tree bzip2" >> archives/clang_format_install.log', rem_u18_host_flag, rem_u18_host_user, rem_u18_host)
-
-              myShCmd('docker cp ./openair-spgwu.tar.bz2 ci-cn-clang-formatter:/home', rem_u18_host_flag, rem_u18_host_user, rem_u18_host)
-              myShCmd('docker exec ci-cn-clang-formatter /bin/bash -c "cd /home && tar -xjf openair-spgwu.tar.bz2"', rem_u18_host_flag, rem_u18_host_user, rem_u18_host)
-              myShCmd('docker exec ci-cn-clang-formatter /bin/bash -c "rm -f /home/openair-spgwu.tar.bz2"', rem_u18_host_flag, rem_u18_host_user, rem_u18_host)
-
-              // We install a dedicated version (installed on our CI server).
-              myShCmd('docker cp /opt/clang-format/9.0.0/bin/clang-format ci-cn-clang-formatter:/usr/local/bin', rem_u18_host_flag, rem_u18_host_user, rem_u18_host)
-              if (env.ghprbPullId != null) {
-                myShCmd('docker exec ci-cn-clang-formatter /bin/bash -c "cd /home && ./ci-scripts/checkCodingFormattingRules.sh --src-branch ' + env.ghprbSourceBranch +' --target-branch ' + env.ghprbTargetBranch + '"', rem_u18_host_flag, rem_u18_host_user, rem_u18_host)
-              } else {
-                myShCmd('docker exec ci-cn-clang-formatter /bin/bash -c "cd /home && ./ci-scripts/checkCodingFormattingRules.sh"', rem_u18_host_flag, rem_u18_host_user, rem_u18_host)
-              }
-            }
-          }
-          post {
-            always {
+            lock (formatCheckResource) {
               script {
-                myShCmd('docker cp ci-cn-clang-formatter:/home/src/oai_rules_result.txt src', rem_u18_host_flag, rem_u18_host_user, rem_u18_host)
-                // May not have been generated
-                try {
-                  myShCmd('docker cp ci-cn-clang-formatter:/home/src/oai_rules_result_list.txt src', rem_u18_host_flag, rem_u18_host_user, rem_u18_host)
-                } catch (Exception e) {
-                  echo "Failed to copy src/oai_rules_result_list.txt! It may not have been generated. That's OK!"
+                // It's a different agent from main one.
+                prepareWorkspaceMergeCase()
+                if (env.ghprbPullId != null) {
+                  sh 'docker build --target spgwu-clang-format-check --tag spgwu-clang-format-check:test --file ci-scripts/docker/Dockerfile.ci.clang-format --build-arg MERGE_REQUEST_CHECK=True --build-arg SOURCE_BRANCH=' + env.ghprbSourceBranch + ' --build-arg TARGET_BRANCH=' + env.ghprbTargetBranch + ' . > archives/clang_format_install.log 2>&1'
+                } else {
+                  sh 'docker build --target spgwu-clang-format-check --tag spgwu-clang-format-check:test --file ci-scripts/docker/Dockerfile.ci.clang-format . > archives/clang_format_install.log 2>&1'
                 }
-                copyFrom2ndServer('archives/clang_format*.*', 'archives', rem_u18_host_flag, rem_u18_host_user, rem_u18_host)
-                copyFrom2ndServer('src/oai_rules*.*', 'src', rem_u18_host_flag, rem_u18_host_user, rem_u18_host)
-                // no need to keep the clang-formatter container
-                myShCmd('docker rm -f ci-cn-clang-formatter', rem_u18_host_flag, rem_u18_host_user, rem_u18_host)
+                sh 'docker run --name spgwu-ci-clang-format --entrypoint /bin/true spgwu-clang-format-check:test'
+                sh 'docker cp spgwu-ci-clang-format:/home/src/oai_rules_result.txt src'
+                sh 'docker cp spgwu-ci-clang-format:/home/src/oai_rules_result_list.txt src || true'
+                sh 'docker rm -f spgwu-ci-clang-format'
+                sh 'docker rmi spgwu-clang-format-check:test'
+                // The check is done now here
+                sh 'grep -L "NB_FILES_FAILING_CHECK=0" src/oai_rules_result.txt'
               }
-            }
-          }
-        }
-      }
-    }
-    stage('Deploy Sanity Check Test') {
-      stages {
-        stage('Create Docker Networks') {
-          steps {
-            script {
-              myShCmd('python3 ./ci-scripts/sanityCheckDeploy.py --action=CreateNetworks', rem_u18_host_flag, rem_u18_host_user, rem_u18_host)
-            }
-          }
-        }
-        stage('Deploy OAI-SPGW-C') {
-          steps {
-            script {
-              myShCmd('python3 ./ci-scripts/sanityCheckDeploy.py --action=DeploySPGWC --tag=develop', rem_u18_host_flag, rem_u18_host_user, rem_u18_host)
             }
           }
           post {
-            always {
+            cleanup {
               script {
-                copyFrom2ndServer('archives/spgwc_config.log', 'archives', rem_u18_host_flag, rem_u18_host_user, rem_u18_host)
+                stash includes: 'src/oai_rules_result*.txt', name: 'formatCheckLogs'
+                sh 'docker rm -f spgwu-ci-clang-format || true'
+                sh 'docker rmi spgwu-clang-format-check:test || true'
               }
             }
-            success {
-              sh "echo 'OAI-SPGW-C CONFIG: OK' >> archives/spgwc_config.log"
-            }
-            unsuccessful {
-              sh "echo 'OAI-SPGW-C CONFIG: KO' >> archives/spgwc_config.log"
-            }
           }
-        }
-        stage('Deploy OAI-SPGWU-TINY') {
-          steps {
-            script {
-              myShCmd('python3 ./ci-scripts/sanityCheckDeploy.py --action=DeploySPGWU --tag=' + spgwu_tag, rem_u18_host_flag, rem_u18_host_user, rem_u18_host)
-            }
-          }
-          post {
-            always {
-              script {
-                myShCmd('docker cp ci-oai-spgwu:/openair-spgwu-tiny/etc/. archives/oai-spgwu-cfg', rem_u18_host_flag, rem_u18_host_user, rem_u18_host)
-                copyFrom2ndServer('archives/spgwu_config.log', 'archives', rem_u18_host_flag, rem_u18_host_user, rem_u18_host)
-                copyFrom2ndServer('archives/oai-spgwu-cfg/*.*', 'archives/oai-spgwu-cfg', rem_u18_host_flag, rem_u18_host_user, rem_u18_host)
-              }
-            }
-            success {
-              sh "echo 'OAI-SPGW-U CONFIG: OK' >> archives/spgwu_config.log"
-            }
-            unsuccessful {
-              sh "echo 'OAI-SPGW-U CONFIG: KO' >> archives/spgwu_config.log"
-            }
-          }
-        }
-      }
-    }
-    stage ('Start-Check-Stop OAI cNFs') {
-      steps {
-        script {
-          myShCmd('python3 ./ci-scripts/sanityCheckDeploy.py --action=StartSPGWC --tag=develop', rem_u18_host_flag, rem_u18_host_user, rem_u18_host)
-          sh "sleep 2"
-          myShCmd('python3 ./ci-scripts/sanityCheckDeploy.py --action=StartSPGWU --tag=' + spgwu_tag, rem_u18_host_flag, rem_u18_host_user, rem_u18_host)
-          sh "sleep 40"
-          myShCmd('python3 ./ci-scripts/sanityCheckDeploy.py --action=StopSPGWC --tag=develop', rem_u18_host_flag, rem_u18_host_user, rem_u18_host)
-          myShCmd('python3 ./ci-scripts/sanityCheckDeploy.py --action=StopSPGWU --tag=' + spgwu_tag, rem_u18_host_flag, rem_u18_host_user, rem_u18_host)
-          sh "sleep 2"
-          myShCmd('python3 ./ci-scripts/sanityCheckDeploy.py --action=RetrieveLogsSPGWC --tag=develop', rem_u18_host_flag, rem_u18_host_user, rem_u18_host)
-          myShCmd('python3 ./ci-scripts/sanityCheckDeploy.py --action=RetrieveLogsSPGWU --tag=' + spgwu_tag, rem_u18_host_flag, rem_u18_host_user, rem_u18_host)
-          copyFrom2ndServer('archives/*_check_run.log', 'archives', rem_u18_host_flag, rem_u18_host_user, rem_u18_host)
-          sh "python3 ./ci-scripts/verifySanityCheckDeployment.py --job_name=${JOB_NAME} --job_id=${BUILD_ID}"
         }
       }
       post {
-        success {
-          sh "echo 'OAI-SPGW-C CHECK START/STOP: OK' > archives/spgwc_cnf_check_start.log"
-          sh "echo 'OAI-SPGW-U CHECK START/STOP: OK' > archives/spgwu_cnf_check_start.log"
-        }
-        unsuccessful {
-          // If anything wrong occurs, we still try to copy
-          myShCmd('python3 ./ci-scripts/sanityCheckDeploy.py --action=RetrieveLogsSPGWC --tag=develop', rem_u18_host_flag, rem_u18_host_user, rem_u18_host)
-          myShCmd('python3 ./ci-scripts/sanityCheckDeploy.py --action=RetrieveLogsSPGWU --tag=' + spgwu_tag, rem_u18_host_flag, rem_u18_host_user, rem_u18_host)
-          copyFrom2ndServer('archives/*_check_run.log', 'archives', rem_u18_host_flag, rem_u18_host_user, rem_u18_host)
-          sh "echo 'OAI-SPGW-C CHECK START/STOP: KO' > archives/spgwc_cnf_check_start.log"
-          sh "echo 'OAI-SPGW-U CHECK START/STOP: KO' > archives/spgwu_cnf_check_start.log"
-        }
-      }
-    }
-    stage ('Undeploy Sanity Check Test') {
-      steps {
-        script {
-          // Killing all containers
-          myShCmd('python3 ./ci-scripts/sanityCheckDeploy.py --action=RemoveAllContainers', rem_u18_host_flag, rem_u18_host_user, rem_u18_host)
-          // Removing all intermediate networks
-          myShCmd('python3 ./ci-scripts/sanityCheckDeploy.py --action=RemoveNetworks', rem_u18_host_flag, rem_u18_host_user, rem_u18_host)
+        always {
+          script {
+            unstash 'podmanBuildLog'
+            unstash 'cppcheckLogs'
+            unstash 'formatCheckLogs'
+          }
         }
       }
     }
     stage ('Testing Images') {
       parallel {
-        stage ('Testing in FED environment') {
+        stage ('Ubuntu 4G-LTE Sanity Check Deployment') {
           steps {
             script {
               localStatus = build job: params.CN_EPC_FED_PipelineName,
@@ -430,8 +307,7 @@ pipeline {
             }
           }
         }
-        stage ('RHEL8 Sanity Check Deployment') {
-          when { expression {rem_rhel_host_flag} }
+        stage ('RHEL8 4G-LTE Sanity Check Deployment') {
           steps {
             script {
               localStatus = build job: params.RHEL8_SanityCheck_PipelineName,
@@ -454,62 +330,6 @@ pipeline {
               script {
                 copyArtifacts(projectName: params.RHEL8_SanityCheck_PipelineName,
                               filter: 'test_results*.html',
-                              selector: lastCompleted())
-              }
-            }
-          }
-        }
-        stage ('Testing in 5G FED Docker environment') {
-          steps {
-            script {
-              localStatus = build job: params.CN5G_FED_PipelineName,
-                parameters: [
-                  string(name: 'SPGWU_TAG', value: String.valueOf(spgwu_tag)),
-                  string(name: 'SPGWU_BRANCH', value: String.valueOf(spgwu_branch))
-                ], propagate: false
-              localResult = localStatus.getResult()
-
-              if (localStatus.resultIsBetterOrEqualTo('SUCCESS')) {
-                echo "Docker Federation Test Job is OK"
-              } else {
-                echo "Docker Federation Test Job is KO"
-                sh "ci-scripts/fail.sh"
-              }
-            }
-          }
-          post {
-            always {
-              script {
-                copyArtifacts(projectName: params.CN5G_FED_PipelineName,
-                              filter: 'test_results_oai_cn5g*.html',
-                              selector: lastCompleted())
-              }
-            }
-          }
-        }
-        stage ('Testing in 5G FED OC environment') {
-          steps {
-            script {
-              localStatus = build job: params.CN5G_FED_OC_PipelineName,
-                parameters: [
-                  string(name: 'SPGWU_TAG', value: String.valueOf(spgwu_tag)),
-                  string(name: 'SPGWU_BRANCH', value: String.valueOf(spgwu_branch))
-                ], propagate: false
-              localResult = localStatus.getResult()
-
-              if (localStatus.resultIsBetterOrEqualTo('SUCCESS')) {
-                echo "OC Federation Test Job is OK"
-              } else {
-                echo "OC Federation Test Job is KO"
-                sh "ci-scripts/fail.sh"
-              }
-            }
-          }
-          post {
-            always {
-              script {
-                copyArtifacts(projectName: params.CN5G_FED_OC_PipelineName,
-                              filter: 'test_results_oai_cn5g_oc*.html',
                               selector: lastCompleted())
               }
             }
@@ -547,7 +367,9 @@ pipeline {
         }
       }
     }
-    // For the moment it is Docker-Hub, but we might have a new one internally.
+    // We are only publishing the Ubuntu image to Docker-Hub
+    // For Post-Merge events.
+    // Temporary Images from Merge-Request Runs are kept in local private registry
     stage ('Pushing Image to Official Registry') {
       steps {
         script {
@@ -556,12 +378,15 @@ pipeline {
             withCredentials([
               [$class: 'UsernamePasswordMultiBinding', credentialsId: "${params.DockerHubCredentials}", usernameVariable: 'DH_Username', passwordVariable: 'DH_Password']
             ]) {
-              myShCmd("echo ${DH_Password} | docker login --username ${DH_Username} --password-stdin", rem_u18_host_flag, rem_u18_host_user, rem_u18_host)
-              myShCmd("docker image tag oai-spgwu-tiny:" + spgwu_tag + " ${DH_Account}/oai-spgwu-tiny:develop", rem_u18_host_flag, rem_u18_host_user, rem_u18_host)
-              myShCmd("docker push ${DH_Account}/oai-spgwu-tiny:develop", rem_u18_host_flag, rem_u18_host_user, rem_u18_host)
-              myShCmd("docker rmi ${DH_Account}/oai-spgwu-tiny:develop", rem_u18_host_flag, rem_u18_host_user, rem_u18_host)
-              myShCmd("docker logout", rem_u18_host_flag, rem_u18_host_user, rem_u18_host)
+              sh "echo ${DH_Password} | docker login --username ${DH_Username} --password-stdin"
             }
+            sh "docker login -u oaicicd -p oaicicd ${PrivateRegistryURL}"
+            sh "docker pull ${PrivateRegistryURL}/oai-spgwu-tiny:${spgwu_tag}"
+            sh "docker image tag ${PrivateRegistryURL}/oai-spgwu-tiny:${spgwu_tag} ${DH_Account}/oai-spgwu-tiny:develop"
+            sh "docker push ${DH_Account}/oai-spgwu-tiny:develop"
+            sh "docker rmi ${DH_Account}/oai-spgwu-tiny:develop ${PrivateRegistryURL}/oai-spgwu-tiny:${spgwu_tag}"
+            sh "docker logout ${PrivateRegistryURL}"
+            sh "docker logout"
           }
         }
       }
@@ -602,43 +427,6 @@ pipeline {
     }
     cleanup {
       script {
-        // Killing all containers
-        myShCmd('python3 ./ci-scripts/sanityCheckDeploy.py --action=RemoveAllContainers', rem_u18_host_flag, rem_u18_host_user, rem_u18_host)
-        // Removing the networks
-        myShCmd('python3 ./ci-scripts/sanityCheckDeploy.py --action=RemoveNetworks', rem_u18_host_flag, rem_u18_host_user, rem_u18_host)
-        // In case of build failure, we might have temporary containers still running. TBD!
-
-        // Removing temporary / intermediate images
-        try {
-          if (env.ghprbPullId != null) {
-            myShCmd('docker image rm --force oai-spgwu-tiny:' + spgwu_tag, rem_u18_host_flag, rem_u18_host_user, rem_u18_host)
-          } else {
-            // TODO: to be removed later!
-            myShCmd('docker image tag oai-spgwu-tiny:' + spgwu_tag + ' oai-spgwu-tiny:develop', rem_u18_host_flag, rem_u18_host_user, rem_u18_host)
-          }
-        } catch (Exception e) {
-          echo "We failed to delete the OAI-SPGWU temp image"
-        }
-        try {
-          if (env.ghprbPullId != null) {
-            myShCmd('sudo podman image rm oai-spgwu-tiny:ci-temp', rem_rhel_host_flag, rem_rhel_host_user, rem_rhel_host)
-          }
-        } catch (Exception e) {
-          echo "We failed to delete the OAI-SPGWU temp image"
-        }
-        try {
-          myShCmd('docker image prune --force', rem_u18_host_flag, rem_u18_host_user, rem_u18_host)
-        } catch (Exception e) {
-          echo "We failed to prune all unneeded intermediate images"
-        }
-        if (rem_rhel_host_flag) {
-          try {
-            myShCmd('sudo podman image prune --force', rem_rhel_host_flag, rem_rhel_host_user, rem_rhel_host)
-          } catch (Exception e) {
-            echo "We failed to prune all unneeded intermediate images"
-          }
-        }
-
         // Zipping all archived log files
         sh "zip -r -qq docker_logs.zip archives"
         if (fileExists('docker_logs.zip')) {
@@ -738,41 +526,11 @@ def updateGithubCommitStatus(build, jobMessage) {
   ])
 }
 
-def copyTo2ndServer(filename, flag, user, host) {
-  if (flag) {
-    if ("openair-spgwu.tar.bz2".equals(filename)) {
-      sh "ssh ${user}@${host} 'rm -rf /tmp/CI-CN-SPGWU'"
-      sh "ssh ${user}@${host} 'mkdir -p /tmp/CI-CN-SPGWU'"
-    }
-    sh "scp ${filename} ${user}@${host}:/tmp/CI-CN-SPGWU"
-    if ("openair-spgwu.tar.bz2".equals(filename)) {
-      sh "ssh ${user}@${host} 'cd /tmp/CI-CN-SPGWU && tar -xjf ${filename}'"
-      sh "ssh ${user}@${host} 'mkdir -p /tmp/CI-CN-SPGWU/archives/oai-spgwu-cfg'"
-      sh "ssh ${user}@${host} 'rm -Rf /tmp/CI-CN-SPGWU/${filename}'"
-    }
+def prepareWorkspaceMergeCase () {
+  sh "git clean -x -d -f > /dev/null 2>&1"
+  if (env.ghprbPullId != null) {
+    sh "./ci-scripts/doGitHubPullRequestTempMerge.sh --src-branch ${env.ghprbSourceBranch} --src-commit ${env.ghprbActualCommit} --target-branch ${env.ghprbTargetBranch} --target-commit ${GIT_COMMIT}"
   }
-}
-
-def copyFrom2ndServer(filename, target, flag, user, host) {
-  if (flag) {
-    sh "scp ${user}@${host}:/tmp/CI-CN-SPGWU/${filename} ${target}"
-  }
-}
-
-def myShCmd(cmd, flag, user, host) {
-  if (flag) {
-    sh "ssh -t -t ${user}@${host} 'cd /tmp/CI-CN-SPGWU && ${cmd}'"
-  } else {
-    sh "${cmd}"
-  }
-}
-
-def myShRetCmd(cmd, flag, user, host) {
-  if (flag) {
-    ret = sh returnStdout: true, script: "ssh -t -t ${user}@${host} 'cd /tmp/CI-CN-SPGWU && ${cmd}'"
-  } else {
-    ret = sh returnStdout: true, script: "${cmd}"
-  }
-  ret = ret.trim()
-  return ret
+  sh "git submodule update --init --recursive"
+  sh "mkdir -p archives"
 }

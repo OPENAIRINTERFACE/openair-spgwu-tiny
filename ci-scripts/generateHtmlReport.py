@@ -695,7 +695,7 @@ class HtmlReport():
 			if os.path.isfile(cwd + '/archives/' + logFileName):
 				section_start_pattern = 'WORKDIR /openair-spgwu-tiny/etc'
 				if variant == 'docker':
-					section_end_pattern = 'Successfully tagged oai-spgwu-tiny'
+					section_end_pattern = 'naming to docker.io/library/oai-spgwu-tiny'
 				else:
 					section_end_pattern = 'COMMIT oai-spgwu-tiny:'
 				section_status = False
@@ -742,29 +742,30 @@ class HtmlReport():
 			logFileName = 'spgwu_' + variant + '_image_build.log'
 			if os.path.isfile(cwd + '/archives/' + logFileName):
 				if variant == 'docker':
-					section_start_pattern = 'Successfully tagged oai-spgwu-tiny'
+					section_start_pattern = 'naming to docker.io/library/oai-spgwu-tiny'
 				else:
 					section_start_pattern = 'COMMIT oai-spgwu-tiny:'
 				section_end_pattern = 'OAI-SPGW-U DOCKER IMAGE BUILD'
 				section_status = False
 				status = False
+				imageTag = 'notAcorrectTagForTheMoment'
 				with open(cwd + '/archives/' + logFileName, 'r') as logfile:
 					for line in logfile:
-						result = re.search(section_start_pattern, line)
+						result = re.search(f'{section_start_pattern}([0-9a-zA-Z\-\_\.]+)', line)
 						if result is not None:
 							section_status = True
+							imageTag = result.group(1)
 						result = re.search(section_end_pattern, line)
 						if result is not None:
 							section_status = False
 						if section_status:
-							if self.git_pull_request:
-								result = re.search('oai-spgwu-tiny *ci-temp', line)
-							else:
-								result = re.search('oai-spgwu-tiny *develop', line)
+							result = re.search(f'oai-amf *{imageTag}', line)
 							if result is not None and not status:
 								result = re.search('ago *([0-9\. A-Z]+)', line)
 								if result is not None:
 									size = result.group(1)
+									if variant == 'docker':
+										size = re.sub('MB', ' MB', size)
 									status = True
 					logfile.close()
 				if status:
