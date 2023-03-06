@@ -110,7 +110,7 @@ pipeline {
             echo "PR ID      is ${env.ghprbPullId}"
             echo "PR LINK    is ${env.ghprbPullLink}"
             echo "PR TITLE   is ${env.ghprbPullTitle}"
-            shortenShaOne = sh returnStdout: true, script: 'git log -1 --pretty=format:"%h" ' + env.ghprbActualCommit
+            shortenShaOne = sh returnStdout: true, script: 'git log -1 --pretty=format:"%h" --abbrev=8 ' + env.ghprbActualCommit
             shortenShaOne = shortenShaOne.trim()
             sh "./ci-scripts/doGitHubPullRequestTempMerge.sh --src-branch ${env.ghprbSourceBranch} --src-commit ${env.ghprbActualCommit} --target-branch ${env.ghprbTargetBranch} --target-commit ${GIT_COMMIT}"
             sh "sleep 10"
@@ -121,7 +121,7 @@ pipeline {
             echo "======= THIS IS A PUSH EVENT ======"
             echo "Git Branch is ${GIT_BRANCH}"
             echo "Git Commit is ${GIT_COMMIT}"
-            shortenShaOne = sh returnStdout: true, script: 'git log -1 --pretty=format:"%h" ' + env.GIT_COMMIT
+            shortenShaOne = sh returnStdout: true, script: 'git log -1 --pretty=format:"%h" --abbrev=8 ' + env.GIT_COMMIT
             shortenShaOne = shortenShaOne.trim()
             spgwu_tag = 'develop-' + shortenShaOne
             // Making a hard copy of the SHA-ONE
