@@ -58,14 +58,6 @@ class HtmlReport():
 		self.imageSizeRow()
 		self.buildSummaryFooter()
 
-		self.sanityCheckSummaryHeader()
-		self.containerStartRow()
-		self.startStopCheckRow()
-		self.sanityCheckSummaryFooter()
-
-		self.testSummaryHeader()
-		self.testSummaryFooter()
-
 		self.generateFooter()
 		self.file.close()
 
@@ -461,8 +453,17 @@ class HtmlReport():
 				spdlog_build = False
 				json_build_start = False
 				json_build = False
+				base_image = False
+				build_stage_id = 'NotAcorrectBuildStageId'
 				with open(cwd + '/archives/' + logFileName, 'r') as logfile:
 					for line in logfile:
+						# new method --> buildx may cache this stage
+						result = re.search('^#([0-9]+).* RUN ./build_spgwu --install-deps', line)
+						if result is not None:
+							build_stage_id = result.group(1)
+						result = re.search(f'^#{build_stage_id} CACHED', line)
+						if result is not None:
+							base_image = True
 						result = re.search(section_start_pattern, line)
 						if result is not None:
 							section_status = True
@@ -501,26 +502,37 @@ class HtmlReport():
 									json_build_start = False
 									json_build = True
 					logfile.close()
-				if status:
+				if base_image:
+					cell_msg = '	  <td bgcolor="LimeGreen"><pre style="border:none; background-color:LimeGreen"><b>'
+					cell_msg += 'N/A:\n'
+				elif status:
 					cell_msg = '	  <td bgcolor="LimeGreen"><pre style="border:none; background-color:LimeGreen"><b>'
 					cell_msg += 'OK:\n'
 				else:
 					cell_msg = '	  <td bgcolor="Tomato"><pre style="border:none; background-color:Tomato"><b>'
 					cell_msg += 'KO:\n'
 				cell_msg += ' -- build_spgwu --install-deps --force\n'
-				if package_install:
+				if base_image:
+					cell_msg += '   ** Packages Installation: N/A\n'
+				elif package_install:
 					cell_msg += '   ** Packages Installation: OK\n'
 				else:
 					cell_msg += '   ** Packages Installation: KO\n'
-				if folly_build:
+				if base_image:
+					cell_msg += '   ** Folly Installation: N/A\n'
+				elif folly_build:
 					cell_msg += '   ** Folly Installation: OK\n'
 				else:
 					cell_msg += '   ** Folly Installation: KO\n'
-				if spdlog_build:
+				if base_image:
+					cell_msg += '   ** spdlog Installation: N/A\n'
+				elif spdlog_build:
 					cell_msg += '   ** spdlog Installation: OK\n'
 				else:
 					cell_msg += '   ** spdlog Installation: KO\n'
-				if json_build:
+				if base_image:
+					cell_msg += '   ** Nlohmann Json Installation: N/A\n'
+				elif json_build:
 					cell_msg += '   ** Nlohmann Json Installation: OK\n'
 				else:
 					cell_msg += '   ** Nlohmann Json Installation: KO\n'
@@ -742,7 +754,7 @@ class HtmlReport():
 			logFileName = 'spgwu_' + variant + '_image_build.log'
 			if os.path.isfile(cwd + '/archives/' + logFileName):
 				if variant == 'docker':
-					section_start_pattern = 'naming to docker.io/library/oai-spgwu-tiny'
+					section_start_pattern = 'naming to docker.io/library/oai-spgwu-tiny:'
 				else:
 					section_start_pattern = 'COMMIT oai-spgwu-tiny:'
 				section_end_pattern = 'OAI-SPGW-U DOCKER IMAGE BUILD'
@@ -759,7 +771,7 @@ class HtmlReport():
 						if result is not None:
 							section_status = False
 						if section_status:
-							result = re.search(f'oai-amf *{imageTag}', line)
+							result = re.search(f'oai-spgwu-tiny *{imageTag}', line)
 							if result is not None and not status:
 								result = re.search('ago *([0-9\. A-Z]+)', line)
 								if result is not None:
