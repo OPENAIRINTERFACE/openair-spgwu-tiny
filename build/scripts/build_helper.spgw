@@ -33,6 +33,43 @@ source $THIS_SCRIPT_PATH/build_helper
 source $THIS_SCRIPT_PATH/build_helper.fb_folly
 
 #-------------------------------------------------------------------------------
+install_libbpf_from_git() {
+  echo_info "Starting to install libbpf from source"
+  if [ $1 -eq 0 ]; then
+    read -p "Do you want to install spdlog ? <y/N> " prompt
+    OPTION=""
+  else
+    prompt='y'
+    OPTION="-y"
+  fi
+  if [ $2 -eq 0 ]; then
+    debug=0
+  else
+    debug=1
+  fi
+
+  if [[ $prompt =~ [yY](es)* ]]
+  then
+    GIT_URL=https://github.com/libbpf/libbpf.git
+    echo "Install libbpf from $GIT_URL"
+    pushd $OPENAIRCN_DIR/build/ext
+    echo "Downloading libbpf"
+    if [[ $OPTION =~ -[yY](es)* ]]
+    then
+      $SUDO rm -rf libbpf
+    fi
+
+    git clone $GIT_URL
+    cd libbpf && git checkout master
+    ret=$?;[[ $ret -ne 0 ]] && popd && return $ret
+    cd src && make
+    popd
+  fi
+  echo_success "End of libbpf installation"
+  return 0
+}
+
+#-------------------------------------------------------------------------------
 #arg1 is force (0 or 1) (no interactive script)
 #arg2 is debug (0 or 1) (install debug libraries)
 install_spdlog_from_git() {
@@ -251,6 +288,9 @@ check_install_spgwu_deps() {
   fi
 
   echo_info "Packages and Libraries installation finished!"
+
+  install_libbpf_from_git $1 $2
+  ret=$?;[[ $ret -ne 0 ]] && return $ret
 
   install_fb_folly_from_source $1 $2
   ret=$?;[[ $ret -ne 0 ]] && return $ret
