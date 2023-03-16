@@ -51,9 +51,8 @@ if MOUNT_CONFIG != "yes":
     with open(CONFIG_FILE, "w") as fh:
         fh.write(output)
     print(f"Configuration file {CONFIG_FILE} is ready")
-    # Hack for running when baremetal, developing conf file
-    if len(sys.argv) == 1:
-        sys.exit(0)
-    os.execvp(sys.argv[1], sys.argv[1:])     #important for running the network function it works like exec $@
 else:
     print("Configuration file is mounted to the network function")
+if len(sys.argv) == 1:
+    sys.exit(0)
+os.execvp(sys.argv[1], sys.argv[1:])     #important for running the network function it works like exec $@
