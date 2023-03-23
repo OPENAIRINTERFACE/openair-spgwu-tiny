@@ -213,11 +213,9 @@ void gtpv2c_stack::start_msg_retry_timer(
         time_out_milli_seconds / 1000, time_out_milli_seconds % 1000, task_id);
     msg_out_retry_timers.insert(
         std::pair<timer_id_t, uint32_t>(p.retry_timer_id, seq_num));
-#if TRACE_IS_ON
     Logger::gtpv2_c().trace(
         "Started Msg retry timer %d, proc " PROC_ID_FMT ", seq %d",
         p.retry_timer_id, p.gtpc_tx_id, seq_num);
-#endif
   } else {
     Logger::gtpv2_c().error(
         "Try to overwrite Msg retry timer %d, proc " PROC_ID_FMT ", seq %d!",
@@ -229,11 +227,9 @@ void gtpv2c_stack::stop_msg_retry_timer(gtpv2c_procedure& p) {
   if (p.retry_timer_id) {
     itti_inst->timer_remove(p.retry_timer_id);
     msg_out_retry_timers.erase(p.retry_timer_id);
-#if TRACE_IS_ON
     Logger::gtpv2_c().trace(
         "Stopped Msg retry timer %d, proc " PROC_ID_FMT ", seq %d",
         p.retry_timer_id, p.gtpc_tx_id, p.retry_msg->get_sequence_number());
-#endif
     p.retry_timer_id = 0;
   }
 }
@@ -241,9 +237,7 @@ void gtpv2c_stack::stop_msg_retry_timer(gtpv2c_procedure& p) {
 void gtpv2c_stack::stop_msg_retry_timer(timer_id_t& t) {
   itti_inst->timer_remove(t);
   msg_out_retry_timers.erase(t);
-#if TRACE_IS_ON
   Logger::gtpv2_c().trace("Stopped Msg retry timer %d", t);
-#endif
 }
 //------------------------------------------------------------------------------
 void gtpv2c_stack::start_proc_cleanup_timer(
@@ -254,12 +248,10 @@ void gtpv2c_stack::start_proc_cleanup_timer(
         time_out_milli_seconds / 1000, time_out_milli_seconds % 1000, task_id);
     proc_cleanup_timers.insert(
         std::pair<timer_id_t, uint32_t>(p.proc_cleanup_timer_id, seq_num));
-#if TRACE_IS_ON
     Logger::gtpv2_c().trace(
         "Started proc cleanup timer %d, proc " PROC_ID_FMT " t-out %" PRIu32
         " ms",
         p.proc_cleanup_timer_id, p.gtpc_tx_id, time_out_milli_seconds);
-#endif
   } else {
     Logger::gtpv2_c().error(
         "Try to overwrite proc cleanup timer %d, proc " PROC_ID_FMT
@@ -270,11 +262,9 @@ void gtpv2c_stack::start_proc_cleanup_timer(
 //------------------------------------------------------------------------------
 void gtpv2c_stack::stop_proc_cleanup_timer(gtpv2c_procedure& p) {
   itti_inst->timer_remove(p.proc_cleanup_timer_id);
-#if TRACE_IS_ON
   Logger::gtpv2_c().trace(
       "Stopped proc cleanup timer %d, proc " PROC_ID_FMT "",
       p.proc_cleanup_timer_id, p.gtpc_tx_id);
-#endif
   msg_out_retry_timers.erase(p.proc_cleanup_timer_id);
   p.proc_cleanup_timer_id = 0;
 }

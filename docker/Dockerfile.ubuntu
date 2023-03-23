@@ -119,6 +119,7 @@ COPY --from=oai-spgwu-tiny-builder \
 # I need a dummy even if I already installed it.
 # Once Ubuntu18 support is dropped, we can remove whole copy section
     /usr/lib/x86_64-linux-gnu/libpsl.so.5 \
+    /usr/local/lib/libfmt.so \
 # Ubuntu 18 --> boost 67 will be copied
     /usr/lib/libboost_system.so.1.6*.0 \
     ./

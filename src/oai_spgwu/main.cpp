@@ -128,6 +128,7 @@ int main(int argc, char** argv) {
   // Config
   spgwu_cfg.load(Options::getlibconfigConfig());
   spgwu_cfg.display();
+  Logger::set_level(spgwu_cfg.log_level);
 
   // Inter task Interface
   itti_inst = new itti_mw();

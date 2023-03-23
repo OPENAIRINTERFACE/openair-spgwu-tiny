@@ -118,6 +118,8 @@ COPY --from=oai-spgwu-tiny-builder \
     /lib64/libgflags.so.2.1 \
     /lib64/libglog.so.0 \
     /lib64/libdouble-conversion.so.1 \
+    /usr/local/lib64/libspdlog.so \
+    /usr/local/lib64/libfmt.so \
     /lib64/
 RUN ldconfig && \
     ldd /openair-spgwu-tiny/bin/oai_spgwu
