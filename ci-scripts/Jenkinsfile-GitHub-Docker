@@ -338,20 +338,18 @@ pipeline {
         stage ('Testing the 5GCN tutorials') {
           steps {
             script {
-              gitlabCommitStatus(name: "Test 5GCN tutorials") {
-                localStatus = build job: 'OAI-CN5G-Tutorials-Check',
-                  parameters: [
-                    string(name: 'SPGWU_TAG', value: String.valueOf(spgwu_tag)),
-                    string(name: 'SPGWU_BRANCH', value: String.valueOf(spgwu_branch))
-                  ], propagate: false
-                localResult = localStatus.getResult()
+              localStatus = build job: 'OAI-CN5G-Tutorials-Check',
+                parameters: [
+                  string(name: 'SPGWU_TAG', value: String.valueOf(spgwu_tag)),
+                  string(name: 'SPGWU_BRANCH', value: String.valueOf(spgwu_branch))
+                ], propagate: false
+              localResult = localStatus.getResult()
 
-                if (localStatus.resultIsBetterOrEqualTo('SUCCESS')) {
-                  echo "Tutorials Test Job is OK"
-                } else {
-                  echo "Tutorials Test Job is KO"
-                  sh "ci-scripts/fail.sh"
-                }
+              if (localStatus.resultIsBetterOrEqualTo('SUCCESS')) {
+                echo "Tutorials Test Job is OK"
+              } else {
+                echo "Tutorials Test Job is KO"
+                sh "ci-scripts/fail.sh"
               }
             }
           }
@@ -359,6 +357,34 @@ pipeline {
             always {
               script {
                 copyArtifacts(projectName: 'OAI-CN5G-Tutorials-Check',
+                              filter: '*_results_oai_cn5g*.html',
+                              selector: lastCompleted())
+              }
+            }
+          }
+        }
+        stage ('Testing with COTS-UE') {
+          steps {
+            script {
+              localStatus = build job: 'OAI-CN5G-COTS-UE-Test',
+                parameters: [
+                  string(name: 'SPGWU_TAG', value: String.valueOf(spgwu_tag)),
+                  string(name: 'SPGWU_BRANCH', value: String.valueOf(spgwu_branch))
+                ], propagate: false
+              localResult = localStatus.getResult()
+
+              if (localStatus.resultIsBetterOrEqualTo('SUCCESS')) {
+                echo "Test Job with COTS-UE is OK"
+              } else {
+                echo "Test Job with COTS-UE is is KO"
+                sh "ci-scripts/fail.sh"
+              }
+            }
+          }
+          post {
+            always {
+              script {
+                copyArtifacts(projectName: 'OAI-CN5G-COTS-UE-Test',
                               filter: '*_results_oai_cn5g*.html',
                               selector: lastCompleted())
               }
