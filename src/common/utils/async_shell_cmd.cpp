@@ -102,7 +102,7 @@ void async_cmd_task(void* args_p) {
         break;
 
       default:
-        Logger::sgwc_app().info("no handler for msg type %d", msg->msg_type);
+        Logger::spgwu_app().info("no handler for msg type %d", msg->msg_type);
     }
 
   } while (true);

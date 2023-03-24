@@ -29,7 +29,7 @@
 
 //------------------------------------------------------------------------------
 void util::thread_sched_params::apply(
-    const int task_id, _Logger& logger) const {
+    const int task_id, const oai::logger::printf_logger& logger) const {
   if (cpu_id >= 0) {
     cpu_set_t cpuset;
     CPU_SET(cpu_id, &cpuset);

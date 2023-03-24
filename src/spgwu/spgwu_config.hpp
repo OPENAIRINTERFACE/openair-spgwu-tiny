@@ -41,6 +41,7 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include <string>
+#include "logger.hpp"
 
 namespace spgwu {
 
@@ -92,6 +93,8 @@ namespace spgwu {
 #define SPGWU_CONFIG_STRING_5G_FEATURES_USE_FQDN_NRF "USE_FQDN_NRF"
 #define SPGWU_CONFIG_STRING_5G_FEATURES_UPF_INFO_DNN_LIST "DNN_LIST"
 
+#define SPGWU_CONFIG_STRING_LOG_LEVEL "LOG_LEVEL"
+
 #define SPGW_ABORT_ON_ERROR true
 #define SPGW_WARN_ON_ERROR false
 
@@ -141,6 +144,7 @@ class spgwu_config {
   std::string pid_dir;
   unsigned int instance;
   std::string fqdn;
+  spdlog::level::level_enum log_level;
   interface_cfg_t s1_up;
   interface_cfg_t sgi;
   interface_cfg_t sx;
@@ -206,6 +210,8 @@ class spgwu_config {
     upf_5g_features.nrf_addr.port             = 80;
     upf_5g_features.nrf_addr.api_version      = "v1";
     upf_5g_features.nrf_addr.fqdn             = {};
+
+    log_level = spdlog::level::debug;
   };
 
   void lock() { m_rw_lock.lock(); };
