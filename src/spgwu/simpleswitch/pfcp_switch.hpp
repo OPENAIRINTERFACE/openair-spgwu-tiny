@@ -49,8 +49,8 @@
 namespace spgwu {
 
 // Have to be tuned for sdt situations
-#define PFCP_SWITCH_MAX_SESSIONS 128
-#define PFCP_SWITCH_MAX_PDRS 128
+#define PFCP_SWITCH_MAX_SESSIONS 1024
+#define PFCP_SWITCH_MAX_PDRS 1024
 
 typedef struct iovec_q_item_s {
   struct iovec msg_iov;
