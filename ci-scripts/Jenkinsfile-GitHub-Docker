@@ -391,6 +391,35 @@ pipeline {
             }
           }
         }
+        // Home-made RAN emulator
+        stage ('NGAP-Tester') {
+          steps {
+            script {
+              localStatus = build job: 'OAI-CN5G-NGAP-Tester',
+                parameters: [
+                  string(name: 'SPGWU_TAG', value: String.valueOf(spgwu_tag)),
+                  string(name: 'SPGWU_BRANCH', value: String.valueOf(spgwu_branch))
+                ], propagate: false
+              localResult = localStatus.getResult()
+
+              if (localStatus.resultIsBetterOrEqualTo('SUCCESS')) {
+                echo "NGAP-Tester is OK"
+              } else {
+                echo "NGAP-Tester is is KO"
+                sh "ci-scripts/fail.sh"
+              }
+            }
+          }
+          post {
+            always {
+              script {
+                copyArtifacts(projectName: 'OAI-CN5G-NGAP-Tester',
+                              filter: '*_results_oai_cn5g*.html',
+                              selector: lastCompleted())
+              }
+            }
+          }
+        }
       }
     }
     // We are only publishing the Ubuntu image to Docker-Hub
