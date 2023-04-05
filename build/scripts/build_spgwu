@@ -112,7 +112,7 @@ function main()
         ;;
       -v | --verbose)
         echo "Make build process verbose"
-        cmake_args="$cmake_args -DCMAKE_VERBOSE_MAKEFILE=ON"
+        cmake_args="$cmake_args -DCMAKE_VERBOSE_MAKEFILE=ON -k"
         make_args="VERBOSE=1 $make_args"
         verbose=1
         shift;

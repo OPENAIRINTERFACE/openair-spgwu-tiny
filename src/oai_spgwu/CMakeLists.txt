@@ -262,6 +262,7 @@ ADD_SUBDIRECTORY(${CMAKE_CURRENT_SOURCE_DIR}/../../src/common ${CMAKE_CURRENT_BI
 ADD_SUBDIRECTORY(${CMAKE_CURRENT_SOURCE_DIR}/../../src/common/utils ${CMAKE_CURRENT_BINARY_DIR}/utils)
 ADD_SUBDIRECTORY(${CMAKE_CURRENT_SOURCE_DIR}/../../src/pfcp ${CMAKE_CURRENT_BINARY_DIR}/pfcp)
 ADD_SUBDIRECTORY(${CMAKE_CURRENT_SOURCE_DIR}/../../src/spgwu/simpleswitch ${CMAKE_CURRENT_BINARY_DIR}/simpleswitch)
+ADD_SUBDIRECTORY(${CMAKE_CURRENT_SOURCE_DIR}/../../src/upf ${CMAKE_CURRENT_BINARY_DIR}/upf)
 ADD_SUBDIRECTORY(${CMAKE_CURRENT_SOURCE_DIR}/../../src/gtpv1u ${CMAKE_CURRENT_BINARY_DIR}/gtpv1u)
 ADD_SUBDIRECTORY(${CMAKE_CURRENT_SOURCE_DIR}/../../src/udp ${CMAKE_CURRENT_BINARY_DIR}/udp)
 
@@ -281,7 +282,11 @@ include_directories(${SRC_TOP_DIR}/pfcp)
 include_directories(${SRC_TOP_DIR}/spgwu)
 include_directories(${SRC_TOP_DIR}/spgwu/simpleswitch)
 include_directories(${SRC_TOP_DIR}/udp)
+include_directories(${SRC_TOP_DIR}/upf)
+include_directories(${SRC_TOP_DIR}/upf/src)
 include_directories(${SRC_TOP_DIR}/../build/ext/spdlog/include)
+include_directories(${SRC_TOP_DIR}/../build/ext/bpftool/libbpf)
+link_directories(${SRC_TOP_DIR}/../build/ext/libbpf/src)
 
 add_executable(spgwu
   ${SRC_TOP_DIR}/oai_spgwu/main.cpp
@@ -299,6 +304,6 @@ ENDIF(STATIC_LINKING)
 
 
 # folly glog dl double-conversion for FB folly library
-target_link_libraries (spgwu ${ASAN}  -Wl,--start-group CN_UTILS SPGWU SPGW_SWITCH UDP GTPV1U PFCP 3GPP_COMMON_TYPES gflags glog dl double-conversion folly -Wl,--end-group
+target_link_libraries (spgwu ${ASAN}  -Wl,--start-group CN_UTILS ${CMAKE_CURRENT_SOURCE_DIR}/../../build/ext/libbpf/src/libbpf.so SPGWU SPGW_SWITCH UDP GTPV1U PFCP 3GPP_COMMON_TYPES upf_xdp_bpf xdp_redirect_map_kern far_bpf session_bpf upfutils xdp_hello_world_bpf sockex3_kern UPF_XDP gflags glog dl double-conversion folly -Wl,--end-group
 pthread m rt config++  event boost_system curl)
 

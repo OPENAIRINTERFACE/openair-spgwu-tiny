@@ -18,20 +18,24 @@
 # For more information about the OpenAirInterface (OAI) Software Alliance:
 #      contact@openairinterface.org
 ################################################################################
-include_directories(${SRC_TOP_DIR}/common)
-include_directories(${SRC_TOP_DIR}/common/msg)
-include_directories(${SRC_TOP_DIR}/common/utils)
-include_directories(${SRC_TOP_DIR}/itti)
-include_directories(${SRC_TOP_DIR}/gtpv1u)
-include_directories(${SRC_TOP_DIR}/gtpv2c)
-include_directories(${SRC_TOP_DIR}/oai_spgwu)
-include_directories(${SRC_TOP_DIR}/pfcp)
-include_directories(${SRC_TOP_DIR}/spgwu)
-include_directories(${SRC_TOP_DIR}/udp)
+add_subdirectory(utils)
+set(ITTI_DIR ${CMAKE_CURRENT_SOURCE_DIR}/itti)
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/itti)
+include_directories(${CMAKE_CURRENT_SOURCE_DIR})
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/..)
 include_directories(${SRC_TOP_DIR}/../build/ext/spdlog/include)
 
-add_library (UDP STATIC
-  udp.cpp
-  )
+add_library(3GPP_COMMON_TYPES STATIC
+  ${CMAKE_CURRENT_SOURCE_DIR}/logger.cpp
+)
 
-  
+install(
+    TARGETS 3GPP_COMMON_TYPES
+    EXPORT "${TARGETS_EXPORT_NAME}"
+    LIBRARY DESTINATION "${CMAKE_INSTALL_LIBDIR}"
+    ARCHIVE DESTINATION "${CMAKE_INSTALL_LIBDIR}"
+    RUNTIME DESTINATION "${CMAKE_INSTALL_BINDIR}"
+    INCLUDES DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}"
+)
+
+

@@ -60,9 +60,11 @@ install_libbpf_from_git() {
     fi
 
     git clone $GIT_URL
-    cd libbpf && git checkout master
+    cd libbpf && git checkout 051a4009f94d5633a8f734ca4235f0a78ee90469
     ret=$?;[[ $ret -ne 0 ]] && popd && return $ret
-    cd src && make
+    cd src && make -j $(nproc) 
+    ret=$?;[[ $ret -ne 0 ]] && popd && return $ret
+    $SUDO make install
     popd
   fi
   echo_success "End of libbpf installation"
@@ -87,7 +89,8 @@ install_bpftool_from_git() {
 
   if [[ $prompt =~ [yY](es)* ]]
   then
-    GIT_URL=https://github.com/libbpf/bpftool.git
+    #GIT_URL=https://github.com/libbpf/bpftool.git
+    GIT_URL=https://git.sjtu.edu.cn/sjtug/linux.git
     echo "Install bpftool from $GIT_URL"
     pushd $OPENAIRCN_DIR/build/ext
     echo "Downloading bpftool"
@@ -96,10 +99,9 @@ install_bpftool_from_git() {
       $SUDO rm -rf bpftool
     fi
 
-    git clone --recurse-submodules $GIT_URL
-    cd bpftool && git checkout master && git submodule update --init
+    wget --recursive --no-parent $GIT_URL ./bpftool
     ret=$?;[[ $ret -ne 0 ]] && popd && return $ret
-    cd src && make -j $(nproc)
+    cd bpftool/src && make -j $(nproc)
     ret=$?;[[ $ret -ne 0 ]] && popd && return $ret
     $SUDO make install
     ret=$?;[[ $ret -ne 0 ]] && popd && return $ret
@@ -185,7 +187,7 @@ install_nlohmann_from_git() {
     mkdir _build && cd _build
     $CMAKE -G "Unix Makefiles" -DCMAKE_BUILD_TYPE=Release -DJSON_BuildTests=OFF ..
     ret=$?;[[ $ret -ne 0 ]] && popd && return $ret
-    make
+    make -j $(nproc)
     ret=$?;[[ $ret -ne 0 ]] && popd && return $ret
     $SUDO make install
     ret=$?;[[ $ret -ne 0 ]] && popd && return $ret
@@ -328,8 +330,11 @@ check_install_spgwu_deps() {
 
   echo_info "Packages and Libraries installation finished!"
 
-  install_bpftool_from_git $1 $2
+  install_libbpf_from_git $1 $2
   ret=$?;[[ $ret -ne 0 ]] && return $ret
+
+  #install_bpftool_from_git $1 $2
+  #ret=$?;[[ $ret -ne 0 ]] && return $ret
 
   install_fb_folly_from_source $1 $2
   ret=$?;[[ $ret -ne 0 ]] && return $ret
