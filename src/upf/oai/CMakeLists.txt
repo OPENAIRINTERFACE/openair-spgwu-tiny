@@ -1,4 +1,7 @@
 # add_subdirectory(common)
+include_directories(${SRC_TOP_DIR}/common)
+include_directories(${SRC_TOP_DIR}/common/msg)
+include_directories(${SRC_TOP_DIR}/common/utils)
 
 add_library(oai STATIC
   pfcp/pfcp_far.cpp

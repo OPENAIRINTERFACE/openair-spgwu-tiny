@@ -2,6 +2,12 @@
 add_subdirectory(bpf)
 add_subdirectory(oai)
 add_subdirectory(utils)
+include_directories(${SRC_TOP_DIR}/upf/bpf)
+include_directories(${SRC_TOP_DIR}/upf/bpf/pfcp)
+include_directories(${SRC_TOP_DIR}/common)
+include_directories(${SRC_TOP_DIR}/common/msg)
+include_directories(${SRC_TOP_DIR}/common/utils)
+include_directories(${SRC_TOP_DIR}/../build/ext/spdlog/include)
 
 set(GTP_INTERFACE $ENV{GTP_INTERFACE})
 set(UDP_INTERFACE $ENV{UDP_INTERFACE})
@@ -11,8 +17,8 @@ add_library(UPF_XDP STATIC
   UserPlaneComponent.cpp
   Configuration.cpp
   SignalHandler.cpp
-  SessionProgramManager.cpp
-  SessionManager.cpp
+  # SessionProgramManager.cpp
+  # SessionManager.cpp
   SessionPrograms.cpp
   programs/UPFProgram.cpp
   programs/SessionProgram.cpp
