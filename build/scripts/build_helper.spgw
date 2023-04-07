@@ -90,7 +90,7 @@ install_bpftool_from_git() {
   if [[ $prompt =~ [yY](es)* ]]
   then
     #GIT_URL=https://github.com/libbpf/bpftool.git
-    GIT_URL=https://git.sjtu.edu.cn/sjtug/linux.git
+    GIT_URL=https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/snapshot/linux-5.4.tar.gz
     echo "Install bpftool from $GIT_URL"
     pushd $OPENAIRCN_DIR/build/ext
     echo "Downloading bpftool"
@@ -99,9 +99,10 @@ install_bpftool_from_git() {
       $SUDO rm -rf bpftool
     fi
 
-    wget --recursive --no-parent $GIT_URL ./bpftool
+    #wget --recursive --no-parent $GIT_URL ./bpftool
+    wget $GIT_URL && tar -xvf linux-5.4.tar.gz
     ret=$?;[[ $ret -ne 0 ]] && popd && return $ret
-    cd bpftool/src && make -j $(nproc)
+    cd linux-5.4/tools/bpf/bpftool && make -j $(nproc)
     ret=$?;[[ $ret -ne 0 ]] && popd && return $ret
     $SUDO make install
     ret=$?;[[ $ret -ne 0 ]] && popd && return $ret
@@ -333,8 +334,8 @@ check_install_spgwu_deps() {
   install_libbpf_from_git $1 $2
   ret=$?;[[ $ret -ne 0 ]] && return $ret
 
-  #install_bpftool_from_git $1 $2
-  #ret=$?;[[ $ret -ne 0 ]] && return $ret
+  install_bpftool_from_git $1 $2
+  ret=$?;[[ $ret -ne 0 ]] && return $ret
 
   install_fb_folly_from_source $1 $2
   ret=$?;[[ $ret -ne 0 ]] && return $ret
