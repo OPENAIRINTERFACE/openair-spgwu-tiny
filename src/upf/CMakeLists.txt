@@ -1,4 +1,4 @@
-# include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/toolchain.cmake)
+include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/toolchain.cmake)
 add_subdirectory(bpf)
 add_subdirectory(oai)
 add_subdirectory(utils)
@@ -17,8 +17,8 @@ add_library(UPF_XDP STATIC
   UserPlaneComponent.cpp
   Configuration.cpp
   SignalHandler.cpp
-  # SessionProgramManager.cpp
-  # SessionManager.cpp
+  SessionProgramManager.cpp
+  SessionManager.cpp
   SessionPrograms.cpp
   programs/UPFProgram.cpp
   programs/SessionProgram.cpp
