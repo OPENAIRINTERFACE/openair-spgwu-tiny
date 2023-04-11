@@ -27,7 +27,7 @@
 #include "common_defs.h"
 #include "endian.h"
 #include "pfcp_pdr.hpp"
-#include "spgwu_sx.hpp"
+#include "upf_n4.hpp"
 
 using namespace pfcp;
 

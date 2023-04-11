@@ -29,9 +29,9 @@
 #include "common_defs.h"
 #include "itti.hpp"
 #include "logger.hpp"
-#include "spgwu_config.hpp"
-#include "spgwu_pfcp_association.hpp"
-#include "spgwu_sx.hpp"
+#include "upf_config.hpp"
+#include "upf_pfcp_association.hpp"
+#include "upf_n4.hpp"
 
 #include <chrono>
 #include <ctime>

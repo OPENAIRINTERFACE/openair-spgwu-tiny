@@ -31,7 +31,7 @@
 #include <boost/algorithm/string/split.hpp>
 
 #include "logger.hpp"
-#include "spgwu_profile.hpp"
+#include "upf_profile.hpp"
 #include "string.hpp"
 
 using namespace spgwu;

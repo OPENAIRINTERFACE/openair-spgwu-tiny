@@ -35,7 +35,7 @@
 #include "itti.hpp"
 #include <curl/curl.h>
 #include "3gpp_29.510.h"
-#include "spgwu_profile.hpp"
+#include "upf_profile.hpp"
 
 namespace spgwu {
 

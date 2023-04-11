@@ -23,7 +23,7 @@ include_directories(${SRC_TOP_DIR}/common/msg)
 include_directories(${SRC_TOP_DIR}/common/utils)
 include_directories(${SRC_TOP_DIR}/itti)
 include_directories(${SRC_TOP_DIR}/gtpv1u)
-include_directories(${SRC_TOP_DIR}/oai_spgwu)
+include_directories(${SRC_TOP_DIR}/oai_upf)
 include_directories(${SRC_TOP_DIR}/pfcp)
 include_directories(${SRC_TOP_DIR}/spgwu)
 include_directories(${SRC_TOP_DIR}/spgwu/simpleswitch)
@@ -32,12 +32,12 @@ include_directories(${SRC_TOP_DIR}/../build/ext/spdlog/include)
 
 
 add_library (SPGWU STATIC
-  spgwu_pfcp_association.cpp
-  spgwu_app.cpp
-  spgwu_config.cpp
-  spgwu_sx.cpp
-  spgwu_profile.cpp
-  spgwu_nrf.cpp
+  upf_pfcp_association.cpp
+  upf_app.cpp
+  upf_config.cpp
+  upf_n4.cpp
+  upf_profile.cpp
+  upf_nrf.cpp
   )
 
   

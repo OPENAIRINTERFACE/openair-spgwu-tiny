@@ -31,8 +31,8 @@
 #include "itti.hpp"
 #include "logger.hpp"
 #include "pfcp_switch.hpp"
-#include "spgwu_config.hpp"
-#include "spgwu_pfcp_association.hpp"
+#include "upf_config.hpp"
+#include "upf_pfcp_association.hpp"
 #include "spgwu_s1u.hpp"
 
 #include <algorithm>

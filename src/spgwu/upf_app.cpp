@@ -29,11 +29,11 @@
 #include "itti.hpp"
 #include "logger.hpp"
 #include "pfcp_switch.hpp"
-#include "spgwu_app.hpp"
-#include "spgwu_config.hpp"
+#include "upf_app.hpp"
+#include "upf_config.hpp"
 #include "spgwu_s1u.hpp"
-#include "spgwu_sx.hpp"
-#include "spgwu_nrf.hpp"
+#include "upf_n4.hpp"
+#include "upf_nrf.hpp"
 
 #include <boost/uuid/random_generator.hpp>
 #include <boost/uuid/uuid_io.hpp>

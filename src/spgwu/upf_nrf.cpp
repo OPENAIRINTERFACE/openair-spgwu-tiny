@@ -27,7 +27,7 @@
  \email: lionel.gauthier@eurecom.fr, tien-thinh.nguyen@eurecom.fr
  */
 
-#include "spgwu_nrf.hpp"
+#include "upf_nrf.hpp"
 
 #include <stdexcept>
 #include <boost/uuid/random_generator.hpp>
@@ -39,7 +39,7 @@
 #include "logger.hpp"
 #include "3gpp_29.510.h"
 #include "3gpp_29.500.h"
-#include "spgwu_config.hpp"
+#include "upf_config.hpp"
 
 using namespace spgwu;
 using json = nlohmann::json;

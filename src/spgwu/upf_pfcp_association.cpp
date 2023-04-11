@@ -28,8 +28,8 @@
 #include "common_defs.h"
 #include "logger.hpp"
 #include "pfcp_switch.hpp"
-#include "spgwu_pfcp_association.hpp"
-#include "spgwu_sx.hpp"
+#include "upf_pfcp_association.hpp"
+#include "upf_n4.hpp"
 
 using namespace spgwu;
 using namespace std;

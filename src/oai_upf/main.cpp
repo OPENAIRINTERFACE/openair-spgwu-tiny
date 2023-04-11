@@ -21,8 +21,8 @@
 #include "options.hpp"
 #include "pfcp_switch.hpp"
 #include "pid_file.hpp"
-#include "spgwu_app.hpp"
-#include "spgwu_config.hpp"
+#include "upf_app.hpp"
+#include "upf_config.hpp"
 
 #include <boost/asio.hpp>
 #include <iostream>

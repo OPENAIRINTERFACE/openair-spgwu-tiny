@@ -33,7 +33,7 @@
 #include "get_gateway_netlink.hpp"
 #include "if.hpp"
 #include "logger.hpp"
-#include "spgwu_config.hpp"
+#include "upf_config.hpp"
 #include "string.hpp"
 #include "fqdn.hpp"
 

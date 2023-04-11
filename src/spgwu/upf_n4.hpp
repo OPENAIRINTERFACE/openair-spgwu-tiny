@@ -32,7 +32,7 @@
 #include "pfcp.hpp"
 #include "itti_msg_sxab.hpp"
 #include "msg_pfcp.hpp"
-#include "spgwu_pfcp_association.hpp"
+#include "upf_pfcp_association.hpp"
 
 #include <thread>
 
