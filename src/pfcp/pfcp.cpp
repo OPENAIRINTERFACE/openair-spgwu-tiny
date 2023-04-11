@@ -19,7 +19,7 @@
  *      contact@openairinterface.org
  */
 
-/*! \file gtpv2c.cpp
+/*! \file pfcp.cpp
   \brief
   \author Lionel Gauthier
   \company Eurecom

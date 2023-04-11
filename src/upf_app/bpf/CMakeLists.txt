@@ -1,4 +1,4 @@
-set(CMAKE_C_FLAGS "-Wno-unused-but-set-variable -Wno-unused-parameter -Wno-unused-variable -Wno-unused-function -Wno-error -Wno-return-type")
+set(CMAKE_C_FLAGS "-Wno-unused-but-set-variable -Wno-unused-parameter -Wno-unused-variable -Wno-unused-function -Wno-error -Wno-return-type -Wno-empty-body")
 
 include_directories(${SRC_TOP_DIR}/upf_app/include)
 include_directories(${SRC_TOP_DIR}/upf_app)

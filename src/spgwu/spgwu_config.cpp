@@ -26,7 +26,6 @@
   \email: lionel.gauthier@eurecom.fr
 */
 
-#include "3gpp_29.274.hpp"
 #include "3gpp_conversions.hpp"
 #include "async_shell_cmd.hpp"
 #include "common_defs.h"
