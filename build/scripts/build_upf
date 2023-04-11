@@ -19,7 +19,7 @@
 # For more information about the OpenAirInterface (OAI) Software Alliance:
 #      contact@openairinterface.org
 ################################################################################
-# file build_spgwu
+# file build_upf
 # brief
 # author Lionel Gauthier
 # company Eurecom
@@ -33,14 +33,14 @@ INSTALL_DIR=/usr/local/bin
 # include helper functions
 ################################
 THIS_SCRIPT_PATH=$(dirname $(readlink -f $0))
-source $THIS_SCRIPT_PATH/build_helper.spgw
+source $THIS_SCRIPT_PATH/build_helper.upf
 
 
 function help()
 {
   echo_error " "
-  echo_error "Usage: build_spgwu [OPTION]..."
-  echo_error "Build the SPGW-U executable."
+  echo_error "Usage: build_upf [OPTION]..."
+  echo_error "Build the UPF executable."
   echo_error " "
   echo_error "Options:"
   echo_error "Mandatory arguments to long options are mandatory for short options too."
@@ -146,13 +146,13 @@ function main()
   if [ $var_check_install_min_deps -gt 0 ];then
     check_install_spgwu_min_deps  $force $debug
     if [[ $? -ne 0 ]]; then
-        echo_error "Error: SPGW-U minimal deps installation failed"
+        echo_error "Error: UPF minimal deps installation failed"
         return 1
     else
         # Done now after
         disable_ipv6
-        echo_success "SPGW-U minimal deps installation successful"
-        echo_warning "SPGW-U not compiled, to compile it, re-run build_spgwu without -i option"
+        echo_success "UPF minimal deps installation successful"
+        echo_warning "UPF not compiled, to compile it, re-run build_upf without -i option"
         return 0
     fi
   fi
@@ -165,7 +165,7 @@ function main()
         # Done now after
         disable_ipv6
         echo_success "SPGW-U deps installation successful"
-        echo_warning "SPGW-U not compiled, to compile it, re-run build_spgwu without -I option"
+        echo_warning "SPGW-U not compiled, to compile it, re-run build_upf without -I option"
         return 0
     fi
   fi
@@ -208,12 +208,12 @@ function main()
   $CMAKE $cmake_args .. > /dev/null
   ret=$?;[[ $ret -ne 0 ]] && return $ret
 
-  compilations spgw_u spgwu $OPENAIRCN_DIR/build/spgw_u/build/spgwu $verbose
+  compilations spgw_u upf $OPENAIRCN_DIR/build/spgw_u/build/upf $verbose
   ret=$?;[[ $ret -ne 0 ]] && return $ret
 
   # For daemon should not be group writable
-  $SUDO chmod 755 $OPENAIRCN_DIR/build/spgw_u/build/spgwu
-  $SUDO cp -upv $OPENAIRCN_DIR/build/spgw_u/build/spgwu $INSTALL_DIR && $SUDO chmod 755 $INSTALL_DIR/spgwu && echo_success "spgwu installed"
+  $SUDO chmod 755 $OPENAIRCN_DIR/build/spgw_u/build/upf
+  $SUDO cp -upv $OPENAIRCN_DIR/build/spgw_u/build/upf $INSTALL_DIR && $SUDO chmod 755 $INSTALL_DIR/upf && echo_success "upf installed"
   return 0
 }
 

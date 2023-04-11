@@ -2,8 +2,8 @@ include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/toolchain.cmake)
 add_subdirectory(bpf)
 add_subdirectory(oai)
 add_subdirectory(utils)
-include_directories(${SRC_TOP_DIR}/upf/bpf)
-include_directories(${SRC_TOP_DIR}/upf/bpf/pfcp)
+include_directories(${SRC_TOP_DIR}/upf_app/bpf)
+include_directories(${SRC_TOP_DIR}/upf_app/bpf/pfcp)
 include_directories(${SRC_TOP_DIR}/common)
 include_directories(${SRC_TOP_DIR}/common/msg)
 include_directories(${SRC_TOP_DIR}/common/utils)
@@ -43,13 +43,12 @@ target_link_libraries(UPF_XDP
 )
 
 target_include_directories(UPF_XDP PUBLIC
-  $<BUILD_INTERFACE:${SRC_TOP_DIR}/upf/include>
-  $<BUILD_INTERFACE:${SRC_TOP_DIR}/upf/>
-  $<BUILD_INTERFACE:${SRC_TOP_DIR}/upf/bpf>
-  $<BUILD_INTERFACE:${SRC_TOP_DIR}/upf/skel>
-  $<BUILD_INTERFACE:${SRC_TOP_DIR}/upf/interfaces>
-  # $<BUILD_INTERFACE:${SRC_TOP_DIR}/upf/observer>
-  $<BUILD_INTERFACE:${SRC_TOP_DIR}/upf/programs>
+  $<BUILD_INTERFACE:${SRC_TOP_DIR}/upf_app/include>
+  $<BUILD_INTERFACE:${SRC_TOP_DIR}/upf_app/>
+  $<BUILD_INTERFACE:${SRC_TOP_DIR}/upf_app/bpf>
+  $<BUILD_INTERFACE:${SRC_TOP_DIR}/upf_app/skel>
+  $<BUILD_INTERFACE:${SRC_TOP_DIR}/upf_app/interfaces>
+  $<BUILD_INTERFACE:${SRC_TOP_DIR}/upf_app/programs>
 )
 
 add_dependencies(UPF_XDP upf_xdp_bpf_all)

@@ -1,8 +1,8 @@
 set(CMAKE_C_FLAGS "-Wno-unused-but-set-variable -Wno-unused-parameter -Wno-unused-variable -Wno-unused-function -Wno-error -Wno-return-type")
 
-include_directories(${SRC_TOP_DIR}/upf/include)
-include_directories(${SRC_TOP_DIR}/upf)
-include_directories(${SRC_TOP_DIR}/upf/bpf)
+include_directories(${SRC_TOP_DIR}/upf_app/include)
+include_directories(${SRC_TOP_DIR}/upf_app)
+include_directories(${SRC_TOP_DIR}/upf_app/bpf)
 
 add_definitions(-DKERNEL_SPACE)
 

@@ -19,14 +19,14 @@ help:
 ## Build dependencies
 #############################################################################
 setup:
-	build/scripts/build_spgwu  -I -f -V
+	build/scripts/build_upf  -I -f -V
 
 
 #############################################################################
 ## Install package
 #############################################################################
 install:
-	build/scripts/build_spgwu -V -b Debug
+	build/scripts/build_upf -V -b Debug --jobs
 	
 
 #############################################################################
