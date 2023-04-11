@@ -100,7 +100,7 @@ install_bpftool_from_git() {
     fi
 
     #wget --recursive --no-parent $GIT_URL ./bpftool
-    wget $GIT_URL && tar -xvf linux-5.4.tar.gz
+    wget $GIT_URL && tar -xvf linux-5.4.tar.gz && rm -rf linux-5.4.tar.gz
     ret=$?;[[ $ret -ne 0 ]] && popd && return $ret
     cd linux-5.4/tools/bpf/bpftool && make -j $(nproc)
     ret=$?;[[ $ret -ne 0 ]] && popd && return $ret
