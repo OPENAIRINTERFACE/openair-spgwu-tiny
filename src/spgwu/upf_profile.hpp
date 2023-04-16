@@ -19,7 +19,7 @@
  *      contact@openairinterface.org
  */
 
-/*! \file spgwu_profile.hpp
+/*! \file upf_nf_profile.hpp
  \brief
  \author  Tien-Thinh NGUYEN
  \company Eurecom
@@ -40,11 +40,11 @@
 #include "3gpp_29.510.h"
 #include "3gpp_23.003.h"
 
-namespace spgwu {
+namespace upf {
 
-class spgwu_profile : public std::enable_shared_from_this<spgwu_profile> {
+class upf_nf_profile : public std::enable_shared_from_this<upf_nf_profile> {
  public:
-  spgwu_profile()
+  upf_nf_profile()
       : nf_type("NF_TYPE_UNKNOWN"),
         heartBeat_timer(0),
         snssais(),
@@ -56,7 +56,7 @@ class spgwu_profile : public std::enable_shared_from_this<spgwu_profile> {
     nf_status        = {};
   }
 
-  spgwu_profile(const std::string& id)
+  upf_nf_profile(const std::string& id)
       : nf_instance_id(id),
         heartBeat_timer(0),
         snssais(),
@@ -69,7 +69,7 @@ class spgwu_profile : public std::enable_shared_from_this<spgwu_profile> {
     nf_status        = {};
   }
 
-  spgwu_profile& operator=(const spgwu_profile& s) {
+  upf_nf_profile& operator=(const upf_nf_profile& s) {
     nf_instance_id   = s.nf_instance_id;
     heartBeat_timer  = s.heartBeat_timer;
     snssais          = s.snssais;
@@ -83,10 +83,10 @@ class spgwu_profile : public std::enable_shared_from_this<spgwu_profile> {
     upf_info         = s.upf_info;
     return *this;
   }
-  // spgwu_profile(spgwu_profile &b) = delete;
+  // upf_nf_profile(upf_nf_profile &b) = delete;
 
-  virtual ~spgwu_profile() {
-    // Logger::spgwu_app().debug("Delete UPF Profile instance...");
+  virtual ~upf_nf_profile() {
+    // Logger::upf_app().debug("Delete UPF Profile instance...");
   }
 
   /*
@@ -348,6 +348,6 @@ class spgwu_profile : public std::enable_shared_from_this<spgwu_profile> {
   upf_info_t upf_info;
 };
 
-}  // namespace spgwu
+}  // namespace upf
 
 #endif

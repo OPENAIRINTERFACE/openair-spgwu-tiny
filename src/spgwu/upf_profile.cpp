@@ -19,7 +19,7 @@
  *      contact@openairinterface.org
  */
 
-/*! \file spgwu_profile.cpp
+/*! \file upf_nf_profile.cpp
  \brief
  \author  Tien-Thinh NGUYEN
  \company Eurecom
@@ -34,205 +34,205 @@
 #include "upf_profile.hpp"
 #include "string.hpp"
 
-using namespace spgwu;
+using namespace upf;
 
 //------------------------------------------------------------------------------
-void spgwu_profile::set_nf_instance_id(const std::string& instance_id) {
+void upf_nf_profile::set_nf_instance_id(const std::string& instance_id) {
   nf_instance_id = instance_id;
 }
 
 //------------------------------------------------------------------------------
-void spgwu_profile::get_nf_instance_id(std::string& instance_id) const {
+void upf_nf_profile::get_nf_instance_id(std::string& instance_id) const {
   instance_id = nf_instance_id;
 }
 
 //------------------------------------------------------------------------------
-std::string spgwu_profile::get_nf_instance_id() const {
+std::string upf_nf_profile::get_nf_instance_id() const {
   return nf_instance_id;
 }
 
 //------------------------------------------------------------------------------
-void spgwu_profile::set_nf_instance_name(const std::string& instance_name) {
+void upf_nf_profile::set_nf_instance_name(const std::string& instance_name) {
   nf_instance_name = instance_name;
 }
 
 //------------------------------------------------------------------------------
-void spgwu_profile::get_nf_instance_name(std::string& instance_name) const {
+void upf_nf_profile::get_nf_instance_name(std::string& instance_name) const {
   instance_name = nf_instance_name;
 }
 
 //------------------------------------------------------------------------------
-std::string spgwu_profile::get_nf_instance_name() const {
+std::string upf_nf_profile::get_nf_instance_name() const {
   return nf_instance_name;
 }
 
 //------------------------------------------------------------------------------
-void spgwu_profile::set_nf_type(const std::string& type) {
+void upf_nf_profile::set_nf_type(const std::string& type) {
   nf_type = type;
 }
 
 //------------------------------------------------------------------------------
-std::string spgwu_profile::get_nf_type() const {
+std::string upf_nf_profile::get_nf_type() const {
   return nf_type;
 }
 //------------------------------------------------------------------------------
-void spgwu_profile::set_nf_status(const std::string& status) {
+void upf_nf_profile::set_nf_status(const std::string& status) {
   nf_status = status;
 }
 
 //------------------------------------------------------------------------------
-void spgwu_profile::get_nf_status(std::string& status) const {
+void upf_nf_profile::get_nf_status(std::string& status) const {
   status = nf_status;
 }
 
 //------------------------------------------------------------------------------
-std::string spgwu_profile::get_nf_status() const {
+std::string upf_nf_profile::get_nf_status() const {
   return nf_status;
 }
 
 //------------------------------------------------------------------------------
-void spgwu_profile::set_nf_heartBeat_timer(const int32_t& timer) {
+void upf_nf_profile::set_nf_heartBeat_timer(const int32_t& timer) {
   heartBeat_timer = timer;
 }
 
 //------------------------------------------------------------------------------
-void spgwu_profile::get_nf_heartBeat_timer(int32_t& timer) const {
+void upf_nf_profile::get_nf_heartBeat_timer(int32_t& timer) const {
   timer = heartBeat_timer;
 }
 
 //------------------------------------------------------------------------------
-int32_t spgwu_profile::get_nf_heartBeat_timer() const {
+int32_t upf_nf_profile::get_nf_heartBeat_timer() const {
   return heartBeat_timer;
 }
 
 //------------------------------------------------------------------------------
-void spgwu_profile::set_nf_priority(const uint16_t& p) {
+void upf_nf_profile::set_nf_priority(const uint16_t& p) {
   priority = p;
 }
 
 //------------------------------------------------------------------------------
-void spgwu_profile::get_nf_priority(uint16_t& p) const {
+void upf_nf_profile::get_nf_priority(uint16_t& p) const {
   p = priority;
 }
 
 //------------------------------------------------------------------------------
-uint16_t spgwu_profile::get_nf_priority() const {
+uint16_t upf_nf_profile::get_nf_priority() const {
   return priority;
 }
 
 //------------------------------------------------------------------------------
-void spgwu_profile::set_nf_capacity(const uint16_t& c) {
+void upf_nf_profile::set_nf_capacity(const uint16_t& c) {
   capacity = c;
 }
 
 //------------------------------------------------------------------------------
-void spgwu_profile::get_nf_capacity(uint16_t& c) const {
+void upf_nf_profile::get_nf_capacity(uint16_t& c) const {
   c = capacity;
 }
 
 //------------------------------------------------------------------------------
-uint16_t spgwu_profile::get_nf_capacity() const {
+uint16_t upf_nf_profile::get_nf_capacity() const {
   return capacity;
 }
 
 //------------------------------------------------------------------------------
-void spgwu_profile::set_nf_snssais(const std::vector<snssai_t>& s) {
+void upf_nf_profile::set_nf_snssais(const std::vector<snssai_t>& s) {
   snssais = s;
 }
 
 //------------------------------------------------------------------------------
-void spgwu_profile::get_nf_snssais(std::vector<snssai_t>& s) const {
+void upf_nf_profile::get_nf_snssais(std::vector<snssai_t>& s) const {
   s = snssais;
 }
 
 //------------------------------------------------------------------------------
-void spgwu_profile::add_snssai(const snssai_t& s) {
+void upf_nf_profile::add_snssai(const snssai_t& s) {
   snssais.push_back(s);
 }
 
 //------------------------------------------------------------------------------
-void spgwu_profile::set_fqdn(const std::string& fqdN) {
+void upf_nf_profile::set_fqdn(const std::string& fqdN) {
   fqdn = fqdN;
 }
 
 //------------------------------------------------------------------------------
-std::string spgwu_profile::get_fqdn() const {
+std::string upf_nf_profile::get_fqdn() const {
   return fqdn;
 }
 
 //------------------------------------------------------------------------------
-void spgwu_profile::set_nf_ipv4_addresses(
+void upf_nf_profile::set_nf_ipv4_addresses(
     const std::vector<struct in_addr>& a) {
   ipv4_addresses = a;
 }
 
 //------------------------------------------------------------------------------
-void spgwu_profile::add_nf_ipv4_addresses(const struct in_addr& a) {
+void upf_nf_profile::add_nf_ipv4_addresses(const struct in_addr& a) {
   ipv4_addresses.push_back(a);
 }
 //------------------------------------------------------------------------------
-void spgwu_profile::get_nf_ipv4_addresses(
+void upf_nf_profile::get_nf_ipv4_addresses(
     std::vector<struct in_addr>& a) const {
   a = ipv4_addresses;
 }
 
 //------------------------------------------------------------------------------
-void spgwu_profile::set_upf_info(const upf_info_t& s) {
+void upf_nf_profile::set_upf_info(const upf_info_t& s) {
   upf_info = s;
 }
 
 //------------------------------------------------------------------------------
-void spgwu_profile::add_upf_info_item(const snssai_upf_info_item_t& s) {
+void upf_nf_profile::add_upf_info_item(const snssai_upf_info_item_t& s) {
   upf_info.snssai_upf_info_list.push_back(s);
 }
 
 //------------------------------------------------------------------------------
-void spgwu_profile::get_upf_info(upf_info_t& s) const {
+void upf_nf_profile::get_upf_info(upf_info_t& s) const {
   s = upf_info;
 }
 
 //------------------------------------------------------------------------------
-void spgwu_profile::display() const {
-  Logger::spgwu_app().debug("- NF instance info");
-  Logger::spgwu_app().debug("    Instance ID: %s", nf_instance_id.c_str());
-  Logger::spgwu_app().debug("    Instance name: %s", nf_instance_name.c_str());
-  Logger::spgwu_app().debug("    Instance type: %s", nf_type.c_str());
-  Logger::spgwu_app().debug("    Instance fqdn: %s", fqdn.c_str());
-  Logger::spgwu_app().debug("    Status: %s", nf_status.c_str());
-  Logger::spgwu_app().debug("    HeartBeat timer: %d", heartBeat_timer);
-  Logger::spgwu_app().debug("    Priority: %d", priority);
-  Logger::spgwu_app().debug("    Capacity: %d", capacity);
+void upf_nf_profile::display() const {
+  Logger::upf_app().debug("- NF instance info");
+  Logger::upf_app().debug("    Instance ID: %s", nf_instance_id.c_str());
+  Logger::upf_app().debug("    Instance name: %s", nf_instance_name.c_str());
+  Logger::upf_app().debug("    Instance type: %s", nf_type.c_str());
+  Logger::upf_app().debug("    Instance fqdn: %s", fqdn.c_str());
+  Logger::upf_app().debug("    Status: %s", nf_status.c_str());
+  Logger::upf_app().debug("    HeartBeat timer: %d", heartBeat_timer);
+  Logger::upf_app().debug("    Priority: %d", priority);
+  Logger::upf_app().debug("    Capacity: %d", capacity);
   // SNSSAIs
   if (snssais.size() > 0) {
-    Logger::spgwu_app().debug("    SNSSAI:");
+    Logger::upf_app().debug("    SNSSAI:");
   }
   for (auto s : snssais) {
-    Logger::spgwu_app().debug("        SST, SD: %d, %s", s.sST, s.sD.c_str());
+    Logger::upf_app().debug("        SST, SD: %d, %s", s.sST, s.sD.c_str());
   }
 
   // IPv4 Addresses
   if (ipv4_addresses.size() > 0) {
-    Logger::spgwu_app().debug("    IPv4 Addr:");
+    Logger::upf_app().debug("    IPv4 Addr:");
   }
   for (auto address : ipv4_addresses) {
-    Logger::spgwu_app().debug("        %s", inet_ntoa(address));
+    Logger::upf_app().debug("        %s", inet_ntoa(address));
   }
 
   // UPF info
   if (upf_info.snssai_upf_info_list.size() > 0) {
-    Logger::spgwu_app().debug("    UPF Info:");
+    Logger::upf_app().debug("    UPF Info:");
   }
   for (auto s : upf_info.snssai_upf_info_list) {
-    Logger::spgwu_app().debug(
+    Logger::upf_app().debug(
         "        SNSSAI (SST %d, SD %s)", s.snssai.sST, s.snssai.sD.c_str());
     for (auto d : s.dnn_upf_info_list) {
-      Logger::spgwu_app().debug("            DNN %s", d.dnn.c_str());
+      Logger::upf_app().debug("            DNN %s", d.dnn.c_str());
     }
   }
 }
 
 //------------------------------------------------------------------------------
-void spgwu_profile::to_json(nlohmann::json& data) const {
+void upf_nf_profile::to_json(nlohmann::json& data) const {
   data["nfInstanceId"]   = nf_instance_id;
   data["nfInstanceName"] = nf_instance_name;
   data["nfType"]         = nf_type;
@@ -273,11 +273,11 @@ void spgwu_profile::to_json(nlohmann::json& data) const {
     data["upfInfo"]["sNssaiUpfInfoList"].push_back(tmp);
   }
 
-  Logger::spgwu_app().debug("UPF profile to JSON:\n %s", data.dump().c_str());
+  Logger::upf_app().debug("UPF profile to JSON:\n %s", data.dump().c_str());
 }
 
 //------------------------------------------------------------------------------
-void spgwu_profile::from_json(const nlohmann::json& data) {
+void upf_nf_profile::from_json(const nlohmann::json& data) {
   if (data.find("nfInstanceId") != data.end()) {
     nf_instance_id = data["nfInstanceId"].get<std::string>();
   }
@@ -317,7 +317,7 @@ void spgwu_profile::from_json(const nlohmann::json& data) {
       if (inet_pton(AF_INET, util::trim(address).c_str(), buf_in_addr) == 1) {
         memcpy(&addr4, buf_in_addr, sizeof(struct in_addr));
       } else {
-        Logger::spgwu_app().warn(
+        Logger::upf_app().warn(
             "Address conversion: Bad value %s", util::trim(address).c_str());
       }
       add_nf_ipv4_addresses(addr4);
@@ -367,8 +367,8 @@ void spgwu_profile::from_json(const nlohmann::json& data) {
 }
 
 //------------------------------------------------------------------------------
-void spgwu_profile::handle_heartbeart_timeout(uint64_t ms) {
-  Logger::spgwu_app().info(
+void upf_nf_profile::handle_heartbeart_timeout(uint64_t ms) {
+  Logger::upf_app().info(
       "Handle heartbeart timeout profile %s, time %d", nf_instance_id.c_str(),
       ms);
   set_nf_status("SUSPENDED");

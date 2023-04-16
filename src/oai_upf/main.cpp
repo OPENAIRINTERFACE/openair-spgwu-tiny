@@ -36,22 +36,22 @@
 #include <boost/algorithm/string.hpp>
 #include <boost/algorithm/string/split.hpp>
 
-using namespace spgwu;
+using namespace upf;
 using namespace util;
 using namespace std;
 
 itti_mw* itti_inst                    = nullptr;
 async_shell_cmd* async_shell_cmd_inst = nullptr;
 pfcp_switch* pfcp_switch_inst         = nullptr;
-spgwu_app* spgwu_app_inst             = nullptr;
-spgwu_config spgwu_cfg;
+upf_app* upf_app_inst                 = nullptr;
+upf_config upf_cfg;
 boost::asio::io_service io_service;
 
 //------------------------------------------------------------------------------
 void my_app_signal_handler(int s) {
   std::cout << "Caught signal " << s << std::endl;
   Logger::system().startup("exiting");
-  itti_inst->send_terminate_msg(TASK_SPGWU_APP);
+  itti_inst->send_terminate_msg(TASK_UPF_APP);
   itti_inst->wait_tasks_end();
   std::cout << "Freeing Allocated memory..." << std::endl;
   if (async_shell_cmd_inst) delete async_shell_cmd_inst;
@@ -60,9 +60,9 @@ void my_app_signal_handler(int s) {
   if (itti_inst) delete itti_inst;
   itti_inst = nullptr;
   std::cout << "ITTI memory done." << std::endl;
-  if (spgwu_app_inst) delete spgwu_app_inst;
-  spgwu_app_inst = nullptr;
-  std::cout << "SPGW-U APP memory done." << std::endl;
+  if (upf_app_inst) delete upf_app_inst;
+  upf_app_inst = nullptr;
+  std::cout << "UPF APP memory done." << std::endl;
   std::cout << "Freeing Allocated memory done" << std::endl;
   exit(0);
 }
@@ -102,7 +102,7 @@ int my_check_redundant_process(char* exec_name) {
 }
 //------------------------------------------------------------------------------
 int main(int argc, char** argv) {
-  // Checking if another instance of SPGW-U is running
+  // Checking if another instance of UPF is running
   int nb_processes = my_check_redundant_process(argv[0]);
   if (nb_processes > 1) {
     std::cout << "An instance of " << argv[0] << " is maybe already called!"
@@ -118,34 +118,33 @@ int main(int argc, char** argv) {
   }
 
   // Logger
-  Logger::init("spgwu", Options::getlogStdout(), Options::getlogRotFilelog());
+  Logger::init("upf", Options::getlogStdout(), Options::getlogRotFilelog());
 
-  Logger::spgwu_app().startup("Options parsed");
+  Logger::upf_app().startup("Options parsed");
 
   std::signal(SIGTERM, my_app_signal_handler);
   std::signal(SIGINT, my_app_signal_handler);
 
   // Config
-  spgwu_cfg.load(Options::getlibconfigConfig());
-  spgwu_cfg.display();
+  upf_cfg.load(Options::getlibconfigConfig());
+  upf_cfg.display();
 
   // Inter task Interface
   itti_inst = new itti_mw();
-  itti_inst->start(spgwu_cfg.itti.itti_timer_sched_params);
+  itti_inst->start(upf_cfg.itti.itti_timer_sched_params);
 
   // system command
   async_shell_cmd_inst =
-      new async_shell_cmd(spgwu_cfg.itti.async_cmd_sched_params);
+      new async_shell_cmd(upf_cfg.itti.async_cmd_sched_params);
 
   // PGW application layer
-  spgwu_app_inst = new spgwu_app(Options::getlibconfigConfig());
+  upf_app_inst = new upf_app(Options::getlibconfigConfig());
 
   // PID file
   // Currently hard-coded value. TODO: add as config option.
-  string pid_file_name = get_exe_absolute_path("/var/run", spgwu_cfg.instance);
+  string pid_file_name = get_exe_absolute_path("/var/run", upf_cfg.instance);
   if (!is_pid_file_lock_success(pid_file_name.c_str())) {
-    Logger::spgwu_app().error(
-        "Lock PID file %s failed\n", pid_file_name.c_str());
+    Logger::upf_app().error("Lock PID file %s failed\n", pid_file_name.c_str());
     exit(-EDEADLK);
   }
 

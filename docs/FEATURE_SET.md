@@ -69,9 +69,9 @@ CUPS = Control-User Planes Separation
 So SPGW is composed of almost 2 network functions:
 
 *  1 SPGW-C
-*  1 SPGW-U
+*  1 UPF
 
-Multiple instances of `SPGW-U` may be connected to a single instance of `SPGW-C`.
+Multiple instances of `UPF` may be connected to a single instance of `SPGW-C`.
 
 Fully written in C++ (-std=c++17)
 

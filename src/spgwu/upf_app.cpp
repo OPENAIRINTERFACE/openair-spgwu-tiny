@@ -19,7 +19,7 @@
  *      contact@openairinterface.org
  */
 
-/*! \file spgwu_app.cpp
+/*! \file upf_app.cpp
   \brief
   \author Lionel Gauthier
   \company Eurecom
@@ -31,7 +31,7 @@
 #include "pfcp_switch.hpp"
 #include "upf_app.hpp"
 #include "upf_config.hpp"
-#include "spgwu_s1u.hpp"
+#include "simple_switch.hpp"
 #include "upf_n4.hpp"
 #include "upf_nrf.hpp"
 
@@ -40,30 +40,30 @@
 #include <stdexcept>
 
 using namespace pfcp;
-using namespace spgwu;
+using namespace upf;
 using namespace std;
 
 // C includes
 
-spgwu_sx* spgwu_sx_inst   = nullptr;
-spgwu_s1u* spgwu_s1u_inst = nullptr;
-spgwu_nrf* spgwu_nrf_inst = nullptr;
+upf_n4* upf_n4_inst   = nullptr;
+upf_n3* upf_n3_inst   = nullptr;
+upf_nrf* upf_nrf_inst = nullptr;
 
 extern itti_mw* itti_inst;
 extern pfcp_switch* pfcp_switch_inst;
-extern spgwu_app* spgwu_app_inst;
-extern spgwu_config spgwu_cfg;
+extern upf_app* upf_app_inst;
+extern upf_config upf_cfg;
 
-void spgwu_app_task(void*);
+void upf_app_task(void*);
 
 //------------------------------------------------------------------------------
-void spgwu_app_task(void* args_p) {
-  const task_id_t task_id = TASK_SPGWU_APP;
+void upf_app_task(void* args_p) {
+  const task_id_t task_id = TASK_UPF_APP;
 
   const util::thread_sched_params* const sched_params =
       (const util::thread_sched_params* const) args_p;
 
-  sched_params->apply(task_id, Logger::spgwu_app());
+  sched_params->apply(task_id, Logger::upf_app());
 
   itti_inst->notify_task_ready(task_id);
 
@@ -72,41 +72,41 @@ void spgwu_app_task(void* args_p) {
     auto* msg                            = shared_msg.get();
     switch (msg->msg_type) {
       case S1U_ECHO_REQUEST:
-        spgwu_app_inst->handle_itti_msg(
+        upf_app_inst->handle_itti_msg(
             std::static_pointer_cast<itti_s1u_echo_request>(shared_msg));
         break;
 
-      case SXAB_SESSION_ESTABLISHMENT_REQUEST:
-        spgwu_app_inst->handle_itti_msg(
-            std::static_pointer_cast<itti_sxab_session_establishment_request>(
+      case N4_SESSION_ESTABLISHMENT_REQUEST:
+        upf_app_inst->handle_itti_msg(
+            std::static_pointer_cast<itti_n4_session_establishment_request>(
                 shared_msg));
         break;
 
-      case SXAB_SESSION_MODIFICATION_REQUEST:
-        spgwu_app_inst->handle_itti_msg(
-            std::static_pointer_cast<itti_sxab_session_modification_request>(
+      case N4_SESSION_MODIFICATION_REQUEST:
+        upf_app_inst->handle_itti_msg(
+            std::static_pointer_cast<itti_n4_session_modification_request>(
                 shared_msg));
         break;
 
-      case SXAB_SESSION_DELETION_REQUEST:
-        spgwu_app_inst->handle_itti_msg(
-            std::static_pointer_cast<itti_sxab_session_deletion_request>(
+      case N4_SESSION_DELETION_REQUEST:
+        upf_app_inst->handle_itti_msg(
+            std::static_pointer_cast<itti_n4_session_deletion_request>(
                 shared_msg));
         break;
 
-      case SXAB_SESSION_REPORT_RESPONSE:
-        spgwu_app_inst->handle_itti_msg(
-            std::static_pointer_cast<itti_sxab_session_report_response>(
+      case N4_SESSION_REPORT_RESPONSE:
+        upf_app_inst->handle_itti_msg(
+            std::static_pointer_cast<itti_n4_session_report_response>(
                 shared_msg));
         break;
 
       case TIME_OUT:
         if (itti_msg_timeout* to = dynamic_cast<itti_msg_timeout*>(msg)) {
           switch (to->arg1_user) {
-            case TASK_SPGWU_PFCP_SWITCH_MIN_COMMIT_INTERVAL:
+            case TASK_UPF_PFCP_SWITCH_MIN_COMMIT_INTERVAL:
               // pfcp_switch_inst->time_out_min_commit_interval(to->timer_id);
               break;
-            case TASK_SPGWU_PFCP_SWITCH_MAX_COMMIT_INTERVAL:
+            case TASK_UPF_PFCP_SWITCH_MAX_COMMIT_INTERVAL:
               // pfcp_switch_inst->time_out_max_commit_interval(to->timer_id);
               break;
             default:;
@@ -117,7 +117,7 @@ void spgwu_app_task(void* args_p) {
       case TERMINATE:
         if (itti_msg_terminate* terminate =
                 dynamic_cast<itti_msg_terminate*>(msg)) {
-          Logger::spgwu_app().info("Received terminate message");
+          Logger::upf_app().info("Received terminate message");
           return;
         }
         break;
@@ -126,62 +126,61 @@ void spgwu_app_task(void* args_p) {
         break;
 
       default:
-        Logger::spgwu_app().info(
+        Logger::upf_app().info(
             "no handler for ITTI msg type %d", msg->msg_type);
     }
   } while (true);
 }
 
 //------------------------------------------------------------------------------
-spgwu_app::spgwu_app(const std::string& config_file) {
-  Logger::spgwu_app().startup("Starting...");
-  spgwu_cfg.execute();
+upf_app::upf_app(const std::string& config_file) {
+  Logger::upf_app().startup("Starting...");
+  upf_cfg.execute();
 
   if (itti_inst->create_task(
-          TASK_SPGWU_APP, spgwu_app_task,
-          &spgwu_cfg.itti.spgwu_app_sched_params)) {
-    Logger::spgwu_app().error("Cannot create task TASK_SPGWU_APP");
-    throw std::runtime_error("Cannot create task TASK_SPGWU_APP");
+          TASK_UPF_APP, upf_app_task, &upf_cfg.itti.upf_app_sched_params)) {
+    Logger::upf_app().error("Cannot create task TASK_UPF_APP");
+    throw std::runtime_error("Cannot create task TASK_UPF_APP");
   }
   try {
-    spgwu_sx_inst = new spgwu_sx();
+    upf_n4_inst = new upf_n4();
   } catch (std::exception& e) {
-    Logger::spgwu_app().error("Cannot create SPGWU_SX: %s", e.what());
+    Logger::upf_app().error("Cannot create UPF_N4: %s", e.what());
     throw;
   }
   try {
-    spgwu_s1u_inst = new spgwu_s1u();
+    upf_n3_inst = new upf_n3();
   } catch (std::exception& e) {
-    Logger::spgwu_app().error("Cannot create SPGWU_S1U: %s", e.what());
+    Logger::upf_app().error("Cannot create UPF_N3: %s", e.what());
     throw;
   }
   try {
     pfcp_switch_inst = new pfcp_switch();
   } catch (std::exception& e) {
-    Logger::spgwu_app().error("Cannot create PFCP_SWITCH: %s", e.what());
+    Logger::upf_app().error("Cannot create PFCP_SWITCH: %s", e.what());
     throw;
   }
   try {
-    if (spgwu_cfg.upf_5g_features.enable_5g_features and
-        spgwu_cfg.upf_5g_features.register_nrf)
-      spgwu_nrf_inst = new spgwu_nrf();
+    if (upf_cfg.upf_5g_features.enable_5g_features and
+        upf_cfg.upf_5g_features.register_nrf)
+      upf_nrf_inst = new upf_nrf();
   } catch (std::exception& e) {
-    Logger::spgwu_app().error("Cannot create SPGWU_NRF: %s", e.what());
+    Logger::upf_app().error("Cannot create UPF_NRF: %s", e.what());
     throw;
   }
-  Logger::spgwu_app().startup("Started");
+  Logger::upf_app().startup("Started");
 }
 
 //------------------------------------------------------------------------------
-spgwu_app::~spgwu_app() {
-  if (spgwu_sx_inst) delete spgwu_sx_inst;
-  if (spgwu_nrf_inst) delete spgwu_nrf_inst;
+upf_app::~upf_app() {
+  if (upf_n4_inst) delete upf_n4_inst;
+  if (upf_nrf_inst) delete upf_nrf_inst;
 }
 //------------------------------------------------------------------------------
-void spgwu_app::handle_itti_msg(std::shared_ptr<itti_s1u_echo_request> m) {
-  Logger::spgwu_app().debug("Received %s ", m->get_msg_name());
+void upf_app::handle_itti_msg(std::shared_ptr<itti_s1u_echo_request> m) {
+  Logger::upf_app().debug("Received %s ", m->get_msg_name());
   itti_s1u_echo_response* s1u_resp =
-      new itti_s1u_echo_response(TASK_SPGWU_APP, TASK_SPGWU_S1U);
+      new itti_s1u_echo_response(TASK_UPF_APP, TASK_UPF_N3);
 
   // May insert a call to a function here(throttle for example)
   s1u_resp->gtp_ies.r_endpoint      = m->gtp_ies.r_endpoint;
@@ -192,87 +191,84 @@ void spgwu_app::handle_itti_msg(std::shared_ptr<itti_s1u_echo_request> m) {
       std::shared_ptr<itti_s1u_echo_response>(s1u_resp);
   int ret = itti_inst->send_msg(msg);
   if (RETURNok != ret) {
-    Logger::spgwu_app().error(
-        "Could not send ITTI message %s to task TASK_SPGWU_S1U",
+    Logger::upf_app().error(
+        "Could not send ITTI message %s to task TASK_UPF_N3",
         s1u_resp->get_msg_name());
   }
 }
 //------------------------------------------------------------------------------
-void spgwu_app::handle_itti_msg(
-    std::shared_ptr<itti_sxab_session_establishment_request> m) {
-  Logger::spgwu_app().info(
-      "Received SXAB_SESSION_ESTABLISHMENT_REQUEST seid " SEID_FMT " ",
-      m->seid);
-  itti_sxab_session_establishment_response* sx_resp =
-      new itti_sxab_session_establishment_response(
-          TASK_SPGWU_APP, TASK_SPGWU_SX);
-  pfcp_switch_inst->handle_pfcp_session_establishment_request(m, sx_resp);
+void upf_app::handle_itti_msg(
+    std::shared_ptr<itti_n4_session_establishment_request> m) {
+  Logger::upf_app().info(
+      "Received N4_SESSION_ESTABLISHMENT_REQUEST seid " SEID_FMT " ", m->seid);
+  itti_n4_session_establishment_response* n4_resp =
+      new itti_n4_session_establishment_response(TASK_UPF_APP, TASK_UPF_N4);
+  pfcp_switch_inst->handle_pfcp_session_establishment_request(m, n4_resp);
 
   pfcp::node_id_t node_id = {};
-  spgwu_cfg.get_pfcp_node_id(node_id);
-  sx_resp->pfcp_ies.set(node_id);
+  upf_cfg.get_pfcp_node_id(node_id);
+  n4_resp->pfcp_ies.set(node_id);
 
-  sx_resp->trxn_id = m->trxn_id;
-  sx_resp->seid    = m->pfcp_ies.cp_fseid.second
+  n4_resp->trxn_id = m->trxn_id;
+  n4_resp->seid    = m->pfcp_ies.cp_fseid.second
                       .seid;  // Mandatory IE, but... may be bad to do this
-  sx_resp->r_endpoint = m->r_endpoint;
-  sx_resp->l_endpoint = m->l_endpoint;
-  std::shared_ptr<itti_sxab_session_establishment_response> msg =
-      std::shared_ptr<itti_sxab_session_establishment_response>(sx_resp);
+  n4_resp->r_endpoint = m->r_endpoint;
+  n4_resp->l_endpoint = m->l_endpoint;
+  std::shared_ptr<itti_n4_session_establishment_response> msg =
+      std::shared_ptr<itti_n4_session_establishment_response>(n4_resp);
   int ret = itti_inst->send_msg(msg);
   if (RETURNok != ret) {
-    Logger::spgwu_app().error(
-        "Could not send ITTI message %s to task TASK_PGWC_SX",
-        sx_resp->get_msg_name());
+    Logger::upf_app().error(
+        "Could not send ITTI message %s to task TASK_UPF_N4",
+        n4_resp->get_msg_name());
   }
 }
 //------------------------------------------------------------------------------
-void spgwu_app::handle_itti_msg(
-    std::shared_ptr<itti_sxab_session_modification_request> m) {
-  Logger::spgwu_app().info(
-      "Received SXAB_SESSION_MODIFICATION_REQUEST seid " SEID_FMT " ", m->seid);
-  itti_sxab_session_modification_response* sx_resp =
-      new itti_sxab_session_modification_response(
-          TASK_SPGWU_APP, TASK_SPGWU_SX);
-  pfcp_switch_inst->handle_pfcp_session_modification_request(m, sx_resp);
+void upf_app::handle_itti_msg(
+    std::shared_ptr<itti_n4_session_modification_request> m) {
+  Logger::upf_app().info(
+      "Received N4_SESSION_MODIFICATION_REQUEST seid " SEID_FMT " ", m->seid);
+  itti_n4_session_modification_response* n4_resp =
+      new itti_n4_session_modification_response(TASK_UPF_APP, TASK_UPF_N4);
+  pfcp_switch_inst->handle_pfcp_session_modification_request(m, n4_resp);
 
-  sx_resp->trxn_id    = m->trxn_id;
-  sx_resp->r_endpoint = m->r_endpoint;
-  sx_resp->l_endpoint = m->l_endpoint;
-  std::shared_ptr<itti_sxab_session_modification_response> msg =
-      std::shared_ptr<itti_sxab_session_modification_response>(sx_resp);
+  n4_resp->trxn_id    = m->trxn_id;
+  n4_resp->r_endpoint = m->r_endpoint;
+  n4_resp->l_endpoint = m->l_endpoint;
+  std::shared_ptr<itti_n4_session_modification_response> msg =
+      std::shared_ptr<itti_n4_session_modification_response>(n4_resp);
   int ret = itti_inst->send_msg(msg);
   if (RETURNok != ret) {
-    Logger::spgwu_app().error(
-        "Could not send ITTI message %s to task TASK_PGWC_SX",
-        sx_resp->get_msg_name());
+    Logger::upf_app().error(
+        "Could not send ITTI message %s to task TASK_UPF_N4",
+        n4_resp->get_msg_name());
   }
 }
 //------------------------------------------------------------------------------
-void spgwu_app::handle_itti_msg(
-    std::shared_ptr<itti_sxab_session_deletion_request> m) {
-  Logger::spgwu_app().info(
-      "Received SXAB_SESSION_DELETION_REQUEST seid " SEID_FMT " ", m->seid);
-  itti_sxab_session_deletion_response* sx_resp =
-      new itti_sxab_session_deletion_response(TASK_SPGWU_APP, TASK_SPGWU_SX);
-  pfcp_switch_inst->handle_pfcp_session_deletion_request(m, sx_resp);
+void upf_app::handle_itti_msg(
+    std::shared_ptr<itti_n4_session_deletion_request> m) {
+  Logger::upf_app().info(
+      "Received N4_SESSION_DELETION_REQUEST seid " SEID_FMT " ", m->seid);
+  itti_n4_session_deletion_response* n4_resp =
+      new itti_n4_session_deletion_response(TASK_UPF_APP, TASK_UPF_N4);
+  pfcp_switch_inst->handle_pfcp_session_deletion_request(m, n4_resp);
 
-  sx_resp->trxn_id    = m->trxn_id;
-  sx_resp->r_endpoint = m->r_endpoint;
-  sx_resp->l_endpoint = m->l_endpoint;
-  std::shared_ptr<itti_sxab_session_deletion_response> msg =
-      std::shared_ptr<itti_sxab_session_deletion_response>(sx_resp);
+  n4_resp->trxn_id    = m->trxn_id;
+  n4_resp->r_endpoint = m->r_endpoint;
+  n4_resp->l_endpoint = m->l_endpoint;
+  std::shared_ptr<itti_n4_session_deletion_response> msg =
+      std::shared_ptr<itti_n4_session_deletion_response>(n4_resp);
   int ret = itti_inst->send_msg(msg);
   if (RETURNok != ret) {
-    Logger::spgwu_app().error(
-        "Could not send ITTI message %s to task TASK_PGWC_SX",
-        sx_resp->get_msg_name());
+    Logger::upf_app().error(
+        "Could not send ITTI message %s to task TASK_UPF_N4",
+        n4_resp->get_msg_name());
   }
 }
 
 //------------------------------------------------------------------------------
-void spgwu_app::handle_itti_msg(
-    std::shared_ptr<itti_sxab_session_report_response> m) {
-  Logger::spgwu_app().info(
-      "Received SXAB_SESSION_REPORT_RESPONSE seid " SEID_FMT " ", m->seid);
+void upf_app::handle_itti_msg(
+    std::shared_ptr<itti_n4_session_report_response> m) {
+  Logger::upf_app().info(
+      "Received N4_SESSION_REPORT_RESPONSE seid " SEID_FMT " ", m->seid);
 }

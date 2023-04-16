@@ -60,6 +60,9 @@ install_libbpf_from_git() {
     fi
 
     git clone $GIT_URL
+    $SUDO apt install -y make gcc binutils-dev libbpf-dev \
+						cmake clang libelf-dev libpcap-dev \
+	 					zlib1g-dev llvm libcap-dev python3-docutils
     cd libbpf && git checkout 051a4009f94d5633a8f734ca4235f0a78ee90469
     ret=$?;[[ $ret -ne 0 ]] && popd && return $ret
     cd src && make -j $(nproc) 
@@ -100,6 +103,7 @@ install_bpftool_from_git() {
     fi
 
     #wget --recursive --no-parent $GIT_URL ./bpftool
+    $SUDO apt install -y wget gcc-multilib
     wget $GIT_URL && tar -xvf linux-5.7.tar.gz && rm -rf linux-5.7.tar.gz
     ret=$?;[[ $ret -ne 0 ]] && popd && return $ret
     cd linux-5.7/tools/bpf/bpftool && make -j $(nproc)

@@ -20,17 +20,17 @@
 # */
 #---------------------------------------------------------------------
 #
-# Dockerfile for the Open-Air-Interface SPGW-U-TINY service
-#   Valid for Ubuntu-18.04 (bionic)
-#             Ubuntu-20.04 (focal)
+# Dockerfile for the Open-Air-Interface UPF service
+#   Valid for Ubuntu-20.04 (focal)
+#             Ubuntu-22.04 (jammy)
 #
 #---------------------------------------------------------------------
 
 #---------------------------------------------------------------------
 # BASE IMAGE
 #---------------------------------------------------------------------
-ARG BASE_IMAGE=ubuntu:bionic
-FROM $BASE_IMAGE as oai-spgwu-tiny-base
+ARG BASE_IMAGE=ubuntu:focal
+FROM $BASE_IMAGE as oai-upf-base
 
 ENV DEBIAN_FRONTEND=noninteractive
 ENV TZ=Europe/Paris
@@ -47,31 +47,31 @@ RUN git config --global https.postBuffer 123289600 && \
     git config --global http.sslverify false
 
 # Copy installation scripts
-WORKDIR /openair-spgwu-tiny
-COPY ./build/scripts /openair-spgwu-tiny/build/scripts/
-COPY ./build/spgw_u/CMakeLists.txt /openair-spgwu-tiny/build/spgw_u/CMakeLists.txt
-COPY ./build/cmake_modules /openair-spgwu-tiny/cmake_modules/
+WORKDIR /oai-upf
+COPY ./build/scripts /oai-upf/build/scripts/
+COPY ./build/upf/CMakeLists.txt /oai-upf/build/upf/CMakeLists.txt
+COPY ./build/cmake_modules /oai-upf/cmake_modules/
 
-# Installing all the needed libraries/packages to build and run SPGWU-TINY
-WORKDIR /openair-spgwu-tiny/build/scripts
-RUN ./build_spgwu --install-deps --force
+# Installing all the needed libraries/packages to build and run UPF
+WORKDIR /oai-upf/build/scripts
+RUN ./build_upf --install-deps --force
 
 #---------------------------------------------------------------------
 # BUILDER IMAGE
 #---------------------------------------------------------------------
-FROM oai-spgwu-tiny-base as oai-spgwu-tiny-builder
+FROM oai-upf-base as oai-upf-builder
 # Copy the rest of source code
-COPY . /openair-spgwu-tiny
-# Building SPGW-U-TINY
-WORKDIR /openair-spgwu-tiny/build/scripts
-RUN ./build_spgwu --clean --build-type Release --jobs --Verbose && \
-    ldd /openair-spgwu-tiny/build/spgw_u/build/spgwu && \
-    mv /openair-spgwu-tiny/build/spgw_u/build/spgwu /openair-spgwu-tiny/build/spgw_u/build/oai_spgwu
+COPY . /oai-upf
+# Building UPF
+WORKDIR /oai-upf/build/scripts
+RUN ./build_upf --clean --build-type Release --jobs --Verbose && \
+    ldd /oai-upf/build/upf/build/upf && \
+    mv /oai-upf/build/upf/build/upf /oai-upf/build/upf/build/oai_upf
 
 #---------------------------------------------------------------------
 # TARGET IMAGE
 #---------------------------------------------------------------------
-FROM $BASE_IMAGE as oai-spgwu-tiny
+FROM $BASE_IMAGE as oai-upf
 ENV DEBIAN_FRONTEND=noninteractive
 ENV TZ=Europe/Paris
 # We install some debug tools for the moment in addition of mandatory libraries
@@ -107,15 +107,15 @@ RUN apt-get update && \
        /lib/x86_64-linux-gnu/libboost_thread.so.1.6*.0
 
 # Copying executable and generated libraries
-WORKDIR /openair-spgwu-tiny/bin
-COPY --from=oai-spgwu-tiny-builder \
-    /openair-spgwu-tiny/build/spgw_u/build/oai_spgwu \
-    /openair-spgwu-tiny/scripts/entrypoint.py \
-    /openair-spgwu-tiny/scripts/healthcheck.sh \
+WORKDIR /oai-upf/bin
+COPY --from=oai-upf-builder \
+    /oai-upf/build/upf/build/oai_upf \
+    /oai-upf/scripts/entrypoint.py \
+    /oai-upf/scripts/healthcheck.sh \
     ./
 
 WORKDIR /usr/local/lib
-COPY --from=oai-spgwu-tiny-builder \
+COPY --from=oai-upf-builder \
 # I need a dummy even if I already installed it.
 # Once Ubuntu18 support is dropped, we can remove whole copy section
     /usr/lib/x86_64-linux-gnu/libpsl.so.5 \
@@ -124,14 +124,14 @@ COPY --from=oai-spgwu-tiny-builder \
     ./
 
 RUN ldconfig && \
-    ldd /openair-spgwu-tiny/bin/oai_spgwu
+    ldd /oai-upf/bin/oai_upf
 
 # Copying template configuration files
 # The configuration folder will be flat
-WORKDIR /openair-spgwu-tiny/etc
-COPY --from=oai-spgwu-tiny-builder /openair-spgwu-tiny/etc/spgw_u.conf .
+WORKDIR /oai-upf/etc
+COPY --from=oai-upf-builder /oai-upf/etc/upf.conf .
 
-WORKDIR /openair-spgwu-tiny
+WORKDIR /oai-upf
 
 # use these labels for CI purpose
 LABEL support-multi-sgwu-instances="true"
@@ -143,7 +143,7 @@ EXPOSE 2152/udp 8805/udp
 HEALTHCHECK --interval=10s \
             --timeout=15s \
             --retries=6 \
-    CMD /openair-spgwu-tiny/bin/healthcheck.sh
+    CMD /oai-upf/bin/healthcheck.sh
 
-CMD ["/openair-spgwu-tiny/bin/oai_spgwu", "-c", "/openair-spgwu-tiny/etc/spgw_u.conf", "-o"]
-ENTRYPOINT ["python3", "/openair-spgwu-tiny/bin/entrypoint.py"]
+CMD ["/oai-upf/bin/oai_upf", "-c", "/oai-upf/etc/upf.conf", "-o"]
+ENTRYPOINT ["python3", "/oai-upf/bin/entrypoint.py"]

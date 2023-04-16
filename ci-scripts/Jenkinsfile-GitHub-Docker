@@ -122,51 +122,51 @@ pipeline {
     }
     stage('Build Core Network Function') {
       parallel {
-        stage ('Build Ubuntu SPGW-U Image') {
+        stage ('Build Ubuntu UPF Image') {
           steps {
             // Now it is only locked during this build stage and not for the whole pipeline
             lock(ubuntuBuildResource) {
               script {
-                sh "docker image rm oai-spgwu-tiny:${spgwu_tag} || true"
+                sh "docker image rm oai-upf:${spgwu_tag} || true"
                 sh "docker image prune --force"
                 if (env.ghprbPullId != null) {
                   dockerBuildOptions = ''
                 } else {
                   dockerBuildOptions = '--no-cache '
                 }
-                sh "docker buildx build ${dockerBuildOptions} --target oai-spgwu-tiny --tag oai-spgwu-tiny:${spgwu_tag} --file docker/Dockerfile.ubuntu . > archives/spgwu_docker_image_build.log 2>&1"
+                sh "docker buildx build ${dockerBuildOptions} --target oai-upf --tag oai-upf:${spgwu_tag} --file docker/Dockerfile.ubuntu . > archives/spgwu_docker_image_build.log 2>&1"
                 // Putting a place holder to try out on the flattening of image.
                 // If not satisfactory, we can remove it.
-                sh "python3 ./ci-scripts/flatten_image.py --tag oai-spgwu-tiny:${spgwu_tag}"
+                sh "python3 ./ci-scripts/flatten_image.py --tag oai-upf:${spgwu_tag}"
                 sh "docker image prune --force"
                 sh "docker image ls | egrep --color=never 'spgwu-tiny|REPOSITORY' >> archives/spgwu_docker_image_build.log"
                 // Pushing to local private registry for testing purpose
                 sh "docker login -u oaicicd -p oaicicd ${PrivateRegistryURL}"
-                sh "docker image tag oai-spgwu-tiny:${spgwu_tag} ${PrivateRegistryURL}/oai-spgwu-tiny:${spgwu_tag}"
-                sh "docker push ${PrivateRegistryURL}/oai-spgwu-tiny:${spgwu_tag}"
+                sh "docker image tag oai-upf:${spgwu_tag} ${PrivateRegistryURL}/oai-upf:${spgwu_tag}"
+                sh "docker push ${PrivateRegistryURL}/oai-upf:${spgwu_tag}"
                 // Remove all images locally
-                sh "docker rmi oai-spgwu-tiny:${spgwu_tag} ${PrivateRegistryURL}/oai-spgwu-tiny:${spgwu_tag}"
+                sh "docker rmi oai-upf:${spgwu_tag} ${PrivateRegistryURL}/oai-upf:${spgwu_tag}"
                 sh "docker logout ${PrivateRegistryURL}"
               }
             }
           }
           post {
             success {
-              sh "echo 'OAI-SPGW-U DOCKER IMAGE BUILD: OK' >> archives/spgwu_docker_image_build.log"
+              sh "echo 'OAI-UPF DOCKER IMAGE BUILD: OK' >> archives/spgwu_docker_image_build.log"
             }
             unsuccessful {
-              sh "echo 'OAI-SPGW-U DOCKER IMAGE BUILD: KO' >> archives/spgwu_docker_image_build.log"
+              sh "echo 'OAI-UPF DOCKER IMAGE BUILD: KO' >> archives/spgwu_docker_image_build.log"
             }
           }
         }
-        stage ('Build RHEL8 SPGW-U Image') {
+        stage ('Build RHEL8 UPF Image') {
           agent { label rhelNode }
           steps {
             lock (rhelResource) {
               script {
                 // It's a different agent from main one.
                 prepareWorkspaceMergeCase()
-                sh "sudo podman image rm oai-spgwu-tiny:${spgwu_tag} || true"
+                sh "sudo podman image rm oai-upf:${spgwu_tag} || true"
                 sh "sudo podman image prune --force"
                 // Copy the RHEL Host certificates for building
                 sh "mkdir -p ./etc-pki-entitlement ./rhsm-conf ./rhsm-ca"
@@ -174,7 +174,7 @@ pipeline {
                 sh "sudo cp /etc/rhsm/rhsm.conf ./rhsm-conf"
                 sh "sudo cp /etc/rhsm/ca/*pem ./rhsm-ca"
                 // Building
-                sh "sudo podman build --no-cache --squash --target oai-spgwu-tiny --tag oai-spgwu-tiny:${spgwu_tag} --file docker/Dockerfile.rhel8 --format docker . > archives/spgwu_podman_image_build.log 2>&1"
+                sh "sudo podman build --no-cache --squash --target oai-upf --tag oai-upf:${spgwu_tag} --file docker/Dockerfile.rhel8 --format docker . > archives/spgwu_podman_image_build.log 2>&1"
                 sh "sudo podman image prune --force"
                 sh "sudo podman image ls | egrep --color=never 'spgwu-tiny|REPOSITORY' >> archives/spgwu_podman_image_build.log"
               }
@@ -183,11 +183,11 @@ pipeline {
           post {
             success {
               script {
-                sh "echo 'OAI-SPGW-U PODMAN RHEL8 IMAGE BUILD: OK' >> archives/spgwu_podman_image_build.log"
+                sh "echo 'OAI-UPF PODMAN RHEL8 IMAGE BUILD: OK' >> archives/spgwu_podman_image_build.log"
               }
             }
             unsuccessful {
-              sh "echo 'OAI-SPGW-U PODMAN RHEL8 IMAGE BUILD: KO' >> archives/spgwu_podman_image_build.log"
+              sh "echo 'OAI-UPF PODMAN RHEL8 IMAGE BUILD: KO' >> archives/spgwu_podman_image_build.log"
             }
             cleanup {
               script {
@@ -381,10 +381,10 @@ pipeline {
               sh "echo ${DH_Password} | docker login --username ${DH_Username} --password-stdin"
             }
             sh "docker login -u oaicicd -p oaicicd ${PrivateRegistryURL}"
-            sh "docker pull ${PrivateRegistryURL}/oai-spgwu-tiny:${spgwu_tag}"
-            sh "docker image tag ${PrivateRegistryURL}/oai-spgwu-tiny:${spgwu_tag} ${DH_Account}/oai-spgwu-tiny:develop"
-            sh "docker push ${DH_Account}/oai-spgwu-tiny:develop"
-            sh "docker rmi ${DH_Account}/oai-spgwu-tiny:develop ${PrivateRegistryURL}/oai-spgwu-tiny:${spgwu_tag}"
+            sh "docker pull ${PrivateRegistryURL}/oai-upf:${spgwu_tag}"
+            sh "docker image tag ${PrivateRegistryURL}/oai-upf:${spgwu_tag} ${DH_Account}/oai-upf:develop"
+            sh "docker push ${DH_Account}/oai-upf:develop"
+            sh "docker rmi ${DH_Account}/oai-upf:develop ${PrivateRegistryURL}/oai-upf:${spgwu_tag}"
             sh "docker logout ${PrivateRegistryURL}"
             sh "docker logout"
           }

@@ -19,7 +19,7 @@
  *      contact@openairinterface.org
  */
 
-/*! \file spgwu_sx.hpp
+/*! \file upf_n4.hpp
    \author  Lionel GAUTHIER
    \date 2019
    \email: lionel.gauthier@eurecom.fr
@@ -36,13 +36,13 @@
 
 #include <thread>
 
-namespace spgwu {
+namespace upf {
 
-#define TASK_SPGWU_SX_TRIGGER_HEARTBEAT_REQUEST (0)
-#define TASK_SPGWU_SX_TIMEOUT_HEARTBEAT_REQUEST (1)
-#define TASK_SPGWU_SX_TIMEOUT_ASSOCIATION_REQUEST (2)
+#define TASK_UPF_N4_TRIGGER_HEARTBEAT_REQUEST (0)
+#define TASK_UPF_N4_TIMEOUT_HEARTBEAT_REQUEST (1)
+#define TASK_UPF_N4_TIMEOUT_ASSOCIATION_REQUEST (2)
 
-class spgwu_sx : public pfcp::pfcp_l4_stack {
+class upf_n4 : public pfcp::pfcp_l4_stack {
  private:
   std::thread::id thread_id;
   std::thread thread;
@@ -53,41 +53,41 @@ class spgwu_sx : public pfcp::pfcp_l4_stack {
   void start_association(const pfcp::node_id_t& node_id);
 
  public:
-  spgwu_sx();
-  spgwu_sx(spgwu_sx const&) = delete;
-  void operator=(spgwu_sx const&) = delete;
+  upf_n4();
+  upf_n4(upf_n4 const&) = delete;
+  void operator=(upf_n4 const&) = delete;
 
-  void handle_itti_msg(itti_sxab_heartbeat_request& s){};
-  void handle_itti_msg(itti_sxab_heartbeat_response& s){};
-  void handle_itti_msg(itti_sxab_association_setup_request& s){};
-  void handle_itti_msg(itti_sxab_association_setup_response& s){};
-  void handle_itti_msg(itti_sxab_association_update_request& s){};
-  void handle_itti_msg(itti_sxab_association_update_response& s){};
-  void handle_itti_msg(itti_sxab_association_release_request& s){};
-  void handle_itti_msg(itti_sxab_association_release_response& s){};
-  void handle_itti_msg(itti_sxab_version_not_supported_response& s){};
-  void handle_itti_msg(itti_sxab_node_report_response& s){};
-  void handle_itti_msg(itti_sxab_session_set_deletion_request& s){};
-  void handle_itti_msg(itti_sxab_session_establishment_response& s);
-  void handle_itti_msg(itti_sxab_session_modification_response& s);
-  void handle_itti_msg(itti_sxab_session_deletion_response& s);
-  void handle_itti_msg(itti_sxab_session_report_response& s){};
+  void handle_itti_msg(itti_n4_heartbeat_request& s){};
+  void handle_itti_msg(itti_n4_heartbeat_response& s){};
+  void handle_itti_msg(itti_n4_association_setup_request& s){};
+  void handle_itti_msg(itti_n4_association_setup_response& s){};
+  void handle_itti_msg(itti_n4_association_update_request& s){};
+  void handle_itti_msg(itti_n4_association_update_response& s){};
+  void handle_itti_msg(itti_n4_association_release_request& s){};
+  void handle_itti_msg(itti_n4_association_release_response& s){};
+  void handle_itti_msg(itti_n4_version_not_supported_response& s){};
+  void handle_itti_msg(itti_n4_node_report_response& s){};
+  void handle_itti_msg(itti_n4_session_set_deletion_request& s){};
+  void handle_itti_msg(itti_n4_session_establishment_response& s);
+  void handle_itti_msg(itti_n4_session_modification_response& s);
+  void handle_itti_msg(itti_n4_session_deletion_response& s);
+  void handle_itti_msg(itti_n4_session_report_response& s){};
 
-  void send_sx_msg(itti_sxab_heartbeat_request& s){};
-  void send_sx_msg(itti_sxab_heartbeat_response& s){};
-  void send_sx_msg(itti_sxab_association_setup_request& s);
-  void send_sx_msg(itti_sxab_association_setup_response& s);
-  void send_sx_msg(itti_sxab_association_update_request& s){};
-  void send_sx_msg(itti_sxab_association_update_response& s){};
-  void send_sx_msg(itti_sxab_association_release_request& s){};
-  void send_sx_msg(itti_sxab_association_release_response& s){};
-  void send_sx_msg(itti_sxab_version_not_supported_response& s){};
-  void send_sx_msg(itti_sxab_node_report_request& s){};
-  void send_sx_msg(itti_sxab_session_set_deletion_response& s){};
-  void send_sx_msg(itti_sxab_session_establishment_response& s);
-  void send_sx_msg(itti_sxab_session_modification_response& s);
-  void send_sx_msg(itti_sxab_session_deletion_response& s);
-  void send_sx_msg(itti_sxab_session_report_request& s);
+  void send_sx_msg(itti_n4_heartbeat_request& s){};
+  void send_sx_msg(itti_n4_heartbeat_response& s){};
+  void send_sx_msg(itti_n4_association_setup_request& s);
+  void send_sx_msg(itti_n4_association_setup_response& s);
+  void send_sx_msg(itti_n4_association_update_request& s){};
+  void send_sx_msg(itti_n4_association_update_response& s){};
+  void send_sx_msg(itti_n4_association_release_request& s){};
+  void send_sx_msg(itti_n4_association_release_response& s){};
+  void send_sx_msg(itti_n4_version_not_supported_response& s){};
+  void send_sx_msg(itti_n4_node_report_request& s){};
+  void send_sx_msg(itti_n4_session_set_deletion_response& s){};
+  void send_sx_msg(itti_n4_session_establishment_response& s);
+  void send_sx_msg(itti_n4_session_modification_response& s);
+  void send_sx_msg(itti_n4_session_deletion_response& s);
+  void send_sx_msg(itti_n4_session_report_request& s);
 
   void send_sx_msg(
       const pfcp::fseid_t& cp_fseid,
@@ -123,5 +123,5 @@ class spgwu_sx : public pfcp::pfcp_l4_stack {
 
   void time_out_itti_event(const uint32_t timer_id);
 };
-}  // namespace spgwu
+}  // namespace upf
 #endif /* FILE_SGWU_SX_HPP_SEEN */

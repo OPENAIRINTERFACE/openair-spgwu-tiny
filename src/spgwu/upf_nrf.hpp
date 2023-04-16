@@ -19,15 +19,15 @@
  *      contact@openairinterface.org
  */
 
-/*! \file spgwu_nrf.hpp
+/*! \file upf_nrf.hpp
  \author  Lionel GAUTHIER, Tien-Thinh NGUYEN
  \company Eurecom
  \date 2021
  \email: lionel.gauthier@eurecom.fr, tien-thinh.nguyen@eurecom.fr
  */
 
-#ifndef FILE_SPGWU_NRF_HPP_SEEN
-#define FILE_SPGWU_NRF_HPP_SEEN
+#ifndef FILE_UPF_NRF_HPP_SEEN
+#define FILE_UPF_NRF_HPP_SEEN
 
 #include <map>
 #include <thread>
@@ -37,24 +37,24 @@
 #include "3gpp_29.510.h"
 #include "upf_profile.hpp"
 
-namespace spgwu {
+namespace upf {
 
-#define TASK_SPGWU_NRF_TIMEOUT_NRF_HEARTBEAT (1)
-#define TASK_SPGWU_NRF_TIMEOUT_NRF_DEREGISTRATION (2)
+#define TASK_UPF_NRF_TIMEOUT_NRF_HEARTBEAT (1)
+#define TASK_UPF_NRF_TIMEOUT_NRF_DEREGISTRATION (2)
 
-class spgwu_nrf {
+class upf_nrf {
  private:
   std::thread::id thread_id;
   std::thread thread;
 
-  spgwu_profile upf_profile;    // UPF profile
+  upf_nf_profile upf_profile;   // UPF profile
   std::string upf_instance_id;  // UPF instance id
   timer_id_t timer_nrf_heartbeat;
 
  public:
-  spgwu_nrf();
-  spgwu_nrf(spgwu_nrf const&) = delete;
-  void operator=(spgwu_nrf const&) = delete;
+  upf_nrf();
+  upf_nrf(upf_nrf const&) = delete;
+  void operator=(upf_nrf const&) = delete;
 
   /*
    * Send NF instance registration to NRF
@@ -136,5 +136,5 @@ class spgwu_nrf {
    */
   void get_nrf_api_root(std::string& api_root);
 };
-}  // namespace spgwu
-#endif /* FILE_SPGWU_NRF_HPP_SEEN */
+}  // namespace upf
+#endif /* FILE_UPF_NRF_HPP_SEEN */

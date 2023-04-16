@@ -53,33 +53,16 @@ void Logger::_init(
   std::stringstream ss;
   ss << "[%Y-%m-%dT%H:%M:%S.%f] [" << app << "] [%n] [%l] %v";
 
-  m_async_cmd = new _Logger("async_c  ", m_sinks, ss.str().c_str());
-  m_enb_s1u   = new _Logger("enb_s1u  ", m_sinks, ss.str().c_str());
-  m_gtpv1_u   = new _Logger("gtpv1_u  ", m_sinks, ss.str().c_str());
-  m_gtpv2_c   = new _Logger("gtpv2_c  ", m_sinks, ss.str().c_str());
-  // m_gx        = new _Logger( "gx      ", m_sinks, ss.str().c_str() );
-  m_itti     = new _Logger("itti     ", m_sinks, ss.str().c_str());
-  m_mme_s11  = new _Logger("mme_s11  ", m_sinks, ss.str().c_str());
-  m_pgwc_app = new _Logger("pgwc_app ", m_sinks, ss.str().c_str());
-  // m_pgwu_app  = new _Logger( "pgwu_app", m_sinks, ss.str().c_str() );
-  m_pgwc_s5s8 = new _Logger("pgwc_s5  ", m_sinks, ss.str().c_str());
-  m_pgwc_sx   = new _Logger("pgwc_sx  ", m_sinks, ss.str().c_str());
-  // m_pgwu_sx   = new _Logger( "pgwu_sx ", m_sinks, ss.str().c_str() );
-  // m_pgw_udp   = new _Logger( "pgw_udp ", m_sinks, ss.str().c_str() );
-  m_sgwc_app = new _Logger("sgwc_app ", m_sinks, ss.str().c_str());
-  // m_sgwu_app  = new _Logger( "sgwu_app", m_sinks, ss.str().c_str() );
-  // m_sgwu_sx   = new _Logger( "sgwu_sx ", m_sinks, ss.str().c_str() );
-  m_sgwc_s11  = new _Logger("sgwc_s11 ", m_sinks, ss.str().c_str());
-  m_sgwc_s5s8 = new _Logger("sgwc_s5  ", m_sinks, ss.str().c_str());
-  m_sgwc_sx   = new _Logger("sgwc_sx  ", m_sinks, ss.str().c_str());
-  // m_sgw_udp   = new _Logger( "sgw_udp ", m_sinks, ss.str().c_str() );
-  m_spgwu_app   = new _Logger("spgwu_app", m_sinks, ss.str().c_str());
-  m_spgwu_s1u   = new _Logger("spgwu_s1u", m_sinks, ss.str().c_str());
-  m_spgwu_sx    = new _Logger("spgwu_sx ", m_sinks, ss.str().c_str());
-  m_system      = new _Logger("system   ", m_sinks, ss.str().c_str());
-  m_udp         = new _Logger("udp      ", m_sinks, ss.str().c_str());
-  m_pfcp        = new _Logger("pfcp     ", m_sinks, ss.str().c_str());
-  m_pfcp_switch = new _Logger("pfcp_sw  ", m_sinks, ss.str().c_str());
+  m_async_cmd   = new _Logger("async_c", m_sinks, ss.str().c_str());
+  m_gtpv1_u     = new _Logger("gtpv1_u", m_sinks, ss.str().c_str());
+  m_itti        = new _Logger("itti   ", m_sinks, ss.str().c_str());
+  m_upf_app     = new _Logger("upf_app", m_sinks, ss.str().c_str());
+  m_upf_n3      = new _Logger("upf_n3 ", m_sinks, ss.str().c_str());
+  m_upf_n4      = new _Logger("upf_n4 ", m_sinks, ss.str().c_str());
+  m_system      = new _Logger("system ", m_sinks, ss.str().c_str());
+  m_udp         = new _Logger("udp    ", m_sinks, ss.str().c_str());
+  m_pfcp        = new _Logger("pfcp   ", m_sinks, ss.str().c_str());
+  m_pfcp_switch = new _Logger("pfcp_sw", m_sinks, ss.str().c_str());
 }
 
 ////////////////////////////////////////////////////////////////////////////////

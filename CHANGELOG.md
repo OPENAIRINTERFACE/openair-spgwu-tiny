@@ -57,7 +57,7 @@
    -  Multi-Threading
    -  Protection to prevent running multiple times the executable
    -  ...
-*  Last release before Multi-SPGW-U-instance support
+*  Last release before Multi-UPF-instance support
 
 ## v1.0.0 -- May 2019 ##
 

@@ -28,14 +28,14 @@
 #include "pfcp_far.hpp"
 #include "pfcp_switch.hpp"
 #include "upf_config.hpp"
-#include "spgwu_s1u.hpp"
+#include "simple_switch.hpp"
 
 using namespace pfcp;
-using namespace spgwu;
+using namespace upf;
 
 extern pfcp_switch* pfcp_switch_inst;
-extern spgwu_s1u* spgwu_s1u_inst;
-extern spgwu_config spgwu_cfg;
+extern upf_n3* upf_n3_inst;
+extern upf_config upf_cfg;
 
 //------------------------------------------------------------------------------
 void pfcp_far::apply_forwarding_rules(
@@ -55,20 +55,20 @@ void pfcp_far::apply_forwarding_rules(
             switch (forwarding_parameters.second.outer_header_creation.second
                         .outer_header_creation_description) {
               case OUTER_HEADER_CREATION_GTPU_UDP_IPV4:
-                spgwu_s1u_inst->send_g_pdu(
+                upf_n3_inst->send_g_pdu(
                     forwarding_parameters.second.outer_header_creation.second
                         .ipv4_address,
-                    spgwu_cfg.s1_up.port,
+                    upf_cfg.n3.port,
                     forwarding_parameters.second.outer_header_creation.second
                         .teid,
                     reinterpret_cast<const char*>(iph), num_bytes, qfi);
 
                 break;
               case OUTER_HEADER_CREATION_GTPU_UDP_IPV6:
-                spgwu_s1u_inst->send_g_pdu(
+                upf_n3_inst->send_g_pdu(
                     forwarding_parameters.second.outer_header_creation.second
                         .ipv6_address,
-                    spgwu_cfg.s1_up.port,
+                    upf_cfg.n3.port,
                     forwarding_parameters.second.outer_header_creation.second
                         .teid,
                     reinterpret_cast<const char*>(iph), num_bytes);

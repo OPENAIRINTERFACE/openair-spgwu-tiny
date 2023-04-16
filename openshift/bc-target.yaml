@@ -2,12 +2,12 @@
 apiVersion: build.openshift.io/v1
 kind: BuildConfig
 metadata: 
-  name: oai-spgwu-tiny
+  name: oai-upf
 spec: 
   output: 
     to: 
       kind: ImageStreamTag
-      name: "oai-spgwu-tiny:oai-oc"
+      name: "oai-upf:oai-oc"
   runPolicy: Serial
   strategy:
     type: Docker
@@ -27,7 +27,7 @@ spec:
             ################################################################
             # Target Image
             ################################################################
-            FROM image-registry.openshift-image-registry.svc:5000/oai4g/oai-spgwu-tiny-dev:oai-oc as oai-spgwu-tiny-dev
+            FROM image-registry.openshift-image-registry.svc:5000/oai4g/oai-upf-dev:oai-oc as oai-upf-dev
             FROM registry.access.redhat.com/ubi8/ubi:latest as spgwu
 
             ENV TZ=Europe/Paris
@@ -48,14 +48,14 @@ spec:
                 rm -rf /var/cache/yum /var/cache/dnf
 
             # Copying executable and generated libraries
-            WORKDIR /openair-spgwu-tiny/bin
-            COPY --from=oai-spgwu-tiny-dev \
-                /openair-spgwu-tiny/build/spgw_u/build/oai_spgwu \
-                /openair-spgwu-tiny/scripts/entrypoint.sh \
+            WORKDIR /oai-upf/bin
+            COPY --from=oai-upf-dev \
+                /oai-upf/build/upf/build/oai_upf \
+                /oai-upf/scripts/entrypoint.sh \
                 ./
             
             # Copying installed libraries from builder
-            COPY --from=oai-spgwu-tiny-dev \
+            COPY --from=oai-upf-dev \
                 /lib64/libgflags.so.2.1 \
                 /lib64/libglog.so.0 \
                 /lib64/libdouble-conversion.so.1 \
@@ -63,17 +63,17 @@ spec:
                 /lib64/libboost_system.so.1.66.0 \
                 /lib64/
             RUN ldconfig && \
-                ldd /openair-spgwu-tiny/bin/oai_spgwu
+                ldd /oai-upf/bin/oai_upf
             
             # Copying template configuration files
             # The configuration folder will be flat
-            WORKDIR /openair-spgwu-tiny/etc
-            COPY --from=oai-spgwu-tiny-dev /openair-spgwu-tiny/etc/spgw_u.conf .
+            WORKDIR /oai-upf/etc
+            COPY --from=oai-upf-dev /oai-upf/etc/upf.conf .
             
             WORKDIR /openair-spgwu-tiny
             
             # expose ports
             EXPOSE 2152/udp 8805/udp
             
-            CMD ["/openair-spgwu-tiny/bin/oai_spgwu", "-c", "/openair-spgwu-tiny/etc/spgw_u.conf", "-o"]
-            ENTRYPOINT ["/openair-spgwu-tiny/bin/entrypoint.sh"]
+            CMD ["/oai-upf/bin/oai_upf", "-c", "/oai-upf/etc/upf.conf", "-o"]
+            ENTRYPOINT ["/oai-upf/bin/entrypoint.sh"]

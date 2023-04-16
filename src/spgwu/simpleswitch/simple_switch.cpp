@@ -19,7 +19,7 @@
  *      contact@openairinterface.org
  */
 
-/*! \file spgwu_s1u.cpp
+/*! \file simple_switch.cpp
   \brief
   \author Lionel Gauthier
   \company Eurecom
@@ -33,29 +33,29 @@
 #include "logger.hpp"
 #include "pfcp_switch.hpp"
 #include "upf_config.hpp"
-#include "spgwu_s1u.hpp"
+#include "simple_switch.hpp"
 
 #include <stdexcept>
 
 using namespace gtpv1u;
-using namespace spgwu;
+using namespace upf;
 using namespace std;
 
 extern itti_mw* itti_inst;
 extern pfcp_switch* pfcp_switch_inst;
-extern spgwu_config spgwu_cfg;
-extern spgwu_s1u* spgwu_s1u_inst;
+extern upf_config upf_cfg;
+extern upf_n3* upf_n3_inst;
 
-void spgwu_s1u_task(void*);
+void upf_n3_task(void*);
 
 //------------------------------------------------------------------------------
 
-void spgwu_s1u_task(void* args_p) {
-  const task_id_t task_id = TASK_SPGWU_S1U;
+void upf_n3_task(void* args_p) {
+  const task_id_t task_id = TASK_UPF_N3;
 
   const util::thread_sched_params* const sched_params =
       (const util::thread_sched_params* const) args_p;
-  sched_params->apply(task_id, Logger::spgwu_s1u());
+  sched_params->apply(task_id, Logger::upf_n3());
 
   itti_inst->notify_task_ready(task_id);
 
@@ -64,26 +64,26 @@ void spgwu_s1u_task(void* args_p) {
     auto* msg                            = shared_msg.get();
     switch (msg->msg_type) {
       case S1U_ECHO_RESPONSE:
-        spgwu_s1u_inst->handle_itti_msg(
+        upf_n3_inst->handle_itti_msg(
             std::static_pointer_cast<itti_s1u_echo_response>(shared_msg));
         break;
 
       case S1U_ERROR_INDICATION:
-        spgwu_s1u_inst->handle_itti_msg(
+        upf_n3_inst->handle_itti_msg(
             std::static_pointer_cast<itti_s1u_error_indication>(shared_msg));
         break;
 
       case TIME_OUT:
         if (itti_msg_timeout* to = dynamic_cast<itti_msg_timeout*>(msg)) {
-          Logger::spgwu_s1u().info("TIME-OUT event timer id %d", to->timer_id);
+          Logger::upf_n3().info("TIME-OUT event timer id %d", to->timer_id);
         }
         break;
 
       case TERMINATE:
         if (itti_msg_terminate* terminate =
                 dynamic_cast<itti_msg_terminate*>(msg)) {
-          Logger::spgwu_s1u().info("Received terminate message");
-          spgwu_s1u_inst->stop();
+          Logger::upf_n3().info("Received terminate message");
+          upf_n3_inst->stop();
           return;
         }
         break;
@@ -92,27 +92,26 @@ void spgwu_s1u_task(void* args_p) {
         break;
 
       default:
-        Logger::spgwu_s1u().info("no handler for msg type %d", msg->msg_type);
+        Logger::upf_n3().info("no handler for msg type %d", msg->msg_type);
     }
   } while (true);
 }
 
 //------------------------------------------------------------------------------
-spgwu_s1u::spgwu_s1u()
+upf_n3::upf_n3()
     : gtpu_l4_stack(
-          spgwu_cfg.s1_up.addr4, spgwu_cfg.s1_up.port,
-          spgwu_cfg.s1_up.thread_rd_sched_params,
-          spgwu_cfg.upf_5g_features.enable_5g_features) {
-  Logger::spgwu_s1u().startup("Starting...");
+          upf_cfg.n3.addr4, upf_cfg.n3.port, upf_cfg.n3.thread_rd_sched_params,
+          upf_cfg.upf_5g_features.enable_5g_features) {
+  Logger::upf_n3().startup("Starting...");
   if (itti_inst->create_task(
-          TASK_SPGWU_S1U, spgwu_s1u_task, &spgwu_cfg.itti.s1u_sched_params)) {
-    Logger::spgwu_s1u().error("Cannot create task TASK_SPGWU_S1U");
-    throw std::runtime_error("Cannot create task TASK_SPGWU_S1U");
+          TASK_UPF_N3, upf_n3_task, &upf_cfg.itti.s1u_sched_params)) {
+    Logger::upf_n3().error("Cannot create task TASK_UPF_N3");
+    throw std::runtime_error("Cannot create task TASK_UPF_N3");
   }
-  Logger::spgwu_s1u().startup("Started");
+  Logger::upf_n3().startup("Started");
 }
 //------------------------------------------------------------------------------
-void spgwu_s1u::handle_receive(
+void upf_n3::handle_receive(
     char* recv_buffer, const std::size_t bytes_transferred,
     const endpoint& r_endpoint) {
 #define GTPU_MESSAGE_FLAGS_POS_IN_UDP_PAYLOAD 0
@@ -145,10 +144,10 @@ void spgwu_s1u::handle_receive(
         pfcp_switch_inst->pfcp_session_look_up_pack_in_access(
             (struct ipv6hdr*) iph, gtp_payload_length, r_endpoint, tunnel_id);
       } else {
-        Logger::spgwu_s1u().trace("Unknown GTPU_G_PDU packet");
+        Logger::upf_n3().trace("Unknown GTPU_G_PDU packet");
       }
     } else {
-      // Logger::spgwu_s1u().info( "handle_receive(%d bytes)",
+      // Logger::upf_n3().info( "handle_receive(%d bytes)",
       // bytes_transferred); std::cout << string_to_hex(recv_buffer,
       // bytes_transferred) << std::endl;
       std::istringstream iss(std::istringstream::binary);
@@ -158,7 +157,7 @@ void spgwu_s1u::handle_receive(
         msg.load_from(iss);
         handle_receive_gtpv1u_msg(msg, r_endpoint);
       } catch (gtpu_exception& e) {
-        Logger::spgwu_s1u().info("handle_receive exception %s", e.what());
+        Logger::upf_n3().info("handle_receive exception %s", e.what());
       }
     }
   } else {
@@ -170,7 +169,7 @@ void spgwu_s1u::handle_receive(
       pfcp_switch_inst->pfcp_session_look_up_pack_in_access(
           (struct ipv6hdr*) iph, bytes_transferred, r_endpoint);
     } else {
-      Logger::spgwu_s1u().trace("Unknown IPX packet");
+      Logger::upf_n3().trace("Unknown IPX packet");
     }
   }
   // auto stop = std::chrono::high_resolution_clock::now();
@@ -178,9 +177,9 @@ void spgwu_s1u::handle_receive(
   // - start); cout << "UL took "  << duration.count() << std::endl;
 }
 //------------------------------------------------------------------------------
-void spgwu_s1u::handle_receive_gtpv1u_msg(
+void upf_n3::handle_receive_gtpv1u_msg(
     gtpv1u_msg& msg, const endpoint& r_endpoint) {
-  // Logger::spgwu_s1u().trace( "handle_receive_gtpv1u_msg msg type %d length
+  // Logger::upf_n3().trace( "handle_receive_gtpv1u_msg msg type %d length
   // %d", msg.get_message_type(), msg.get_message_length());
   switch (msg.get_message_type()) {
     case GTPU_ECHO_REQUEST:
@@ -193,16 +192,16 @@ void spgwu_s1u::handle_receive_gtpv1u_msg(
     case GTPU_G_PDU:
       break;
     default:
-      Logger::spgwu_s1u().error(
+      Logger::upf_n3().error(
           "handle_receive_gtpv1u_msg msg length %d", msg.get_message_length());
   }
 }
 //------------------------------------------------------------------------------
-void spgwu_s1u::send_g_pdu(
+void upf_n3::send_g_pdu(
     const struct in_addr& peer_addr, const uint16_t peer_udp_port,
     const uint32_t tunnel_id, const char* send_buffer, const ssize_t num_bytes,
     uint8_t qfi) {
-  // Logger::spgwu_s1u().info( "spgwu_s1u::send_g_pdu() TEID " TEID_FMT " %d
+  // Logger::upf_n3().info( "upf_n3::send_g_pdu() TEID " TEID_FMT " %d
   // bytes", num_bytes);
   struct sockaddr_in peer_sock_addr;
   peer_sock_addr.sin_family = AF_INET;
@@ -212,7 +211,7 @@ void spgwu_s1u::send_g_pdu(
       peer_sock_addr, (teid_t) tunnel_id, send_buffer, num_bytes, qfi);
 }
 //------------------------------------------------------------------------------
-void spgwu_s1u::send_g_pdu(
+void upf_n3::send_g_pdu(
     const struct in6_addr& peer_addr, const uint16_t peer_udp_port,
     const uint32_t tunnel_id, const char* send_buffer,
     const ssize_t num_bytes) {
@@ -225,10 +224,10 @@ void spgwu_s1u::send_g_pdu(
   gtpu_l4_stack::send_g_pdu(peer_sock_addr, tunnel_id, send_buffer, num_bytes);
 }
 //------------------------------------------------------------------------------
-void spgwu_s1u::handle_receive_echo_request(
+void upf_n3::handle_receive_echo_request(
     gtpv1u_msg& msg, const endpoint& r_endpoint) {
   itti_s1u_echo_request* echo =
-      new itti_s1u_echo_request(TASK_SPGWU_S1U, TASK_SPGWU_APP);
+      new itti_s1u_echo_request(TASK_UPF_N3, TASK_UPF_APP);
 
   gtpv1u_echo_request msg_ies_container = {};
   msg.to_core_type(echo->gtp_ies);
@@ -245,25 +244,25 @@ void spgwu_s1u::handle_receive_echo_request(
       std::shared_ptr<itti_s1u_echo_request>(echo);
   int ret = itti_inst->send_msg(secho);
   if (RETURNok != ret) {
-    Logger::spgwu_s1u().error(
-        "Could not send ITTI message %s to task TASK_SPGWU_APP",
+    Logger::upf_n3().error(
+        "Could not send ITTI message %s to task TASK_UPF_APP",
         echo->get_msg_name());
   }
 }
 
 //------------------------------------------------------------------------------
-void spgwu_s1u::handle_itti_msg(std::shared_ptr<itti_s1u_echo_response> m) {
+void upf_n3::handle_itti_msg(std::shared_ptr<itti_s1u_echo_response> m) {
   send_response(m->gtp_ies);
 }
 //------------------------------------------------------------------------------
-void spgwu_s1u::handle_itti_msg(std::shared_ptr<itti_s1u_error_indication> m) {
+void upf_n3::handle_itti_msg(std::shared_ptr<itti_s1u_error_indication> m) {
   send_indication(m->gtp_ies);
 }
 //------------------------------------------------------------------------------
-void spgwu_s1u::report_error_indication(
+void upf_n3::report_error_indication(
     const endpoint& r_endpoint, const uint32_t tunnel_id) {
   itti_s1u_error_indication* error_ind =
-      new itti_s1u_error_indication(TASK_SPGWU_S1U, TASK_SPGWU_S1U);
+      new itti_s1u_error_indication(TASK_UPF_N3, TASK_UPF_N3);
   error_ind->gtp_ies.r_endpoint = r_endpoint;
   error_ind->gtp_ies.set_teid(0);
 
@@ -284,8 +283,8 @@ void spgwu_s1u::report_error_indication(
       std::shared_ptr<itti_s1u_error_indication>(error_ind);
   int ret = itti_inst->send_msg(serror_ind);
   if (RETURNok != ret) {
-    Logger::spgwu_s1u().error(
-        "Could not send ITTI message %s to task TASK_SPGWU_S1U",
+    Logger::upf_n3().error(
+        "Could not send ITTI message %s to task TASK_UPF_N3",
         error_ind->get_msg_name());
   }
 }

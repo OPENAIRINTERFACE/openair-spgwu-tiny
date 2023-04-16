@@ -32,11 +32,11 @@ include_directories(${SRC_TOP_DIR}/../build/ext/spdlog/include)
 
 #find_library(FOLLY folly)
 
-add_library (SPGW_SWITCH STATIC
+add_library (SIMPLE_SWITCH STATIC
   pfcp_far.cpp
   pfcp_pdr.cpp
   pfcp_session.cpp
   pfcp_switch.cpp
-  spgwu_s1u.cpp
+  simple_switch.cpp
   )
   

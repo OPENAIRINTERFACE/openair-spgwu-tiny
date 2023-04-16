@@ -48,8 +48,8 @@ function help()
   echo_error "  -c, --clean                               Clean the build generated files: config, object, executable files (build from scratch)"
   echo_error "  -f, --force                               No interactive script for installation of software packages."
   echo_error "  -h, --help                                Print this help."
-  echo_error "  -I, --install-deps                        Check installed software necessary to build and run S/P-GW-U (support $SUPPORTED_DISTRO)."
-  echo_error "  -i, --install-min-deps                    Check installed software necessary to run a statically linked S/P-GW-U (support $SUPPORTED_DISTRO)."
+  echo_error "  -I, --install-deps                        Check installed software necessary to build and run UPF (support $SUPPORTED_DISTRO)."
+  echo_error "  -i, --install-min-deps                    Check installed software necessary to run a statically linked UPF (support $SUPPORTED_DISTRO)."
   echo_error "  -j, --jobs                                Multiple jobs for compiling."
   echo_error "  -v, --verbose                             Build process verbose."
   echo_error "  -V, --Verbose                             CMake only build process verbose, display compilation warnings and errors."
@@ -95,13 +95,13 @@ function main()
         return 0
         ;;
       -I | --install-deps)
-        echo "Check installed software necessary to build and run S/P-GW-U (support $SUPPORTED_DISTRO):"
+        echo "Check installed software necessary to build and run UPF (support $SUPPORTED_DISTRO):"
         set_openair_env
         var_check_install_deps=1
         shift;
         ;;
       -i | --install-min-deps)
-        echo "Check installed software necessary to run S/P-GW-U (support $SUPPORTED_DISTRO):"
+        echo "Check installed software necessary to run UPF (support $SUPPORTED_DISTRO):"
         set_openair_env
         var_check_install_min_deps=1
         shift;
@@ -159,13 +159,13 @@ function main()
   if [ $var_check_install_deps -gt 0 ];then
     check_install_spgwu_deps  $force $debug
     if [[ $? -ne 0 ]]; then
-        echo_error "Error: SPGW-U deps installation failed"
+        echo_error "Error: UPF deps installation failed"
         return 1
     else
         # Done now after
         disable_ipv6
-        echo_success "SPGW-U deps installation successful"
-        echo_warning "SPGW-U not compiled, to compile it, re-run build_upf without -I option"
+        echo_success "UPF deps installation successful"
+        echo_warning "UPF not compiled, to compile it, re-run build_upf without -I option"
         return 0
     fi
   fi
@@ -187,19 +187,19 @@ function main()
   ##############################################################################
   # Clean
   ##############################################################################
-  cd $OPENAIRCN_DIR/build/spgw_u
+  cd $OPENAIRCN_DIR/build/upf
   if [ $clean -ne 0 ]; then
     if [[ $verbose -eq 1 ]]; then
-      echo "Cleaning S/P-GW-U: generated configuration files, obj files, executable"
+      echo "Cleaning UPF: generated configuration files, obj files, executable"
     fi
-    rm -Rf $OPENAIRCN_DIR/build/spgw_u/build  2>&1
+    rm -Rf $OPENAIRCN_DIR/build/upf/build  2>&1
     mkdir -m 777 -p -v build
   fi
 
   ##############################################################################
   # Compile S/P-GW
   ##############################################################################
-  cd $OPENAIRCN_DIR/build/spgw_u
+  cd $OPENAIRCN_DIR/build/upf
   if [ ! -d ./build ]; then
     mkdir -m 777 -p -v build
   fi
@@ -208,12 +208,12 @@ function main()
   $CMAKE $cmake_args .. > /dev/null
   ret=$?;[[ $ret -ne 0 ]] && return $ret
 
-  compilations spgw_u upf $OPENAIRCN_DIR/build/spgw_u/build/upf $verbose
+  compilations upf upf $OPENAIRCN_DIR/build/upf/build/upf $verbose
   ret=$?;[[ $ret -ne 0 ]] && return $ret
 
   # For daemon should not be group writable
-  $SUDO chmod 755 $OPENAIRCN_DIR/build/spgw_u/build/upf
-  $SUDO cp -upv $OPENAIRCN_DIR/build/spgw_u/build/upf $INSTALL_DIR && $SUDO chmod 755 $INSTALL_DIR/upf && echo_success "upf installed"
+  $SUDO chmod 755 $OPENAIRCN_DIR/build/upf/build/upf
+  $SUDO cp -upv $OPENAIRCN_DIR/build/upf/build/upf $INSTALL_DIR && $SUDO chmod 755 $INSTALL_DIR/upf && echo_success "upf installed"
   return 0
 }
 

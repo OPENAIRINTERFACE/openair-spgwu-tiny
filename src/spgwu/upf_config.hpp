@@ -19,15 +19,15 @@
  *      contact@openairinterface.org
  */
 
-/*! \file spgwu_config.hpp
+/*! \file upf_config.hpp
  * \brief
  * \author Lionel Gauthier
  * \company Eurecom
  * \email: lionel.gauthier@eurecom.fr
  */
 
-#ifndef FILE_SPGWU_CONFIG_HPP_SEEN
-#define FILE_SPGWU_CONFIG_HPP_SEEN
+#ifndef FILE_UPF_CONFIG_HPP_SEEN
+#define FILE_UPF_CONFIG_HPP_SEEN
 
 #include "3gpp_29.244.h"
 #include "3gpp_29.510.h"
@@ -42,58 +42,58 @@
 #include <stdbool.h>
 #include <string>
 
-namespace spgwu {
+namespace upf {
 
-#define SPGWU_CONFIG_STRING_SPGWU_CONFIG "SPGW-U"
-#define SPGWU_CONFIG_STRING_PID_DIRECTORY "PID_DIRECTORY"
-#define SPGWU_CONFIG_STRING_INSTANCE "INSTANCE"
-#define SPGWU_CONFIG_STRING_FQDN "FQDN"
-#define SPGWU_CONFIG_STRING_INTERFACES "INTERFACES"
-#define SPGWU_CONFIG_STRING_INTERFACE_NAME "INTERFACE_NAME"
-#define SPGWU_CONFIG_STRING_IPV4_ADDRESS "IPV4_ADDRESS"
-#define SPGWU_CONFIG_STRING_PORT "PORT"
-#define SPGWU_CONFIG_STRING_SCHED_PARAMS "SCHED_PARAMS"
-#define SPGWU_CONFIG_STRING_THREAD_RD_CPU_ID "CPU_ID"
-#define SPGWU_CONFIG_STRING_THREAD_RD_SCHED_POLICY "SCHED_POLICY"
-#define SPGWU_CONFIG_STRING_THREAD_RD_SCHED_PRIORITY "SCHED_PRIORITY"
-#define SPGWU_CONFIG_STRING_THREAD_POOL_SIZE "THREAD_POOL_SIZE"
-#define SPGWU_CONFIG_STRING_INTERFACE_SGI "SGI"
-#define SPGWU_CONFIG_STRING_INTERFACE_SX "SX"
-#define SPGWU_CONFIG_STRING_INTERFACE_S1U_S12_S4_UP "S1U_S12_S4_UP"
-#define SPGWU_CONFIG_STRING_PDN_NETWORK_LIST "PDN_NETWORK_LIST"
-#define SPGWU_CONFIG_STRING_NETWORK_IPV4 "NETWORK_IPV4"
-#define SPGWU_CONFIG_STRING_NETWORK_IPV6 "NETWORK_IPV6"
-#define SPGWU_CONFIG_STRING_ADDRESS_PREFIX_DELIMITER "/"
-#define SPGWU_CONFIG_STRING_SNAT "SNAT"
-#define SPGWU_CONFIG_STRING_MAX_PFCP_SESSIONS "MAX_PFCP_SESSIONS"
-#define SPGWU_CONFIG_STRING_SPGWC_LIST "SPGW-C_LIST"
-#define SPGWU_CONFIG_STRING_ITTI_TASKS "ITTI_TASKS"
-#define SPGWU_CONFIG_STRING_ITTI_TIMER_SCHED_PARAMS "ITTI_TIMER_SCHED_PARAMS"
-#define SPGWU_CONFIG_STRING_S1U_SCHED_PARAMS "S1U_SCHED_PARAMS"
-#define SPGWU_CONFIG_STRING_SX_SCHED_PARAMS "SX_SCHED_PARAMS"
-#define SPGWU_CONFIG_STRING_SPGWU_APP_SCHED_PARAMS "SPGWU_APP_SCHED_PARAMS"
-#define SPGWU_CONFIG_STRING_ASYNC_CMD_SCHED_PARAMS "ASYNC_CMD_SCHED_PARAMS"
-#define SPGWU_CONFIG_STRING_NON_STANDART_FEATURES "NON_STANDART_FEATURES"
-#define SPGWU_CONFIG_STRING_BYPASS_UL_PFCP_RULES "BYPASS_UL_PFCP_RULES"
+#define UPF_CONFIG_STRING_UPF_CONFIG "UPF"
+#define UPF_CONFIG_STRING_PID_DIRECTORY "PID_DIRECTORY"
+#define UPF_CONFIG_STRING_INSTANCE "INSTANCE"
+#define UPF_CONFIG_STRING_FQDN "FQDN"
+#define UPF_CONFIG_STRING_INTERFACES "INTERFACES"
+#define UPF_CONFIG_STRING_INTERFACE_NAME "INTERFACE_NAME"
+#define UPF_CONFIG_STRING_IPV4_ADDRESS "IPV4_ADDRESS"
+#define UPF_CONFIG_STRING_PORT "PORT"
+#define UPF_CONFIG_STRING_SCHED_PARAMS "SCHED_PARAMS"
+#define UPF_CONFIG_STRING_THREAD_RD_CPU_ID "CPU_ID"
+#define UPF_CONFIG_STRING_THREAD_RD_SCHED_POLICY "SCHED_POLICY"
+#define UPF_CONFIG_STRING_THREAD_RD_SCHED_PRIORITY "SCHED_PRIORITY"
+#define UPF_CONFIG_STRING_THREAD_POOL_SIZE "THREAD_POOL_SIZE"
+#define UPF_CONFIG_STRING_INTERFACE_N3 "N3"
+#define UPF_CONFIG_STRING_INTERFACE_N4 "N4"
+#define UPF_CONFIG_STRING_INTERFACE_N6 "N6"
+#define UPF_CONFIG_STRING_PDN_NETWORK_LIST "PDN_NETWORK_LIST"
+#define UPF_CONFIG_STRING_NETWORK_IPV4 "NETWORK_IPV4"
+#define UPF_CONFIG_STRING_NETWORK_IPV6 "NETWORK_IPV6"
+#define UPF_CONFIG_STRING_ADDRESS_PREFIX_DELIMITER "/"
+#define UPF_CONFIG_STRING_SNAT "SNAT"
+#define UPF_CONFIG_STRING_MAX_PFCP_SESSIONS "MAX_PFCP_SESSIONS"
+#define UPF_CONFIG_STRING_SMF_LIST "SMF_LIST"
+#define UPF_CONFIG_STRING_ITTI_TASKS "ITTI_TASKS"
+#define UPF_CONFIG_STRING_ITTI_TIMER_SCHED_PARAMS "ITTI_TIMER_SCHED_PARAMS"
+#define UPF_CONFIG_STRING_S1U_SCHED_PARAMS "S1U_SCHED_PARAMS"
+#define UPF_CONFIG_STRING_SX_SCHED_PARAMS "SX_SCHED_PARAMS"
+#define UPF_CONFIG_STRING_SMF_APP_SCHED_PARAMS "SMF_APP_SCHED_PARAMS"
+#define UPF_CONFIG_STRING_ASYNC_CMD_SCHED_PARAMS "ASYNC_CMD_SCHED_PARAMS"
+#define UPF_CONFIG_STRING_NON_STANDART_FEATURES "NON_STANDART_FEATURES"
+#define UPF_CONFIG_STRING_BYPASS_UL_PFCP_RULES "BYPASS_UL_PFCP_RULES"
 
-#define SPGWU_CONFIG_STRING_5G_FEATURES "SUPPORT_5G_FEATURES"
-#define SPGWU_CONFIG_STRING_ENABLE_5G_FEATURES "ENABLE_5G_FEATURES"
-#define SPGWU_CONFIG_STRING_5G_FEATURES_REGISTER_NRF "REGISTER_NRF"
-#define SPGWU_CONFIG_STRING_5G_FEATURES_UPF_FQDN "UPF_FQDN_5G"
-#define SPGWU_CONFIG_STRING_5G_FEATURES_NRF "NRF"
-#define SPGWU_CONFIG_STRING_5G_FEATURES_NRF_IPV4_ADDRESS "IPV4_ADDRESS"
-#define SPGWU_CONFIG_STRING_5G_FEATURES_NRF_PORT "PORT"
-#define SPGWU_CONFIG_STRING_5G_FEATURES_NRF_HTTP_VERSION "HTTP_VERSION"
-#define SPGWU_CONFIG_STRING_5G_FEATURES_NRF_API_VERSION "API_VERSION"
-#define SPGWU_CONFIG_STRING_5G_FEATURES_UPF_INFO "UPF_INFO"
-#define SPGWU_CONFIG_STRING_5G_FEATURES_NSSAI_SST "NSSAI_SST"
-#define SPGWU_CONFIG_STRING_5G_FEATURES_NSSAI_SD "NSSAI_SD"
-#define SPGWU_CONFIG_STRING_5G_FEATURES_DNN "DNN"
-#define SPGWU_CONFIG_STRING_5G_FEATURES_USE_FQDN_NRF "USE_FQDN_NRF"
-#define SPGWU_CONFIG_STRING_5G_FEATURES_UPF_INFO_DNN_LIST "DNN_LIST"
+#define UPF_CONFIG_STRING_5G_FEATURES "SUPPORT_5G_FEATURES"
+#define UPF_CONFIG_STRING_ENABLE_5G_FEATURES "ENABLE_5G_FEATURES"
+#define UPF_CONFIG_STRING_5G_FEATURES_REGISTER_NRF "REGISTER_NRF"
+#define UPF_CONFIG_STRING_5G_FEATURES_UPF_FQDN "UPF_FQDN_5G"
+#define UPF_CONFIG_STRING_5G_FEATURES_NRF "NRF"
+#define UPF_CONFIG_STRING_5G_FEATURES_NRF_IPV4_ADDRESS "IPV4_ADDRESS"
+#define UPF_CONFIG_STRING_5G_FEATURES_NRF_PORT "PORT"
+#define UPF_CONFIG_STRING_5G_FEATURES_NRF_HTTP_VERSION "HTTP_VERSION"
+#define UPF_CONFIG_STRING_5G_FEATURES_NRF_API_VERSION "API_VERSION"
+#define UPF_CONFIG_STRING_5G_FEATURES_UPF_INFO "UPF_INFO"
+#define UPF_CONFIG_STRING_5G_FEATURES_NSSAI_SST "NSSAI_SST"
+#define UPF_CONFIG_STRING_5G_FEATURES_NSSAI_SD "NSSAI_SD"
+#define UPF_CONFIG_STRING_5G_FEATURES_DNN "DNN"
+#define UPF_CONFIG_STRING_5G_FEATURES_USE_FQDN_NRF "USE_FQDN_NRF"
+#define UPF_CONFIG_STRING_5G_FEATURES_UPF_INFO_DNN_LIST "DNN_LIST"
 
-#define SPGW_ABORT_ON_ERROR true
-#define SPGW_WARN_ON_ERROR false
+#define UPF_ABORT_ON_ERROR true
+#define UPG_WARN_ON_ERROR false
 
 typedef struct interface_cfg_s {
   std::string if_name;
@@ -119,7 +119,7 @@ typedef struct itti_cfg_s {
   util::thread_sched_params itti_timer_sched_params;
   util::thread_sched_params s1u_sched_params;
   util::thread_sched_params sx_sched_params;
-  util::thread_sched_params spgwu_app_sched_params;
+  util::thread_sched_params upf_app_sched_params;
   util::thread_sched_params async_cmd_sched_params;
 } itti_cfg_t;
 
@@ -127,7 +127,7 @@ typedef struct itti_cfg_s {
 typedef struct nsf_cfg_s {
   bool bypass_ul_pfcp_rules;
 } nsf_cfg_t;
-class spgwu_config {
+class upf_config {
  private:
   int load_itti(const libconfig::Setting& itti_cfg, itti_cfg_t& cfg);
   int load_interface(const libconfig::Setting& if_cfg, interface_cfg_t& cfg);
@@ -141,9 +141,9 @@ class spgwu_config {
   std::string pid_dir;
   unsigned int instance;
   std::string fqdn;
-  interface_cfg_t s1_up;
-  interface_cfg_t sgi;
-  interface_cfg_t sx;
+  interface_cfg_t n3;
+  interface_cfg_t n6;
+  interface_cfg_t n4;
   itti_cfg_t itti;
   nsf_cfg_t nsf;
 
@@ -153,7 +153,7 @@ class spgwu_config {
 
   bool snat;
   std::vector<pdn_cfg_t> pdns;
-  std::vector<pfcp::node_id_t> spgwcs;
+  std::vector<pfcp::node_id_t> smfs;
 
   struct {
     bool enable_5g_features;
@@ -169,34 +169,34 @@ class spgwu_config {
     } nrf_addr;
   } upf_5g_features;
 
-  spgwu_config()
+  upf_config()
       : m_rw_lock(),
         pid_dir(),
         instance(0),
         fqdn(),
-        s1_up(),
-        sgi(),
+        n3(),
+        n6(),
         gateway(),
-        sx(),
+        n4(),
         itti(),
         pdns(),
-        spgwcs(),
+        smfs(),
         max_pfcp_sessions(100),
         nsf(),
         snat(false) {
     itti.itti_timer_sched_params.sched_priority = 85;
     itti.s1u_sched_params.sched_priority        = 84;
     itti.sx_sched_params.sched_priority         = 84;
-    itti.spgwu_app_sched_params.sched_priority  = 84;
+    itti.upf_app_sched_params.sched_priority    = 84;
     itti.async_cmd_sched_params.sched_priority  = 84;
 
-    s1_up.thread_rd_sched_params.sched_priority = 98;
-    s1_up.port                                  = gtpv1u::default_port;
+    n3.thread_rd_sched_params.sched_priority = 98;
+    n3.port                                  = gtpv1u::default_port;
 
-    sgi.thread_rd_sched_params.sched_priority = 98;
+    n6.thread_rd_sched_params.sched_priority = 98;
 
-    sx.thread_rd_sched_params.sched_priority = 95;
-    sx.port                                  = pfcp::default_port;
+    n4.thread_rd_sched_params.sched_priority = 95;
+    n4.port                                  = pfcp::default_port;
 
     upf_5g_features.enable_5g_features        = false;
     upf_5g_features.register_nrf              = false;
@@ -216,6 +216,6 @@ class spgwu_config {
   int get_pfcp_node_id(pfcp::node_id_t& node_id);
   int get_pfcp_fseid(pfcp::fseid_t& fseid);
 };
-}  // namespace spgwu
+}  // namespace upf
 
-#endif /* FILE_SPGWU_CONFIG_HPP_SEEN */
+#endif /* FILE_UPF_CONFIG_HPP_SEEN */

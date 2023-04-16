@@ -46,7 +46,7 @@
 #include <thread>
 #include <vector>
 
-namespace spgwu {
+namespace upf {
 
 // Have to be tuned for sdt situations
 #define PFCP_SWITCH_MAX_SESSIONS 128
@@ -76,8 +76,8 @@ class pfcp_switch {
   util::uint_generator<uint64_t> seid_generator_;
   util::uint_generator<teid_t> teid_s1u_generator_;
 
-#define TASK_SPGWU_PFCP_SWITCH_MAX_COMMIT_INTERVAL (0)
-#define TASK_SPGWU_PFCP_SWITCH_MIN_COMMIT_INTERVAL (1)
+#define TASK_UPF_PFCP_SWITCH_MAX_COMMIT_INTERVAL (0)
+#define TASK_UPF_PFCP_SWITCH_MIN_COMMIT_INTERVAL (1)
 
 #define PFCP_SWITCH_MAX_COMMIT_INTERVAL_MILLISECONDS 200
 #define PFCP_SWITCH_MIN_COMMIT_INTERVAL_MILLISECONDS 50
@@ -173,14 +173,14 @@ class pfcp_switch {
   void send_to_core(char* const ip_packet, const ssize_t len);
 
   void handle_pfcp_session_establishment_request(
-      std::shared_ptr<itti_sxab_session_establishment_request> sreq,
-      itti_sxab_session_establishment_response*);
+      std::shared_ptr<itti_n4_session_establishment_request> sreq,
+      itti_n4_session_establishment_response*);
   void handle_pfcp_session_modification_request(
-      std::shared_ptr<itti_sxab_session_modification_request> sreq,
-      itti_sxab_session_modification_response*);
+      std::shared_ptr<itti_n4_session_modification_request> sreq,
+      itti_n4_session_modification_response*);
   void handle_pfcp_session_deletion_request(
-      std::shared_ptr<itti_sxab_session_deletion_request> sreq,
-      itti_sxab_session_deletion_response*);
+      std::shared_ptr<itti_n4_session_deletion_request> sreq,
+      itti_n4_session_deletion_response*);
 
   void time_out_min_commit_interval(const uint32_t timer_id);
   void time_out_max_commit_interval(const uint32_t timer_id);
@@ -191,5 +191,5 @@ class pfcp_switch {
 
   std::string to_string() const;
 };
-}  // namespace spgwu
+}  // namespace upf
 #endif /* FILE_PFCP_SWITCH_HPP_SEEN */

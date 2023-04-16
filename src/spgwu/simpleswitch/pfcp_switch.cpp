@@ -33,7 +33,7 @@
 #include "pfcp_switch.hpp"
 #include "upf_config.hpp"
 #include "upf_pfcp_association.hpp"
-#include "spgwu_s1u.hpp"
+#include "simple_switch.hpp"
 
 #include <algorithm>
 #include <fstream>  // std::ifstream
@@ -51,12 +51,12 @@
 
 using namespace pfcp;
 using namespace gtpv1u;
-using namespace spgwu;
+using namespace upf;
 using namespace std;
 
 extern itti_mw* itti_inst;
-extern spgwu_config spgwu_cfg;
-extern spgwu_s1u* spgwu_s1u_inst;
+extern upf_config upf_cfg;
+extern upf_n3* upf_n3_inst;
 extern pfcp_switch* pfcp_switch_inst;
 
 //------------------------------------------------------------------------------
@@ -281,7 +281,7 @@ void pfcp_switch::setup_pdn_interfaces() {
   int index = 0;
   // TODO for loop on pdns
   {
-    pdn_cfg_t it = spgwu_cfg.pdns[index];
+    pdn_cfg_t it = upf_cfg.pdns[index];
     int sock_r   = 0;
 
     cmd = fmt::format("ip tuntap add mode tun dev tun{}", index);
@@ -301,13 +301,13 @@ void pfcp_switch::setup_pdn_interfaces() {
           it.prefix_ipv4, index);
       rc = system((const char*) cmd.c_str());
 
-      if (spgwu_cfg.snat) {
+      if (upf_cfg.snat) {
         cmd = fmt::format(
             "iptables -t nat -A POSTROUTING -s {}/{} -o {} -j SNAT --to-source "
             "{}",
             conv::toString(it.network_ipv4).c_str(), it.prefix_ipv4,
-            spgwu_cfg.sgi.if_name.c_str(),
-            conv::toString(spgwu_cfg.sgi.addr4).c_str());
+            upf_cfg.n6.if_name.c_str(),
+            conv::toString(upf_cfg.n6.addr4).c_str());
         rc = system((const char*) cmd.c_str());
       }
     }
@@ -332,7 +332,7 @@ void pfcp_switch::setup_pdn_interfaces() {
     // but do not forget to set routes outside SPGWu
     cmd = fmt::format(
         "/sbin/sysctl -w net.ipv4.conf.{}.rp_filter=0",
-        spgwu_cfg.sgi.if_name.c_str());
+        upf_cfg.n6.if_name.c_str());
     rc = system((const char*) cmd.c_str());
 
     // Otherwise redirect incoming ingress UE IP to default gw
@@ -352,7 +352,7 @@ void pfcp_switch::setup_pdn_interfaces() {
 
     std::thread t = thread(
         &pfcp_switch::pdn_read_loop, this, sock_r,
-        spgwu_cfg.sgi.thread_rd_sched_params);
+        upf_cfg.n6.thread_rd_sched_params);
     t.detach();
     threads_.push_back(std::move(t));
     socks_r.push_back(sock_r);
@@ -369,12 +369,12 @@ void pfcp_switch::setup_pdn_interfaces() {
 pfcp::fteid_t pfcp_switch::generate_fteid_s1u() {
   pfcp::fteid_t fteid = {};
   fteid.teid          = generate_teid_s1u();
-  if (spgwu_cfg.s1_up.addr4.s_addr) {
+  if (upf_cfg.n3.addr4.s_addr) {
     fteid.v4                  = 1;
-    fteid.ipv4_address.s_addr = spgwu_cfg.s1_up.addr4.s_addr;
+    fteid.ipv4_address.s_addr = upf_cfg.n3.addr4.s_addr;
   } else {
     fteid.v6           = 1;
-    fteid.ipv6_address = spgwu_cfg.s1_up.addr6;
+    fteid.ipv6_address = upf_cfg.n3.addr6;
   }
   return fteid;
 }
@@ -388,7 +388,7 @@ pfcp_switch::pfcp_switch()
       threads_(16),
       socks_r(16),
       sock_w(0) {
-  num_threads_   = spgwu_cfg.sgi.thread_rd_sched_params.thread_pool_size;
+  num_threads_   = upf_cfg.n6.thread_rd_sched_params.thread_pool_size;
   int num_blocks = num_threads_ * 16;
   free_pool_     = new folly::MPMCQueue<iovec_q_item_t*>(num_blocks);
   work_pool_     = new folly::MPMCQueue<iovec_q_item_t*>(num_blocks);
@@ -408,8 +408,7 @@ pfcp_switch::pfcp_switch()
   }
   for (int i = 0; i < num_threads_; i++) {
     std::thread t = std::thread(
-        &pfcp_switch::pdn_worker, this, i,
-        spgwu_cfg.sgi.thread_rd_sched_params);
+        &pfcp_switch::pdn_worker, this, i, upf_cfg.n6.thread_rd_sched_params);
     threads_.push_back(std::move(t));
   }
   timer_min_commit_interval_id = 0;
@@ -593,10 +592,10 @@ bool pfcp_switch::create_packet_in_access(
 
 //------------------------------------------------------------------------------
 void pfcp_switch::handle_pfcp_session_establishment_request(
-    std::shared_ptr<itti_sxab_session_establishment_request> sreq,
-    itti_sxab_session_establishment_response* resp) {
-  itti_sxab_session_establishment_request* req = sreq.get();
-  pfcp::fseid_t fseid                          = {};
+    std::shared_ptr<itti_n4_session_establishment_request> sreq,
+    itti_n4_session_establishment_response* resp) {
+  itti_n4_session_establishment_request* req = sreq.get();
+  pfcp::fseid_t fseid                        = {};
   pfcp::cause_t cause = {.cause_value = CAUSE_VALUE_REQUEST_ACCEPTED};
   pfcp::offending_ie_t offending_ie = {};
 
@@ -669,7 +668,7 @@ void pfcp_switch::handle_pfcp_session_establishment_request(
         // start_timer_max_commit_interval();
 
         pfcp::fseid_t up_fseid = {};
-        spgwu_cfg.get_pfcp_fseid(up_fseid);
+        upf_cfg.get_pfcp_fseid(up_fseid);
         up_fseid.seid = session->get_up_seid();
         resp->pfcp_ies.set(up_fseid);
 
@@ -725,9 +724,9 @@ void pfcp_switch::handle_pfcp_session_establishment_request(
 }
 //------------------------------------------------------------------------------
 void pfcp_switch::handle_pfcp_session_modification_request(
-    std::shared_ptr<itti_sxab_session_modification_request> sreq,
-    itti_sxab_session_modification_response* resp) {
-  itti_sxab_session_modification_request* req = sreq.get();
+    std::shared_ptr<itti_n4_session_modification_request> sreq,
+    itti_n4_session_modification_response* resp) {
+  itti_n4_session_modification_request* req = sreq.get();
 
   std::shared_ptr<pfcp::pfcp_session> s = {};
   pfcp::fseid_t fseid                   = {};
@@ -886,9 +885,9 @@ void pfcp_switch::handle_pfcp_session_modification_request(
 }
 //------------------------------------------------------------------------------
 void pfcp_switch::handle_pfcp_session_deletion_request(
-    std::shared_ptr<itti_sxab_session_deletion_request> sreq,
-    itti_sxab_session_deletion_response* resp) {
-  itti_sxab_session_deletion_request* req = sreq.get();
+    std::shared_ptr<itti_n4_session_deletion_request> sreq,
+    itti_n4_session_deletion_response* resp) {
+  itti_n4_session_deletion_request* req = sreq.get();
 
   std::shared_ptr<pfcp::pfcp_session> s = {};
   pfcp::fseid_t fseid                   = {};
@@ -940,7 +939,7 @@ void pfcp_switch::handle_pfcp_session_deletion_request(
 void pfcp_switch::pfcp_session_look_up_pack_in_access(
     struct iphdr* const iph, const std::size_t num_bytes,
     const endpoint& r_endpoint, const uint32_t tunnel_id) {
-  if (!spgwu_cfg.nsf.bypass_ul_pfcp_rules) {
+  if (!upf_cfg.nsf.bypass_ul_pfcp_rules) {
     std::shared_ptr<std::vector<std::shared_ptr<pfcp::pfcp_pdr>>> pdrs = {};
     if (get_pfcp_ul_pdrs_by_up_teid(tunnel_id, pdrs)) {
       bool nocp = false;
@@ -976,7 +975,7 @@ void pfcp_switch::pfcp_session_look_up_pack_in_access(
     } else {
       // Logger::pfcp_switch().info( "pfcp_session_look_up_pack_in_access tunnel
       // " TEID_FMT " not found", tunnel_id);
-      spgwu_s1u_inst->report_error_indication(r_endpoint, tunnel_id);
+      upf_n3_inst->report_error_indication(r_endpoint, tunnel_id);
     }
   } else {
     // Do not check PFCP rules for all UL data packet
@@ -989,7 +988,7 @@ void pfcp_switch::pfcp_session_look_up_pack_in_access(
 //------------------------------------------------------------------------------
 bool pfcp_switch::no_internal_loop(
     struct iphdr* const iph, const std::size_t num_bytes) {
-  pdn_cfg_t& pdn = spgwu_cfg.pdns[0];
+  pdn_cfg_t& pdn = upf_cfg.pdns[0];
   if ((pdn.network_ipv4.s_addr == (iph->daddr & pdn.network_mask_ipv4_be)) &&
       ((be32toh(iph->daddr) & 0x000000FF) != 0X00000001)) {
     pfcp_session_look_up_pack_in_core((const char*) iph, num_bytes);

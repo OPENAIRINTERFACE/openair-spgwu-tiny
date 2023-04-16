@@ -30,7 +30,6 @@
 
 using namespace pfcp;
 
-
 //------------------------------------------------------------------------------
 bool pfcp_session::get(
     const uint32_t far_id, std::shared_ptr<pfcp::pfcp_far>& far) const {
@@ -55,12 +54,12 @@ bool pfcp_session::get(
 }
 //------------------------------------------------------------------------------
 void pfcp_session::add(std::shared_ptr<pfcp::pfcp_far> far) {
-  Logger::spgwu_sx().info("pfcp_session::add(far) seid " SEID_FMT " ", seid);
+  Logger::upf_n4().info("pfcp_session::add(far) seid " SEID_FMT " ", seid);
   fars.push_back(far);
 }
 //------------------------------------------------------------------------------
 void pfcp_session::add(std::shared_ptr<pfcp::pfcp_pdr> pdr) {
-  Logger::spgwu_sx().info("pfcp_session::add(pdr) seid " SEID_FMT " ", seid);
+  Logger::upf_n4().info("pfcp_session::add(pdr) seid " SEID_FMT " ", seid);
   pdrs.push_back(pdr);
 }
 //------------------------------------------------------------------------------
@@ -68,7 +67,7 @@ bool pfcp_session::remove(const pfcp::far_id_t& far_id, uint8_t& cause_value) {
   for (std::vector<std::shared_ptr<pfcp::pfcp_far>>::iterator it = fars.begin();
        it != fars.end(); ++it) {
     if ((*it)->far_id.far_id == far_id.far_id) {
-      Logger::spgwu_sx().info(
+      Logger::upf_n4().info(
           "pfcp_session::remove(far) seid " SEID_FMT " ", seid);
       fars.erase(it);
       return true;
@@ -82,7 +81,7 @@ bool pfcp_session::remove(const pfcp::pdr_id_t& pdr_id, uint8_t& cause_value) {
   for (std::vector<std::shared_ptr<pfcp::pfcp_pdr>>::iterator it = pdrs.begin();
        it != pdrs.end(); ++it) {
     if ((*it)->pdr_id.rule_id == pdr_id.rule_id) {
-      Logger::spgwu_sx().info(
+      Logger::upf_n4().info(
           "pfcp_session::remove(pdr) seid " SEID_FMT " ", seid);
       pdrs.erase(it);
       return true;
@@ -194,7 +193,7 @@ bool pfcp_session::create(
 
   if (pdi.traffic_endpoint_id.first) {
     cause.cause_value = CAUSE_VALUE_REQUEST_REJECTED;
-    Logger::spgwu_sx().info("Do not support IE traffic_endpoint_id yet!");
+    Logger::upf_n4().info("Do not support IE traffic_endpoint_id yet!");
     return false;
   }
 
@@ -209,11 +208,11 @@ bool pfcp_session::create(
     const pfcp::fteid_t& local_fteid = pdi.local_fteid.second;
     // allocated_fteid                  = {};
     // if (local_fteid.ch) {
-      // TODO if (local_fteid.choose_id) {
-      // allocated_fteid = pfcp_switch_inst->generate_fteid_s1u();
+    // TODO if (local_fteid.choose_id) {
+    // allocated_fteid = pfcp_switch_inst->generate_fteid_s1u();
     // } else {
     //   cause.cause_value = CAUSE_VALUE_REQUEST_REJECTED;
-    //   Logger::spgwu_sx().info(
+    //   Logger::upf_n4().info(
     //       "Do not support IE FTEID managed by CP entity! Rejecting "
     //       "PFCP_XXX_REQUEST");
     //   return false;
@@ -225,12 +224,12 @@ bool pfcp_session::create(
 
     std::shared_ptr<pfcp_pdr> spdr = std::shared_ptr<pfcp_pdr>(pdr);
     // if (pfcp_switch_inst->create_packet_in_access(
-            // spdr, allocated_fteid, cause.cause_value)) {
-      pdr->set(get_up_seid());
-      add(spdr);
+    // spdr, allocated_fteid, cause.cause_value)) {
+    pdr->set(get_up_seid());
+    add(spdr);
     // } else {
     //   cause.cause_value = CAUSE_VALUE_REQUEST_REJECTED;
-    //   Logger::spgwu_sx().info(
+    //   Logger::upf_n4().info(
     //       "Could not create_packet_in_access ! Rejecting "
     //       "PFCP_SESSION_ESTABLISHMENT_REQUEST");
     //   return false;
@@ -245,7 +244,7 @@ bool pfcp_session::create(
     //       be32toh(pdi.ue_ip_address.second.ipv4_address.s_addr), spdr);
     // } else {
     //   cause.cause_value = CAUSE_VALUE_REQUEST_REJECTED;
-    //   Logger::spgwu_sx().info(
+    //   Logger::upf_n4().info(
     //       "Could not create_packet_in_access, cause accept only IPv4 UE IP "
     //       "address! Rejecting PFCP_XXX_REQUEST");
     //   return false;
@@ -253,7 +252,7 @@ bool pfcp_session::create(
     add(spdr);
   } else {
     cause.cause_value = CAUSE_VALUE_REQUEST_REJECTED;
-    Logger::spgwu_sx().info(
+    Logger::upf_n4().info(
         "Do not actually support other interface type value as ACCESS and CORE "
         "in PFCP_XXX_REQUEST! Rejecting PFCP_XXX_REQUEST");
     return false;

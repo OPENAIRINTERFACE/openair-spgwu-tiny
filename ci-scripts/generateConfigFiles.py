@@ -47,21 +47,21 @@ class spgwuConfigGen():
 		spgwuFile.write('\n')
 		spgwuFile.write('INSTANCE=1\n')
 		if self.fromDockerFile:
-			spgwuFile.write('PREFIX=\'/openair-spgwu-tiny/etc\'\n')
+			spgwuFile.write('PREFIX=\'/oai-upf/etc\'\n')
 		else:
 			spgwuFile.write('PREFIX=\'/usr/local/etc/oai\'\n')
 		spgwuFile.write('\n')
 
 		if not self.fromDockerFile:
 			spgwuFile.write('mkdir -p $PREFIX\n')
-			spgwuFile.write('cp etc/spgw_u.conf $PREFIX\n')
+			spgwuFile.write('cp etc/upf.conf $PREFIX\n')
 			spgwuFile.write('\n')
 
 		spgwuFile.write('declare -A SPGWU_CONF\n')
 		spgwuFile.write('\n')
 		spgwuFile.write('SPGWU_CONF[@INSTANCE@]=$INSTANCE\n')
 		spgwuFile.write('SPGWU_CONF[@PID_DIRECTORY@]=\'/var/run\'\n')
-		spgwuFile.write('SPGWU_CONF[@SGW_INTERFACE_NAME_FOR_S1U_S12_S4_UP@]=\'' + self.s1u_name + '\'\n')
+		spgwuFile.write('SPGWU_CONF[@SGW_INTERFACE_NAME_FOR_N3@]=\'' + self.s1u_name + '\'\n')
 		spgwuFile.write('SPGWU_CONF[@SGW_INTERFACE_NAME_FOR_SX@]=\'' + self.sxu_name + '\'\n')
 		# SGI is fixed on SGI
 		spgwuFile.write('SPGWU_CONF[@PGW_INTERFACE_NAME_FOR_SGI@]=\'eth0\'\n')
@@ -86,14 +86,14 @@ class spgwuConfigGen():
 
 	def GenerateSpgwuEnvList(self):
 		spgwuFile = open('./spgwu-env.list', 'w')
-		spgwuFile.write('# Environment Variables used by the OAI-SPGW-U-TINY Entrypoint Script\n')
+		spgwuFile.write('# Environment Variables used by the OAI-UPF-TINY Entrypoint Script\n')
 		spgwuFile.write('MCC=208\n')
 		spgwuFile.write('MNC=99\n')
 		spgwuFile.write('MNC03=099\n')
 		spgwuFile.write('REALM=openairinterface.org\n')
 		spgwuFile.write('GW_ID=1\n')
 		spgwuFile.write('PID_DIRECTORY=/var/run\n')
-		spgwuFile.write('SGW_INTERFACE_NAME_FOR_S1U_S12_S4_UP=' + self.s1u_name + '\n')
+		spgwuFile.write('SGW_INTERFACE_NAME_FOR_N3=' + self.s1u_name + '\n')
 		spgwuFile.write('SGW_INTERFACE_NAME_FOR_SX=' + self.sxu_name + '\n')
 		spgwuFile.write('PGW_INTERFACE_NAME_FOR_SGI=eth0\n')
 		spgwuFile.write('SPGWC0_IP_ADDRESS=' + str(self.spgwc0_ip_addr) + '\n')
@@ -115,18 +115,18 @@ class spgwuConfigGen():
 def Usage():
 	print('----------------------------------------------------------------------------------------------------------------------')
 	print('generateConfigFiles.py')
-	print('   Prepare a bash script to be run in the workspace where SPGW-U-TINY is being built.')
+	print('   Prepare a bash script to be run in the workspace where UPF-TINY is being built.')
 	print('   That bash script will copy configuration template files and adapt to your configuration.')
 	print('----------------------------------------------------------------------------------------------------------------------')
 	print('Usage: python3 generateConfigFiles.py [options]')
 	print('  --help  Show this help.')
-	print('------------------------------------------------------------------------------------------------- SPGW-U Options -----')
-	print('  --kind=SPGW-U')
+	print('------------------------------------------------------------------------------------------------- UPF Options -----')
+	print('  --kind=UPF')
 	print('  --sxc_ip_addr=[SPGW-C SX IP address]')
-	print('  --sxu=[SPGW-U SX Interface Name]')
-	print('  --s1u=[SPGW-U S1-U Interface Name]')
+	print('  --sxu=[UPF SX Interface Name]')
+	print('  --s1u=[UPF S1-U Interface Name]')
 	print('  --from_docker_file')
-	print('------------------------------------------------------------------------------------------- SPGW-U Not Mandatory -----')
+	print('------------------------------------------------------------------------------------------- UPF Not Mandatory -----')
 	print('  --network_ue_ip=[UE IP pool range in CICDR format, for example 12.1.1.0/24. The attached UE will be allocated an IP address in that range.]')
 	print('  --network_ue_nat_option=[yes or no, no is default]')
 	print('  --env_for_entrypoint	[generates a spgwc-env.list interpreted by the entrypoint]')
@@ -174,13 +174,13 @@ if mySpgwuCfg.kind == '':
 	Usage()
 	sys.exit('missing kind parameter')
 
-if mySpgwuCfg.kind == 'SPGW-U':
+if mySpgwuCfg.kind == 'UPF':
 	if mySpgwuCfg.sxu_name == '':
 		Usage()
-		sys.exit('missing SX Interface Name on SPGW-U container')
+		sys.exit('missing SX Interface Name on UPF container')
 	elif mySpgwuCfg.s1u_name == '':
 		Usage()
-		sys.exit('missing S1-U Interface Name on SPGW-U container')
+		sys.exit('missing S1-U Interface Name on UPF container')
 	elif str(mySpgwuCfg.spgwc0_ip_addr) == '0.0.0.0':
 		Usage()
 		sys.exit('missing SPGW-C #0 IP address on SX interface')

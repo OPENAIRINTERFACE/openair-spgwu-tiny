@@ -19,7 +19,7 @@
  *      contact@openairinterface.org
  */
 
-/*! \file spgwu_s1u.hpp
+/*! \file simple_switch.hpp
    \author  Lionel GAUTHIER
    \date 2019
    \email: lionel.gauthier@eurecom.fr
@@ -38,9 +38,9 @@
 #include <netinet/in.h>
 #include <thread>
 
-namespace spgwu {
+namespace upf {
 
-class spgwu_s1u : public gtpv1u::gtpu_l4_stack {
+class upf_n3 : public gtpv1u::gtpu_l4_stack {
  private:
   std::thread::id thread_id;
   std::thread thread;
@@ -51,9 +51,9 @@ class spgwu_s1u : public gtpv1u::gtpu_l4_stack {
       gtpv1u::gtpv1u_msg& msg, const endpoint& r_endpoint);
 
  public:
-  spgwu_s1u();
-  spgwu_s1u(spgwu_s1u const&) = delete;
-  void operator=(spgwu_s1u const&) = delete;
+  upf_n3();
+  upf_n3(upf_n3 const&) = delete;
+  void operator=(upf_n3 const&) = delete;
 
   // void handle_itti_msg (itti_s1u_echo_request& s) {};
   void handle_itti_msg(std::shared_ptr<itti_s1u_echo_response> m);
@@ -86,5 +86,5 @@ class spgwu_s1u : public gtpv1u::gtpu_l4_stack {
   void report_error_indication(
       const endpoint& r_endpoint, const uint32_t tunnel_id);
 };
-}  // namespace spgwu
+}  // namespace upf
 #endif /* FILE_SGWU_S1U_HPP_SEEN */

@@ -2,12 +2,12 @@
 apiVersion: build.openshift.io/v1
 kind: BuildConfig
 metadata: 
-  name: oai-spgwu-tiny-base-builder
+  name: oai-upf-base-builder
 spec: 
   output: 
     to: 
       kind: ImageStreamTag
-      name: "oai-spgwu-tiny-base-builder:oai-oc"
+      name: "oai-upf-base-builder:oai-oc"
   runPolicy: Serial
   strategy:
     type: Docker
@@ -27,7 +27,7 @@ spec:
         ################################################################
         # Builder Image (can also be used as developer's image)
         ################################################################
-        FROM registry.access.redhat.com/ubi8/ubi:latest as oai-spgwu-tiny-builder
+        FROM registry.access.redhat.com/ubi8/ubi:latest as oai-upf-builder
 
         ARG FEATURES=mme_oai
         ENV MAGMA_ROOT=/magma

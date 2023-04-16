@@ -269,7 +269,7 @@ ADD_SUBDIRECTORY(${CMAKE_CURRENT_SOURCE_DIR}/../../src/gtpv1u ${CMAKE_CURRENT_BI
 ADD_SUBDIRECTORY(${CMAKE_CURRENT_SOURCE_DIR}/../../src/udp ${CMAKE_CURRENT_BINARY_DIR}/udp)
 
 ################################################################################
-# Specific part for oai_spgw_u folder
+# Specific part for oai_upf folder
 
 add_definitions("-DPACKAGE_NAME=\"UPF\"")
 
@@ -296,15 +296,7 @@ add_executable(upf
   ${SRC_TOP_DIR}/itti/itti_msg.cpp
   )
 
-IF(STATIC_LINKING)
-    SET(CMAKE_EXE_LINKER_FLAGS "-static")
-    SET_TARGET_PROPERTIES(spgwc PROPERTIES LINK_SEARCH_END_STATIC 1)
-    # asan do not support static linking
-    SET(ASAN)
-ENDIF(STATIC_LINKING)
-
-
 # folly glog dl double-conversion for FB folly library
-target_link_libraries (upf ${ASAN}  -Wl,--start-group CN_UTILS ${CMAKE_CURRENT_SOURCE_DIR}/../../build/ext/libbpf/src/libbpf.so SPGWU SPGW_SWITCH UDP GTPV1U PFCP 3GPP_COMMON_TYPES far_bpf session_bpf upfutils upf_xdp_bpf  UPF_XDP gflags glog dl double-conversion folly -Wl,--end-group
+target_link_libraries (upf ${ASAN}  -Wl,--start-group CN_UTILS ${CMAKE_CURRENT_SOURCE_DIR}/../../build/ext/libbpf/src/libbpf.so SPGWU SIMPLE_SWITCH UDP GTPV1U PFCP 3GPP_COMMON_TYPES far_bpf session_bpf upfutils upf_xdp_bpf  UPF_XDP gflags glog dl double-conversion folly -Wl,--end-group
 pthread m rt config++  event boost_system curl)
 

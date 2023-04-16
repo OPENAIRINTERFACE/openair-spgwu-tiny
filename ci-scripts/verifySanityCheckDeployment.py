@@ -31,11 +31,11 @@ class verifySanityCheckDeployment():
 
 	def checkLogs(self):
 		spgwc_status = self.analyze_check_run_log('SPGW-C')
-		spgwu_status = self.analyze_check_run_log('SPGW-U')
+		spgwu_status = self.analyze_check_run_log('UPF')
 		if not spgwc_status:
 			print ('SPGW-C did not deploy properly')
 		if not spgwu_status:
-			print ('SPGW-U did not deploy properly')
+			print ('UPF did not deploy properly')
 		if not spgwc_status or not spgwu_status:
 			sys.exit('Sanity Check Deployment went wrong')
 		else:
@@ -65,7 +65,7 @@ class verifySanityCheckDeployment():
 			if nfType == 'SPGW-C':
 				if nb_pfcp_hb_proc > 0:
 					status = True
-			if nfType == 'SPGW-U':
+			if nfType == 'UPF':
 				if nb_pfcp_hb_proc > 0 and nb_sx_hb_resp > 0 and nb_sx_hb_req > 0:
 					status = True
 

@@ -85,14 +85,14 @@ bool util::is_pid_file_lock_success(const char* pid_file_name) {
       S_IRUSR | S_IWUSR | S_IRGRP |
           S_IROTH); /* Read/write by owner, read by grp, others */
   if (0 > g_fd_pid_file) {
-    Logger::sgwc_app().error(
+    Logger::upf_app().error(
         "open filename %s failed %d:%s\n", pid_file_name, errno,
         strerror(errno));
     return false;
   }
 
   if (0 > util::lockfile(g_fd_pid_file, F_TLOCK)) {
-    Logger::sgwc_app().error(
+    Logger::upf_app().error(
         "lockfile filename %s failed %d:%s\n", pid_file_name, errno,
         strerror(errno));
     if (EACCES == errno || EAGAIN == errno) {
@@ -102,7 +102,7 @@ bool util::is_pid_file_lock_success(const char* pid_file_name) {
   }
   // fruncate file content
   if (ftruncate(g_fd_pid_file, 0)) {
-    Logger::sgwc_app().error(
+    Logger::upf_app().error(
         "truncate %s failed %d:%s\n", pid_file_name, errno, strerror(errno));
     close(g_fd_pid_file);
     return false;
@@ -111,7 +111,7 @@ bool util::is_pid_file_lock_success(const char* pid_file_name) {
   g_pid = getpid();
   snprintf(pid_dec, 64 /* should be big enough */, "%ld", (long) g_pid);
   if ((ssize_t) -1 == write(g_fd_pid_file, pid_dec, strlen(pid_dec))) {
-    Logger::sgwc_app().error(
+    Logger::upf_app().error(
         "write PID to filename %s failed %d:%s\n", pid_file_name, errno,
         strerror(errno));
     return false;

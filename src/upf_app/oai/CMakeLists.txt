@@ -2,6 +2,7 @@
 include_directories(${SRC_TOP_DIR}/common)
 include_directories(${SRC_TOP_DIR}/common/msg)
 include_directories(${SRC_TOP_DIR}/common/utils)
+include_directories(${SRC_TOP_DIR}/../build/ext/spdlog/include)
 
 add_library(oai STATIC
   pfcp/pfcp_far.cpp

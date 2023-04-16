@@ -31,7 +31,7 @@
 
 using namespace pfcp;
 
-extern spgwu::spgwu_sx* spgwu_sx_inst;
+extern upf::upf_n4* upf_n4_inst;
 
 //------------------------------------------------------------------------------
 bool pfcp_pdr::look_up_pack_in_access(
@@ -134,7 +134,7 @@ bool pfcp_pdr::update(const pfcp::update_pdr& update, uint8_t& cause_value) {
 //------------------------------------------------------------------------------
 void pfcp_pdr::buffering_requested(
     const char* buffer, const std::size_t num_bytes) {
-  Logger::spgwu_sx().warn("TODO pfcp_pdr::buffering_requested()");
+  Logger::upf_n4().warn("TODO pfcp_pdr::buffering_requested()");
   /*
     // TODO find smarter solution
     char filename[] = "/tmp/buff_pdrzzzxxxyyy.XXXXXX";
@@ -153,7 +153,7 @@ void pfcp_pdr::buffering_requested(
 void pfcp_pdr::notify_cp_requested(
     std::shared_ptr<pfcp::pfcp_session> session) {
   if (not notified_cp) {
-    Logger::spgwu_sx().trace("notify_cp_requested()");
+    Logger::upf_n4().trace("notify_cp_requested()");
     notified_cp = true;
 
     pfcp::pfcp_session_report_request h;
@@ -167,6 +167,6 @@ void pfcp_pdr::notify_cp_requested(
     h.set(report);
     h.set(dl_data_report);
 
-    spgwu_sx_inst->send_sx_msg(session->cp_fseid, h);
+    upf_n4_inst->send_sx_msg(session->cp_fseid, h);
   }
 }

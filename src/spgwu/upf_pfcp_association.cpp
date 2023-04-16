@@ -19,7 +19,7 @@
  *      contact@openairinterface.org
  */
 
-/*! \file spgwu_pfcp_association.cpp
+/*! \file upf_pfcp_association.cpp
    \brief
    \author  Lionel GAUTHIER
    \date 2019
@@ -31,12 +31,12 @@
 #include "upf_pfcp_association.hpp"
 #include "upf_n4.hpp"
 
-using namespace spgwu;
+using namespace upf;
 using namespace std;
 
 extern itti_mw* itti_inst;
 extern pfcp_switch* pfcp_switch_inst;
-extern spgwu_sx* spgwu_sx_inst;
+extern upf_n4* upf_n4_inst;
 
 //------------------------------------------------------------------------------
 void pfcp_association::notify_add_session(const pfcp::fseid_t& cp_fseid) {
@@ -148,7 +148,7 @@ bool pfcp_associations::add_peer_candidate_node(
        it < pending_associations.end(); ++it) {
     if ((*it)->node_id == node_id) {
       // TODO purge sessions of this node
-      Logger::spgwu_sx().info("TODO purge sessions of this node");
+      Logger::upf_n4().info("TODO purge sessions of this node");
       pending_associations.erase(it);
       break;
     }
@@ -158,14 +158,14 @@ bool pfcp_associations::add_peer_candidate_node(
       std::shared_ptr<pfcp_association>(association);
   pending_associations.push_back(s);
   return true;
-  // start_timer = itti_inst->timer_setup(0,0, TASK_SPGWU_SX,
+  // start_timer = itti_inst->timer_setup(0,0, TASK_UPF_N4,
   // TASK_MME_S11_TIMEOUT_SEND_GTPU_PING, 0);
 }
 //------------------------------------------------------------------------------
 void pfcp_associations::trigger_heartbeat_request_procedure(
     std::shared_ptr<pfcp_association>& s) {
   s->timer_heartbeat = itti_inst->timer_setup(
-      5, 0, TASK_SPGWU_SX, TASK_SPGWU_SX_TRIGGER_HEARTBEAT_REQUEST,
+      5, 0, TASK_UPF_N4, TASK_UPF_N4_TRIGGER_HEARTBEAT_REQUEST,
       s->hash_node_id);
 }
 //------------------------------------------------------------------------------
@@ -174,10 +174,9 @@ void pfcp_associations::initiate_heartbeat_request(
   size_t hash = (size_t) arg2_user;
   for (auto it : associations) {
     if (it.second->hash_node_id == hash) {
-      Logger::spgwu_sx().info(
-          "PFCP HEARTBEAT PROCEDURE hash %u starting", hash);
+      Logger::upf_n4().info("PFCP HEARTBEAT PROCEDURE hash %u starting", hash);
       it.second->num_retries_timer_heartbeat = 0;
-      spgwu_sx_inst->send_heartbeat_request(it.second);
+      upf_n4_inst->send_heartbeat_request(it.second);
     }
   }
 }
@@ -187,12 +186,11 @@ void pfcp_associations::timeout_heartbeat_request(
   size_t hash = (size_t) arg2_user;
   for (auto it : associations) {
     if (it.second->hash_node_id == hash) {
-      Logger::spgwu_sx().info(
-          "PFCP HEARTBEAT PROCEDURE hash %u TIMED OUT", hash);
+      Logger::upf_n4().info("PFCP HEARTBEAT PROCEDURE hash %u TIMED OUT", hash);
       if (it.second->num_retries_timer_heartbeat <
           PFCP_ASSOCIATION_HEARTBEAT_MAX_RETRIES) {
         it.second->num_retries_timer_heartbeat++;
-        spgwu_sx_inst->send_heartbeat_request(it.second);
+        upf_n4_inst->send_heartbeat_request(it.second);
       } else {
         it.second->del_sessions();
         pfcp::node_id_t node_id  = it.second->node_id;
@@ -214,7 +212,7 @@ void pfcp_associations::handle_receive_heartbeat_response(
       return;
     }
   }
-  Logger::spgwu_sx().info(
+  Logger::upf_n4().info(
       "PFCP HEARTBEAT PROCEDURE trxn_id %d NOT FOUND", trxn_id);
 }
 

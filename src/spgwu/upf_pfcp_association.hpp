@@ -19,14 +19,14 @@
  *      contact@openairinterface.org
  */
 
-/*! \file spgwu_pfcp_association.hpp
+/*! \file upf_pfcp_association.hpp
    \author  Lionel GAUTHIER
    \date 2019
    \email: lionel.gauthier@eurecom.fr
 */
 
-#ifndef FILE_SPGWU_PFCP_ASSOCIATION_HPP_SEEN
-#define FILE_SPGWU_PFCP_ASSOCIATION_HPP_SEEN
+#ifndef FILE_UPF_PFCP_ASSOCIATION_HPP_SEEN
+#define FILE_UPF_PFCP_ASSOCIATION_HPP_SEEN
 
 #include "3gpp_29.244.h"
 #include "itti.hpp"
@@ -36,7 +36,7 @@
 #include <mutex>
 #include <vector>
 
-namespace spgwu {
+namespace upf {
 
 #define PFCP_ASSOCIATION_HEARTBEAT_MAX_RETRIES 5
 class pfcp_association {
@@ -164,6 +164,6 @@ class pfcp_associations {
 
   void handle_receive_heartbeat_response(const uint64_t trxn_id);
 };
-}  // namespace spgwu
+}  // namespace upf
 
-#endif /* FILE_SPGWU_PFCP_ASSOCIATION_HPP_SEEN */
+#endif /* FILE_UPF_PFCP_ASSOCIATION_HPP_SEEN */

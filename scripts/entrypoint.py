@@ -25,7 +25,7 @@ import socket
 import os
 import sys
 
-CONFIG_FILE = str(os.getenv('CONFIG_FILE','/openair-spgwu-tiny/etc/spgw_u.conf'))
+CONFIG_FILE = str(os.getenv('CONFIG_FILE','/oai-upf/etc/upf.conf'))
 MOUNT_CONFIG = str(os.getenv('MOUNT_CONFIG','no')).lower()
 
 def resolve(hostname):

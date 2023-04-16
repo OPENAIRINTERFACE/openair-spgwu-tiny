@@ -43,7 +43,7 @@ Another key role of the PGW is to act as the anchor for mobility between 3GPP an
 | 1      | S5 / S8       | :heavy_check_mark: | Available on control plane only.               | GTP-based     |
 | 2      | Gx            | :x:                | Policy                                         |               |
 | 3      | Gy            | :x:                | Charging                                       |               |
-| 4      | SGi           | :heavy_check_mark: |                                                |               |
+| 4      | N6           | :heavy_check_mark: |                                                |               |
 
 # 3. OAI SGW Conformance Functions #
 

@@ -30,7 +30,6 @@
 
 using namespace pfcp;
 
-
 //------------------------------------------------------------------------------
 bool pfcp_pdr::update(const pfcp::update_pdr& update, uint8_t& cause_value) {
   if (update.get(outer_header_removal.second))
@@ -49,7 +48,7 @@ bool pfcp_pdr::update(const pfcp::update_pdr& update, uint8_t& cause_value) {
 void pfcp_pdr::notify_cp_requested(
     std::shared_ptr<pfcp::pfcp_session> session) {
   if (not notified_cp) {
-    Logger::spgwu_sx().trace("notify_cp_requested()");
+    Logger::upf_n4().trace("notify_cp_requested()");
     notified_cp = true;
 
     pfcp::pfcp_session_report_request h;
@@ -63,6 +62,6 @@ void pfcp_pdr::notify_cp_requested(
     h.set(report);
     h.set(dl_data_report);
 
-    // spgwu_sx_inst->send_sx_msg(session->cp_fseid, h);
+    // upf_n4_inst->send_sx_msg(session->cp_fseid, h);
   }
 }

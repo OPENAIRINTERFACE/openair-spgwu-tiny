@@ -26,7 +26,7 @@ setup:
 ## Install package
 #############################################################################
 install:
-	build/scripts/build_upf -V -b Debug --jobs
+	build/scripts/build_upf -V -b Debug
 	
 
 #############################################################################

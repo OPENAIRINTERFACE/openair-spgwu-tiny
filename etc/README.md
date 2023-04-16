@@ -23,12 +23,12 @@ Create a `test-jinja.sh` file and edit it:
 $ vi test-jinja.sh
 #!/bin/bash
 
-cp etc/spgw_u.conf etc/spgw_u_copy.conf
-export CONFIG_FILE=./etc/spgw_u_copy.conf
+cp etc/upf.conf etc/upf_copy.conf
+export CONFIG_FILE=./etc/upf_copy.conf
 export MOUNT_CONFIG=NO
 export TZ=Europe/Paris
 export PID_DIRECTORY=/var/run
-#export SGW_INTERFACE_NAME_FOR_S1U_S12_S4_UP=eth0
+#export SGW_INTERFACE_NAME_FOR_N3=eth0
 #export PGW_INTERFACE_NAME_FOR_SGI=eth0
 #export SGW_INTERFACE_NAME_FOR_SX=eth0
 export SPGWC0_IP_ADDRESS=192.168.61.70
@@ -44,7 +44,7 @@ export REALM=openairinterface.org
 ./scripts/entrypoint.py
 $ chmod 755 test-jinja.sh
 $ ./test-jinja.sh
-Configuration file ./etc/spgw_u_copy.conf is ready
+Configuration file ./etc/upf_copy.conf is ready
 ```
 
 ## 5G SA Core Network configuration ##
@@ -55,12 +55,12 @@ Create a `test-jinja-5g.sh` file and edit it:
 $ vi test-jinja-5g.sh
 #!/bin/bash
 
-cp etc/spgw_u.conf etc/spgw_u_copy.conf
-export CONFIG_FILE=./etc/spgw_u_copy.conf
+cp etc/upf.conf etc/upf_copy.conf
+export CONFIG_FILE=./etc/upf_copy.conf
 export MOUNT_CONFIG=NO
 export TZ=Europe/Paris
 export PID_DIRECTORY=/var/run
-export SGW_INTERFACE_NAME_FOR_S1U_S12_S4_UP=eth0
+export SGW_INTERFACE_NAME_FOR_N3=eth0
 export SGW_INTERFACE_NAME_FOR_SX=eth0
 export PGW_INTERFACE_NAME_FOR_SGI=eth0
 export NETWORK_UE_NAT_OPTION=yes
@@ -99,7 +99,7 @@ export DNN_2=default
 ./scripts/entrypoint.py
 $ chmod 755 test-jinja-5g.sh
 $ ./test-jinja-5g.sh
-Configuration file ./etc/spgw_u_copy.conf is ready
+Configuration file ./etc/upf_copy.conf is ready
 ```
 
 ## List of fields ##
@@ -115,7 +115,7 @@ If there is no default value associated to a field, it means it is **MANDATORY**
 | MCC        | Mandatory | 4G | |
 | REALM      | Mandatory | 4G | |
 | PID_DIRECTORY | Mandatory | 4G and 5G | |
-| SGW_INTERFACE_NAME_FOR_S1U_S12_S4_UP | Optional | 4G and 5G | eth0 |
+| SGW_INTERFACE_NAME_FOR_N3 | Optional | 4G and 5G | eth0 |
 | THREAD_S1U_PRIO | Optional | 4G and 5G | 80 |
 | S1U_THREADS | Optional | 4G and 5G | 8 |
 | SGW_INTERFACE_NAME_FOR_SX | Optional | 4G and 5G | eth0 |

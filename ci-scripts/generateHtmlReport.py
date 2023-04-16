@@ -42,7 +42,7 @@ class HtmlReport():
 
 	def generate(self):
 		cwd = os.getcwd()
-		self.file = open(cwd + '/test_results_oai_spgwu.html', 'w')
+		self.file = open(cwd + '/test_results_oai_upf.html', 'w')
 		self.generateHeader()
 
 		self.coding_formatting_log()
@@ -157,7 +157,7 @@ class HtmlReport():
 
 		cwd = os.getcwd()
 		for reportFile in glob.glob('./test_results_*.html'):
-			if reportFile == './test_results_oai_spgwu.html':
+			if reportFile == './test_results_oai_upf.html':
 				continue
 			newEpcReport = open(cwd + '/' + str(reportFile) + '.new', 'w')
 			buildSummaryDone = True
@@ -368,8 +368,8 @@ class HtmlReport():
 		self.file.write('	  <tr bgcolor="#33CCFF" >\n')
 		self.file.write('		<th>Stage Name</th>\n')
 		self.file.write('		<th>Image Kind</th>\n')
-		self.file.write('		<th>OAI SPGW-U-TINY <font color="Gold">Ubuntu18</font> Image</th>\n')
-		self.file.write('		<th>OAI SPGW-U-TINY <font color="Gold">RHEL8</font> Image</th>\n')
+		self.file.write('		<th>OAI UPF-TINY <font color="Gold">Ubuntu18</font> Image</th>\n')
+		self.file.write('		<th>OAI UPF-TINY <font color="Gold">RHEL8</font> Image</th>\n')
 		self.file.write('	  </tr>\n')
 
 	def buildSummaryFooter(self):
@@ -379,11 +379,11 @@ class HtmlReport():
 	def initialGitSetup(self):
 		self.file.write('	 <tr>\n')
 		self.file.write('	   <td bgcolor="lightcyan" >Initial Git Setup</td>\n')
-		self.analyze_docker_build_git_part('SPGW-U')
+		self.analyze_docker_build_git_part('UPF')
 		self.file.write('	 </tr>\n')
 
 	def analyze_docker_build_git_part(self, nfType):
-		if nfType != 'SPGW-U':
+		if nfType != 'UPF':
 			self.file.write('      <td>N/A</td>\n')
 			self.file.write('	   <td colspan="2">Wrong NF Type for this Report</td>\n')
 			return
@@ -397,7 +397,7 @@ class HtmlReport():
 			if os.path.isfile(cwd + '/archives/' + logFileName):
 				status = False
 				section_start_pattern = 'git config --global http'
-				section_end_pattern = 'WORKDIR /openair-spgwu-tiny/build/scripts'
+				section_end_pattern = 'WORKDIR /oai-upf/build/scripts'
 				section_status = False
 				with open(cwd + '/archives/' + logFileName, 'r') as logfile:
 					for line in logfile:
@@ -426,11 +426,11 @@ class HtmlReport():
 	def installLibsPackagesRow(self):
 		self.file.write('	 <tr>\n')
 		self.file.write('	   <td bgcolor="lightcyan" >SW libs and packages Installation</td>\n')
-		self.analyze_install_log('SPGW-U')
+		self.analyze_install_log('UPF')
 		self.file.write('	 </tr>\n')
 
 	def analyze_install_log(self, nfType):
-		if nfType != 'SPGW-U':
+		if nfType != 'UPF':
 			self.file.write('      <td>N/A</td>\n')
 			self.file.write('	   <td colspan="2">Wrong NF Type for this Report</td>\n')
 			return
@@ -471,7 +471,7 @@ class HtmlReport():
 						if result is not None:
 							section_status = False
 						if section_status:
-							result = re.search('SPGW-U deps installation successful', line)
+							result = re.search('UPF deps installation successful', line)
 							if result is not None:
 								status = True
 							result = re.search('Packages and Libraries installation finished', line)
@@ -545,14 +545,14 @@ class HtmlReport():
 	def buildCompileRows(self):
 		self.file.write('	 <tr>\n')
 		self.file.write('	   <td rowspan=2 bgcolor="lightcyan" >cNF Compile / Build</td>\n')
-		self.analyze_build_log('SPGW-U')
+		self.analyze_build_log('UPF')
 		self.file.write('	 </tr>\n')
 		self.file.write('	 <tr>\n')
-		self.analyze_compile_log('SPGW-U')
+		self.analyze_compile_log('UPF')
 		self.file.write('	 </tr>\n')
 
 	def analyze_build_log(self, nfType):
-		if nfType != 'SPGW-U':
+		if nfType != 'UPF':
 			self.file.write('      <td>N/A</td>\n')
 			self.file.write('	   <td colspan="2">Wrong NF Type for this Report</td>\n')
 			return
@@ -566,7 +566,7 @@ class HtmlReport():
 			if os.path.isfile(cwd + '/archives/' + logFileName):
 				status = False
 				section_start_pattern = 'build_spgwu --clean --build-type Release --jobs --Verbose'
-				section_end_pattern = 'FROM .* as oai-spgwu-tiny$'
+				section_end_pattern = 'FROM .* as oai-upf$'
 				section_status = False
 				with open(cwd + '/archives/' + logFileName, 'r') as logfile:
 					for line in logfile:
@@ -594,7 +594,7 @@ class HtmlReport():
 			self.file.write(cell_msg)
 
 	def analyze_compile_log(self, nfType):
-		if nfType != 'SPGW-U':
+		if nfType != 'UPF':
 			self.file.write('      <td>N/A</td>\n')
 			self.file.write('	   <td colspan="2">Wrong NF Type for this Report</td>\n')
 			return
@@ -609,7 +609,7 @@ class HtmlReport():
 			nb_warnings = 0
 			if os.path.isfile(cwd + '/archives/' + logFileName):
 				section_start_pattern = 'build_spgwu --clean --build-type Release --jobs --Verbose'
-				section_end_pattern = 'FROM .* as oai-spgwu-tiny$'
+				section_end_pattern = 'FROM .* as oai-upf$'
 				section_status = False
 				with open(cwd + '/archives/' + logFileName, 'r') as logfile:
 					for line in logfile:
@@ -644,11 +644,11 @@ class HtmlReport():
 	def copyToTargetImage(self):
 		self.file.write('	 <tr>\n')
 		self.file.write('	   <td bgcolor="lightcyan" >SW libs Installation / Copy from Builder</td>\n')
-		self.analyze_copy_log('SPGW-U')
+		self.analyze_copy_log('UPF')
 		self.file.write('	 </tr>\n')
 
 	def analyze_copy_log(self, nfType):
-		if nfType != 'SPGW-U':
+		if nfType != 'UPF':
 			self.file.write('      <td>N/A</td>\n')
 			self.file.write('	   <td colspan="2">Wrong NF Type for this Report</td>\n')
 			return
@@ -660,8 +660,8 @@ class HtmlReport():
 		for variant in variants:
 			logFileName = 'spgwu_' + variant + '_image_build.log'
 			if os.path.isfile(cwd + '/archives/' + logFileName):
-				section_start_pattern = 'FROM .* as oai-spgwu-tiny$'
-				section_end_pattern = 'WORKDIR /openair-spgwu-tiny/etc'
+				section_start_pattern = 'FROM .* as oai-upf$'
+				section_end_pattern = 'WORKDIR /oai-upf/etc'
 				section_status = False
 				status = False
 				with open(cwd + '/archives/' + logFileName, 'r') as logfile:
@@ -689,11 +689,11 @@ class HtmlReport():
 	def copyConfToolsToTargetImage(self):
 		self.file.write('	 <tr>\n')
 		self.file.write('	   <td bgcolor="lightcyan" >Copy Template Conf / Tools from Builder</td>\n')
-		self.analyze_copy_conf_tool_log('SPGW-U')
+		self.analyze_copy_conf_tool_log('UPF')
 		self.file.write('	 </tr>\n')
 
 	def analyze_copy_conf_tool_log(self, nfType):
-		if nfType != 'SPGW-U':
+		if nfType != 'UPF':
 			self.file.write('      <td>N/A</td>\n')
 			self.file.write('	   <td colspan="2">Wrong NF Type for this Report</td>\n')
 			return
@@ -705,11 +705,11 @@ class HtmlReport():
 		for variant in variants:
 			logFileName = 'spgwu_' + variant + '_image_build.log'
 			if os.path.isfile(cwd + '/archives/' + logFileName):
-				section_start_pattern = 'WORKDIR /openair-spgwu-tiny/etc'
+				section_start_pattern = 'WORKDIR /oai-upf/etc'
 				if variant == 'docker':
-					section_end_pattern = 'naming to docker.io/library/oai-spgwu-tiny'
+					section_end_pattern = 'naming to docker.io/library/oai-upf'
 				else:
-					section_end_pattern = 'COMMIT oai-spgwu-tiny:'
+					section_end_pattern = 'COMMIT oai-upf:'
 				section_status = False
 				status = False
 				with open(cwd + '/archives/' + logFileName, 'r') as logfile:
@@ -737,11 +737,11 @@ class HtmlReport():
 	def imageSizeRow(self):
 		self.file.write('	 <tr>\n')
 		self.file.write('	   <td bgcolor="lightcyan" >Image Size</td>\n')
-		self.analyze_image_size_log('SPGW-U')
+		self.analyze_image_size_log('UPF')
 		self.file.write('	 </tr>\n')
 
 	def analyze_image_size_log(self, nfType):
-		if nfType != 'SPGW-U':
+		if nfType != 'UPF':
 			self.file.write('      <td>N/A</td>\n')
 			self.file.write('	   <td colspan="2">Wrong NF Type for this Report</td>\n')
 			return
@@ -754,10 +754,10 @@ class HtmlReport():
 			logFileName = 'spgwu_' + variant + '_image_build.log'
 			if os.path.isfile(cwd + '/archives/' + logFileName):
 				if variant == 'docker':
-					section_start_pattern = 'naming to docker.io/library/oai-spgwu-tiny:'
+					section_start_pattern = 'naming to docker.io/library/oai-upf:'
 				else:
-					section_start_pattern = 'COMMIT oai-spgwu-tiny:'
-				section_end_pattern = 'OAI-SPGW-U DOCKER IMAGE BUILD'
+					section_start_pattern = 'COMMIT oai-upf:'
+				section_end_pattern = 'OAI-UPF DOCKER IMAGE BUILD'
 				section_status = False
 				status = False
 				imageTag = 'notAcorrectTagForTheMoment'
@@ -771,7 +771,7 @@ class HtmlReport():
 						if result is not None:
 							section_status = False
 						if section_status:
-							result = re.search(f'oai-spgwu-tiny *{imageTag}', line)
+							result = re.search(f'oai-upf *{imageTag}', line)
 							if result is not None and not status:
 								result = re.search('ago *([0-9\. A-Z]+)', line)
 								if result is not None:
@@ -798,7 +798,7 @@ class HtmlReport():
 		self.file.write('	  <tr bgcolor="#33CCFF" >\n')
 		self.file.write('		<th>Stage Name</th>\n')
 		self.file.write('		<th>OAI SPGW-C cNF</th>\n')
-		self.file.write('		<th>OAI SPGW-U cNF</th>\n')
+		self.file.write('		<th>OAI UPF cNF</th>\n')
 		self.file.write('	  </tr>\n')
 
 	def sanityCheckSummaryFooter(self):
@@ -809,7 +809,7 @@ class HtmlReport():
 		self.file.write('	 <tr>\n')
 		self.file.write('	   <td bgcolor="lightcyan" >Starting/Configuring Docker Containers</td>\n')
 		self.analyze_docker_start_log('SPGW-C')
-		self.analyze_docker_start_log('SPGW-U')
+		self.analyze_docker_start_log('UPF')
 		self.file.write('	 </tr>\n')
 
 	def analyze_docker_start_log(self, nfType):
@@ -847,7 +847,7 @@ class HtmlReport():
 		self.file.write('	 <tr>\n')
 		self.file.write('	   <td bgcolor="lightcyan" >cNF Check Start / Stop</td>\n')
 		self.analyze_check_run_log('SPGW-C')
-		self.analyze_check_run_log('SPGW-U')
+		self.analyze_check_run_log('UPF')
 		self.file.write('	 </tr>\n')
 
 	def analyze_check_run_log(self, nfType):
@@ -883,7 +883,7 @@ class HtmlReport():
 					cell_msg += 'KO:\n'
 				cell_msg += '  -- started ' + str(nb_pfcp_hb_proc) + ' PFCP HEARTBEAT PROCEDURE(s)\n'
 				cell_msg += '</b></pre></td>\n'
-			if nfType == 'SPGW-U':
+			if nfType == 'UPF':
 				if nb_pfcp_hb_proc > 0 and nb_sx_hb_resp > 0 and nb_sx_hb_req > 0:
 					cell_msg = '      <td bgcolor="LimeGreen"><pre style="border:none; background-color:LimeGreen"><b>'
 					cell_msg += 'OK:\n'

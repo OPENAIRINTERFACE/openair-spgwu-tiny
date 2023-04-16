@@ -20,7 +20,7 @@
 # */
 #---------------------------------------------------------------------
 #
-# Dockerfile for the Open-Air-Interface SPGW-U-TINY service
+# Dockerfile for the Open-Air-Interface UPF-TINY service
 #   Valid for UBI 8.6 | RHEL 8.6
 #
 #---------------------------------------------------------------------
@@ -28,7 +28,7 @@
 #---------------------------------------------------------------------
 # BUILDER IMAGE
 #---------------------------------------------------------------------
-FROM registry.access.redhat.com/ubi8/ubi:latest as oai-spgwu-tiny-builder
+FROM registry.access.redhat.com/ubi8/ubi:latest as oai-upf-builder
 
 # Entitlements and RHSM configurations are Open-Shift Secret and ConfigMaps
 # It is pre-requisite
@@ -56,20 +56,20 @@ RUN rm /etc/rhsm-host && \
 WORKDIR /openair-spgwu-tiny
 COPY . /openair-spgwu-tiny
 
-# Installing and Building SPGW-U-TINY
-WORKDIR /openair-spgwu-tiny/build/scripts
+# Installing and Building UPF-TINY
+WORKDIR /oai-upf/build/scripts
 RUN ./build_spgwu --install-deps --force && \
     # Remove entitlements and Subscription Manager configs
     rm -rf /etc/pki/entitlement && \
     rm -rf /etc/rhsm
 RUN ./build_spgwu --clean --build-type Release --jobs --Verbose && \
-    ldd /openair-spgwu-tiny/build/spgw_u/build/spgwu && \
-    mv /openair-spgwu-tiny/build/spgw_u/build/spgwu /openair-spgwu-tiny/build/spgw_u/build/oai_spgwu
+    ldd /oai-upf/build/upf/build/spgwu && \
+    mv /oai-upf/build/upf/build/spgwu /oai-upf/build/upf/build/oai_upf
 
 #---------------------------------------------------------------------
 # TARGET IMAGE
 #---------------------------------------------------------------------
-FROM registry.access.redhat.com/ubi8/ubi-minimal:latest as oai-spgwu-tiny
+FROM registry.access.redhat.com/ubi8/ubi-minimal:latest as oai-upf
 ENV TZ=Europe/Paris
 
 # Copy the entitlements
@@ -105,27 +105,27 @@ RUN rm -f /etc/rhsm-host && \
     rm -rf /etc/rhsm
 
 # Copying executable and generated libraries
-WORKDIR /openair-spgwu-tiny/bin
-COPY --from=oai-spgwu-tiny-builder \
-    /openair-spgwu-tiny/build/spgw_u/build/oai_spgwu \
-    /openair-spgwu-tiny/scripts/entrypoint.py \
-    /openair-spgwu-tiny/scripts/healthcheck.sh \
+WORKDIR /oai-upf/bin
+COPY --from=oai-upf-builder \
+    /oai-upf/build/upf/build/oai_upf \
+    /oai-upf/scripts/entrypoint.py \
+    /oai-upf/scripts/healthcheck.sh \
     ./
 
 # Copying installed libraries from builder
-COPY --from=oai-spgwu-tiny-builder \
+COPY --from=oai-upf-builder \
 # Currently we keep these folly dependencies from the builder
     /lib64/libgflags.so.2.1 \
     /lib64/libglog.so.0 \
     /lib64/libdouble-conversion.so.1 \
     /lib64/
 RUN ldconfig && \
-    ldd /openair-spgwu-tiny/bin/oai_spgwu
+    ldd /oai-upf/bin/oai_upf
 
 # Copying template configuration files
 # The configuration folder will be flat
-WORKDIR /openair-spgwu-tiny/etc
-COPY --from=oai-spgwu-tiny-builder /openair-spgwu-tiny/etc/spgw_u.conf .
+WORKDIR /oai-upf/etc
+COPY --from=oai-upf-builder /oai-upf/etc/upf.conf .
 
 WORKDIR /openair-spgwu-tiny
 
@@ -135,7 +135,7 @@ EXPOSE 2152/udp 8805/udp
 HEALTHCHECK --interval=10s \
             --timeout=15s \
             --retries=6 \
-    CMD /openair-spgwu-tiny/bin/healthcheck.sh
+    CMD /oai-upf/bin/healthcheck.sh
 
-CMD ["/openair-spgwu-tiny/bin/oai_spgwu", "-c", "/openair-spgwu-tiny/etc/spgw_u.conf", "-o"]
-ENTRYPOINT ["python3", "/openair-spgwu-tiny/bin/entrypoint.py"]
+CMD ["/oai-upf/bin/oai_upf", "-c", "/oai-upf/etc/upf.conf", "-o"]
+ENTRYPOINT ["python3", "/oai-upf/bin/entrypoint.py"]
