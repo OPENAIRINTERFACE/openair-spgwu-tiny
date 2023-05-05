@@ -35,6 +35,22 @@ INSTALL_DIR=/usr/local/bin
 THIS_SCRIPT_PATH=$(dirname $(readlink -f $0))
 source $THIS_SCRIPT_PATH/build_helper.spgw
 
+## initialize git submodules
+pushd ${THIS_SCRIPT_PATH}/../..
+if [ -d .git ] && [ -f .gitmodules ]; then
+  echo "Synchronizing the Git Sub-Modules"
+  git submodule status | while read -r line ; do
+    moduleName=`echo $line | awk '{print $2}'`
+    gitReference=`echo $line | awk '{print $3}'`
+    if [[ -z "$gitReference" ]]; then
+      echo "$moduleName looks empty!"
+      git submodule update --init --recursive $moduleName
+    fi
+  done
+  git submodule --quiet foreach 'echo "${path} is synchronized or in edition"'
+fi
+popd
+
 
 function help()
 {
