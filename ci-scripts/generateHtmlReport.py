@@ -368,7 +368,7 @@ class HtmlReport():
 		self.file.write('	  <tr bgcolor="#33CCFF" >\n')
 		self.file.write('		<th>Stage Name</th>\n')
 		self.file.write('		<th>Image Kind</th>\n')
-		self.file.write('		<th>OAI SPGW-U-TINY <font color="Gold">Ubuntu18</font> Image</th>\n')
+		self.file.write('		<th>OAI SPGW-U-TINY <font color="Gold">Ubuntu20</font> Image</th>\n')
 		self.file.write('		<th>OAI SPGW-U-TINY <font color="Gold">RHEL8</font> Image</th>\n')
 		self.file.write('	  </tr>\n')
 
