@@ -30,7 +30,9 @@ RUN apt-get update && \
     apt-get install --yes \
       git \
       tree \
-      clang-format-9
+      clang-format-9 && \
+    update-alternatives --install /usr/bin/clang-format clang-format /usr/bin/clang-format-9 20 && \
+    clang-format --version
 
 WORKDIR /home
 COPY . .
