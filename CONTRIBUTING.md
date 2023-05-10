@@ -13,6 +13,19 @@ Please refer to the steps described on our website: [How to contribute to OAI](h
       * The Continuous Integration will reject your pull request.
    - All pull requests SHALL have **`develop`** branch as target branch.
 
+## Synchronizing GIT sub-modules ##
+
+We are using nested GIT submodules. To synchronize them, the 2 most important commands to know are :
+
+1. `git submodule deinit --force .`
+2. `git submodule update --init --recursive`
+
+If you have non-tracked files or modified files within git submodules, these commands may not work.
+
+Use the `--verbose` option to see the execution of each command.
+
+If the synchronization fails, you may need to go into the path of the failing git-submodule(s) and clean the workspace from non-tracked/modified files.
+
 ## Coding Styles ##
 
 We are using `clang-format` as formatting tool on the C/C++ code.
