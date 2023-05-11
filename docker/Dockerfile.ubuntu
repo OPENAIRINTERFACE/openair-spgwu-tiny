@@ -90,7 +90,8 @@ RUN apt-get update && \
       netbase \
       libgssapi-krb5-2 \
 # Ubuntu 18/20 --> libldap-2.4-2
-      libldap-2.4-2 \
+# Ubuntu 22    --> libldap-2.5-0
+      libldap-2.?-? \
       libgoogle-glog0v5 \
 # Ubuntu 18 --> libdouble-conversion1
 # Ubuntu 20 --> libdouble-conversion3
