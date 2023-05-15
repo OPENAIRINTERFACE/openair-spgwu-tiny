@@ -1,5 +1,14 @@
 # RELEASE NOTES: #
 
+## v1.5.1 -- May 2023 ##
+
+* Support for rocky linux 8.7
+* Increasing size of hashmap tables
+* Code Refactoring for:
+  * Logging mechanism (runtime log level selection)
+* Published image on Docker-Hub is using now Ubuntu-20 as base image
+  * We will soon obsolete the build system for Ubuntu18.04
+
 ## v1.5.0 -- January 2023 ##
 
 * feat(fqdn): giving some time for FQDN resolution

@@ -23,13 +23,14 @@
 # Dockerfile for the Open-Air-Interface SPGW-U-TINY service
 #   Valid for Ubuntu-18.04 (bionic)
 #             Ubuntu-20.04 (focal)
+#             Ubuntu-22.04 (jammy)
 #
 #---------------------------------------------------------------------
 
 #---------------------------------------------------------------------
 # BASE IMAGE
 #---------------------------------------------------------------------
-ARG BASE_IMAGE=ubuntu:bionic
+ARG BASE_IMAGE=ubuntu:focal
 FROM $BASE_IMAGE as oai-spgwu-tiny-base
 
 ENV DEBIAN_FRONTEND=noninteractive
@@ -89,7 +90,8 @@ RUN apt-get update && \
       netbase \
       libgssapi-krb5-2 \
 # Ubuntu 18/20 --> libldap-2.4-2
-      libldap-2.4-2 \
+# Ubuntu 22    --> libldap-2.5-0
+      libldap-2.?-? \
       libgoogle-glog0v5 \
 # Ubuntu 18 --> libdouble-conversion1
 # Ubuntu 20 --> libdouble-conversion3
