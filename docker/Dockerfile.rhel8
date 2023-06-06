@@ -45,6 +45,7 @@ RUN rm /etc/rhsm-host && \
     yum repolist --disablerepo=* && \
     subscription-manager repos --enable codeready-builder-for-rhel-8-x86_64-rpms && \
     yum update -y && \
+    cat /etc/os-release && \
     yum -y install --enablerepo="codeready-builder-for-rhel-8-x86_64-rpms" \
        diffutils \
        file \
