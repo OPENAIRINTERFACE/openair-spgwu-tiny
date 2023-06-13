@@ -234,15 +234,6 @@ check_install_spgwu_deps() {
   # Libraries
   if [[ $OS_DISTRO == "ubuntu" ]]; then
     case "$(get_distribution_release)" in
-      "ubuntu18.04")
-        # Currently Ubuntu18.04 has boost 1.65 as the latest
-        # We need at least 1.66
-        # PPA has 1.67
-        $SUDO $INSTALLER install $OPTION software-properties-common
-        $SUDO add-apt-repository ppa:mhier/libboost-latest --yes
-        $SUDO $INSTALLER update
-        specific_packages="libconfig++-dev libasio-dev libboost-all-dev libasan4"
-        ;;
       "ubuntu20.04")
         specific_packages="libconfig++-dev libasio-dev libboost-all-dev libasan5"
         ;;
@@ -291,17 +282,6 @@ check_install_spgwu_deps() {
   $SUDO $INSTALLER install $OPTION $PACKAGE_LIST
   ret=$?;[[ $ret -ne 0 ]] && return $ret
 
-  # fix issue with libboost in U18 for a bare metal deployment
-  if [[ $OS_DISTRO == "ubuntu" ]]; then
-    case "$(get_distribution_release)" in
-      "ubuntu18.04")
-        $SUDO $INSTALLER remove $OPTION libboost1.65-dev || true
-        $SUDO $INSTALLER autoremove $OPTION || true
-        $SUDO $INSTALLER install $OPTION libboost1.67-dev
-        ;;
-    esac
-  fi
-
   echo_info "Packages and Libraries installation finished!"
 
   install_fb_folly_from_source $1 $2
@@ -315,6 +295,8 @@ check_install_spgwu_deps() {
 
   install_nlohmann_from_git $1 $2
   ret=$?;[[ $ret -ne 0 ]] && return $ret
+
+  $SUDO ldconfig
 
   return 0
 }

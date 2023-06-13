@@ -21,8 +21,7 @@
 #---------------------------------------------------------------------
 #
 # Dockerfile for the Open-Air-Interface SPGW-U-TINY service
-#   Valid for Ubuntu-18.04 (bionic)
-#             Ubuntu-20.04 (focal)
+#   Valid for Ubuntu-20.04 (focal)
 #             Ubuntu-22.04 (jammy)
 #
 #---------------------------------------------------------------------
@@ -101,12 +100,8 @@ RUN apt-get update && \
       libpsl5 \
       libnghttp2-14 \
       libcurl?-gnutls \
-# Ubuntu 18 --> boost62/65 -> will remove both
-# Ubuntu 20 --> boost67/71 -> will remove 67
-      libboost-thread1.??.0 \
-  && rm -rf /var/lib/apt/lists/* \
-       /lib/x86_64-linux-gnu/libboost_system.so.1.6*.0 \
-       /lib/x86_64-linux-gnu/libboost_thread.so.1.6*.0
+      libboost-thread1.7?.0 \
+  && rm -rf /var/lib/apt/lists/*
 
 # Copying executable and generated libraries
 WORKDIR /openair-spgwu-tiny/bin
@@ -118,12 +113,7 @@ COPY --from=oai-spgwu-tiny-builder \
 
 WORKDIR /usr/local/lib
 COPY --from=oai-spgwu-tiny-builder \
-# I need a dummy even if I already installed it.
-# Once Ubuntu18 support is dropped, we can remove whole copy section
-    /usr/lib/x86_64-linux-gnu/libpsl.so.5 \
     /usr/local/lib/libfmt.so \
-# Ubuntu 18 --> boost 67 will be copied
-    /usr/lib/libboost_system.so.1.6*.0 \
     ./
 
 RUN ldconfig && \

@@ -141,7 +141,12 @@ endif()
 Message("Architecture is ${CMAKE_SYSTEM_PROCESSOR}")
 if (CMAKE_SYSTEM_PROCESSOR STREQUAL "armv7l")
   set(C_FLAGS_PROCESSOR "-gdwarf-2 -mfloat-abi=hard -mfpu=neon -lgcc -lrt")
-else (CMAKE_SYSTEM_PROCESSOR STREQUAL "armv7l")
+elseif (CMAKE_SYSTEM_PROCESSOR STREQUAL "aarch64")
+  # Tested on aarch64 system in Little Endian
+  # Model ARM-Neoverse-N1
+  #   flags: fp asimd evtstrm aes pmull sha1 sha2 crc32 atomics fphp asimdhp cpuid asimdrdm lrcpc dcpop asimddp ssbs
+  set(C_FLAGS_PROCESSOR "-gdwarf-2 -lgcc -lrt")
+else ()
   set(C_FLAGS_PROCESSOR "-msse4.2")
 endif()
 #

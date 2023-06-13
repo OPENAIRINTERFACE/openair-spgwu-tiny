@@ -34,6 +34,7 @@ RUN dnf install 'dnf-command(config-manager)' -y && \
     dnf config-manager --set-enabled powertools && \
     dnf install epel-release -y && crb enable && \
     dnf update -y && \
+    cat /etc/os-release && \
     dnf -y install \
        diffutils \
        file \
